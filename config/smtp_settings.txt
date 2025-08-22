@@ -1,0 +1,31 @@
+# Настройки SMTP для .env файла
+# Конфигурация для Google Gmail SMTP
+
+# Базовые настройки почты
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=support.ict@oatk.org
+MAIL_PASSWORD=noh9phiH
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=support.ict@oatk.org
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Другие рекомендуемые настройки
+# Для очередей (рекомендуется для больших объемов писем)
+QUEUE_CONNECTION=database
+
+# Для работы через Google SMTP могут потребоваться дополнительные шаги:
+# 1. Убедитесь, что включен доступ по SMTP в аккаунте Google
+# 2. Если включена двухфакторная аутентификация, потребуется создать пароль приложения
+# 3. Если возникают ошибки безопасности, проверьте настройки безопасности в аккаунте Google:
+#    - Разрешить доступ менее защищенным приложениям
+#    - Или создать пароль приложения в настройках безопасности
+
+# Настройка SMTP в Laravel 12:
+# 1. Добавьте приведенные выше настройки в .env файл
+# 2. Очистите кеш конфигурации: php artisan config:clear
+# 3. Перезапустите приложение
+
+# Команда для тестирования:
+# php artisan test:email-notifications --email=test@example.com

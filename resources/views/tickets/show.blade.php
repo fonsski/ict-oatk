@@ -1,0 +1,352 @@
+@extends('layouts.app')
+
+@section('title', 'Детали заявки - ICT')
+
+@section('content')
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Back Link -->
+        <div class="mb-8">
+            <a href="{{ route('tickets.index') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                Вернуться к заявкам
+            </a>
+        </div>
+
+        <!-- Ticket Header -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+                <div class="flex-1">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">#{{ $ticket->id }} {{ $ticket->title }}</h1>
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <!-- Status -->
+                        @php
+                            $statusColors = [
+                                'open' => 'bg-blue-100 text-blue-800',
+                                'in_progress' => 'bg-yellow-100 text-yellow-800',
+                                'resolved' => 'bg-green-100 text-green-800',
+                                'closed' => 'bg-gray-100 text-gray-800'
+                            ];
+                            $statusLabels = [
+                                'open' => 'Открыта',
+                                'in_progress' => 'В работе',
+                                'resolved' => 'Решена',
+                                'closed' => 'Закрыта'
+                            ];
+                            $priorityColors = [
+                                'low' => 'bg-green-100 text-green-800',
+                                'medium' => 'bg-yellow-100 text-yellow-800',
+                                'high' => 'bg-orange-100 text-orange-800',
+                                'urgent' => 'bg-red-100 text-red-800'
+                            ];
+                            $priorityLabels = [
+                                'low' => 'Низкий',
+                                'medium' => 'Средний',
+                                'high' => 'Высокий',
+                                'urgent' => 'Срочный'
+                            ];
+                            $categoryLabels = [
+                                'hardware' => 'Оборудование',
+                                'software' => 'Программное обеспечение',
+                                'network' => 'Сеть и интернет',
+                                'account' => 'Учетная запись',
+                                'other' => 'Другое'
+                            ];
+                        @endphp
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColors[$ticket->status] }}">
+                            @if($ticket->status === 'open')
+                                <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path>
+                                </svg>
+                            @elseif($ticket->status === 'in_progress')
+                                <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            @elseif($ticket->status === 'resolved')
+                                <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4 12 14.01l-3-3"></path>
+                                </svg>
+                            @else
+                                <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path>
+                                </svg>
+                            @endif
+                            {{ $statusLabels[$ticket->status] }}
+                        </span>
+
+                        <!-- Priority -->
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $priorityColors[$ticket->priority] }}">
+                            {{ $priorityLabels[$ticket->priority] }}
+                        </span>
+
+                        <!-- Category -->
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                            {{ $categoryLabels[$ticket->category] }}
+                        </span>
+                    </div>
+                </div>
+
+                @if($ticket->status !== 'closed')
+                    @if(Auth::check() && in_array(optional(Auth::user()->role)->slug, ['admin','master','technician']))
+                        <div class="mt-4 lg:mt-0 flex flex-wrap gap-2">
+                            @if($ticket->status === 'open')
+                                <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Начать работу
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if($ticket->status === 'in_progress')
+                                <form action="{{ route('tickets.resolve', $ticket) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        Отметить как решенную
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if($ticket->status === 'resolved')
+                                <form action="{{ route('tickets.close', $ticket) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Закрыть заявку
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endif
+                @endif
+            </div>
+        </div>
+
+        <!-- Ticket Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Description -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Описание проблемы</h2>
+                    <div class="prose max-w-none">
+                        {{ $ticket->description }}
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                @if($ticket->comments->count() > 0)
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Комментарии</h2>
+                        <div class="space-y-6">
+                            @foreach($ticket->comments as $comment)
+                                @if($comment->is_system)
+                                    <div class="flex space-x-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="bg-blue-50 rounded-lg p-3">
+                                                <div class="flex items-center justify-between">
+                                                    <h3 class="text-sm font-medium text-blue-600">Система</h3>
+                                                    <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
+                                                </div>
+                                                <div class="mt-1 text-sm text-gray-700">
+                                                    {{ $comment->content }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="flex space-x-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between">
+                                                <h3 class="text-sm font-medium text-gray-900">{{ $comment->user->name }}</h3>
+                                                <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
+                                            </div>
+                                            <div class="mt-2 text-sm text-gray-700">
+                                                {{ $comment->content }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Add Comment -->
+                @if($ticket->status !== 'closed')
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Добавить комментарий</h2>
+                        <form action="{{ route('tickets.comment.store', $ticket) }}" method="POST">
+                            @csrf
+                            <div>
+                                <textarea name="content"
+                                          rows="4"
+                                          required
+                                          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                          placeholder="Введите ваш комментарий..."></textarea>
+                            </div>
+                            <div class="mt-4">
+                                <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Отправить комментарий
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Ticket Info -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Информация о заявке</h2>
+                    <dl class="space-y-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Автор</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span class="text-sm text-gray-900">{{ $ticket->reporter_name }}</span>
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Email</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900">{{ $ticket->reporter_email }}</span>
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">ID сотрудника</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span class="text-sm text-gray-900">{{ $ticket->reporter_id ?: '—' }}</span>
+                            </dd>
+                        </div>
+
+                        @if($ticket->room)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Кабинет</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 21h18"></path>
+                                    <path d="M5 21V7l8-4v18"></path>
+                                    <path d="M19 21V11l-6-4"></path>
+                                </svg>
+                                <div>
+                                    <span class="text-sm text-gray-900">{{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</span>
+                                    @if($ticket->room->building || $ticket->room->floor)
+                                        <br>
+                                        <span class="text-xs text-gray-500">{{ $ticket->room->full_address }}</span>
+                                    @endif
+                                </div>
+                            </dd>
+                        </div>
+                        @endif
+
+                        @if($ticket->equipment)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Оборудование</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                    <path d="M6 12h12"></path>
+                                </svg>
+                                <a href="{{ route('equipment.show', $ticket->equipment) }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                                    {{ $ticket->equipment->name ?: 'Оборудование' }} ({{ $ticket->equipment->inventory_number }})
+                                </a>
+                            </dd>
+                        </div>
+                        @elseif($ticket->location)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Локация</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="text-sm text-gray-900">{{ $ticket->location->name }}</span>
+                            </dd>
+                        </div>
+                        @endif
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Создано</dt>
+                            <dd class="mt-1 flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span class="text-sm text-gray-900">{{ $ticket->created_at ? $ticket->created_at->format('d.m.Y H:i') : '—' }}</span>
+                            </dd>
+                        </div>
+
+                        @if($ticket->updated_at->ne($ticket->created_at))
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Последнее обновление</dt>
+                                <dd class="mt-1 flex items-center">
+                                    <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    <span class="text-sm text-gray-900">{{ $ticket->updated_at ? $ticket->updated_at->format('d.m.Y H:i') : '—' }}</span>
+                                </dd>
+                            </div>
+                        @endif
+                    </dl>
+                </div>
+
+                @if(Auth::check() && in_array(optional(Auth::user()->role)->slug, ['admin','master','technician']))
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-md font-medium text-gray-900 mb-3">Назначить исполнителя</h3>
+                        <form action="{{ route('tickets.assign', $ticket) }}" method="POST">
+                            @csrf
+                            <div>
+                                <label for="assigned_to_id" class="block text-sm font-medium text-gray-700">Исполнитель</label>
+                                <select id="assigned_to_id" name="assigned_to_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Не назначено</option>
+                                    @if(!empty($assignable))
+                                        @foreach($assignable as $user)
+                                            <option value="{{ $user->id }}" @if($ticket->assigned_to_id == $user->id) selected @endif>{{ $user->name }} @if($user->role) ({{ $user->role->name }}) @endif</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+                            <div class="mt-4">
+                                <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Назначить</button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

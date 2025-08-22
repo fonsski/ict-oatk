@@ -1,0 +1,48 @@
+# Пример настроек Google OAuth для ICT
+
+## Настройки для .env файла
+
+```
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=802308790906-mmdlgddtp2u91v6t85h7r25eibm75nmu.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_REDIRECT_URI=http://localhost/auth/google/callback
+GOOGLE_PROJECT_ID=ict-email-service
+
+# Mail Configuration
+MAIL_MAILER=gmail
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=support.ict@oatk.org
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=support.ict@oatk.org
+MAIL_FROM_NAME="ИКТ Поддержка"
+```
+
+## Проверка настроек OAuth
+
+Для проверки правильности учётных данных OAuth можно выполнить следующую команду:
+
+```bash
+curl -d "client_id=802308790906-mmdlgddtp2u91v6t85h7r25eibm75nmu.apps.googleusercontent.com&client_secret=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&grant_type=client_credentials" https://www.googleapis.com/oauth2/v4/token
+```
+
+При правильных настройках вы получите ответ с токеном или ошибку, которая поможет диагностировать проблему.
+
+## Обновление настроек OAuth
+
+1. Перейдите в [Google Cloud Console](https://console.cloud.google.com/)
+2. Выберите проект "ict-email-service"
+3. В меню слева выберите "APIs & Services" > "Credentials"
+4. Найдите существующий OAuth Client ID и нажмите на него
+5. Убедитесь, что следующие URI перенаправления добавлены:
+   - http://localhost/auth/google/callback
+   - http://127.0.0.1/auth/google/callback
+   - [другие URI для вашей среды разработки]
+
+## Примечания
+
+* Client ID всегда заканчивается на `.apps.googleusercontent.com`
+* Client Secret обычно начинается с `GOCSPX-`
+* При изменении учетных данных необходимо очистить кэш: `php artisan cache:clear`

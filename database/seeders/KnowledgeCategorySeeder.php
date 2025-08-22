@@ -1,0 +1,64 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use App\Models\KnowledgeCategory;
+
+class KnowledgeCategorySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $categories = [
+            [
+                "name" => "Оборудование",
+                "slug" => "hardware",
+                "description" =>
+                    "Статьи о компьютерном оборудовании и периферии",
+                "icon" => "computer-desktop",
+                "color" => "#059669",
+                "sort_order" => 1,
+                "is_active" => true,
+            ],
+            [
+                "name" => "Программное обеспечение",
+                "slug" => "software",
+                "description" => "Статьи о программах и приложениях",
+                "icon" => "code-bracket",
+                "color" => "#3B82F6",
+                "sort_order" => 2,
+                "is_active" => true,
+            ],
+            [
+                "name" => "Сеть и интернет",
+                "slug" => "network",
+                "description" =>
+                    "Статьи о настройке сети и интернет-подключения",
+                "icon" => "globe-alt",
+                "color" => "#8B5CF6",
+                "sort_order" => 3,
+                "is_active" => true,
+            ],
+            [
+                "name" => "Другое",
+                "slug" => "other",
+                "description" => "Прочие статьи",
+                "icon" => "ellipsis-horizontal",
+                "color" => "#6B7280",
+                "sort_order" => 4,
+                "is_active" => true,
+            ],
+        ];
+
+        foreach ($categories as $category) {
+            KnowledgeCategory::firstOrCreate(
+                ["slug" => $category["slug"]],
+                $category,
+            );
+        }
+    }
+}
