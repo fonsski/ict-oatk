@@ -16,6 +16,8 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ActivationController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\DrawingCanvasController;
+use App\Http\Controllers\TestCanvasController;
 use Illuminate\Support\Facades\Route;
 
 // Аутентификация
@@ -289,13 +291,65 @@ Route::middleware("auth")->group(function () {
             HomepageFAQController::class,
             "preview",
         ])->name("homepage-faq.preview");
+        Route::post("/homepage-faq/upload-image", [
+            HomepageFAQController::class,
+            "uploadImage",
+        ])->name("homepage-faq.upload-image");
     });
+
+    // Группа маршрутов для работы с холстом для рисования
+    // Доступна только администраторам, техникам и мастерам
+    Route::middleware([
+        "auth",
+        \App\Http\Middleware\CheckRole::class . ":admin,technician,master",
+    ])->group(function () {
+        // Explicit routes for drawing canvas
+        Route::get("/drawing-canvas", [
+            DrawingCanvasController::class,
+            "index",
+        ])->name("drawing-canvas.index");
+        Route::get("/drawing-canvas/create", [
+            DrawingCanvasController::class,
+            "create",
+        ])->name("drawing-canvas.create");
+        Route::post("/drawing-canvas", [
+            DrawingCanvasController::class,
+            "store",
+        ])->name("drawing-canvas.store");
+        Route::get("/drawing-canvas/{drawing_canvas}", [
+            DrawingCanvasController::class,
+            "show",
+        ])->name("drawing-canvas.show");
+        Route::get("/drawing-canvas/{drawing_canvas}/edit", [
+            DrawingCanvasController::class,
+            "edit",
+        ])->name("drawing-canvas.edit");
+        Route::put("/drawing-canvas/{drawing_canvas}", [
+            DrawingCanvasController::class,
+            "update",
+        ])->name("drawing-canvas.update");
+        Route::delete("/drawing-canvas/{drawing_canvas}", [
+            DrawingCanvasController::class,
+            "destroy",
+        ])->name("drawing-canvas.destroy");
+    });
+
+    // Test route for canvas controller
+    Route::get("/test-canvas", [TestCanvasController::class, "test"])->name(
+        "test-canvas",
+    );
 
     // AJAX preview для markdown (только для авторизованных)
     Route::post("/knowledge/preview", [
         KnowledgeBaseController::class,
         "preview",
     ])->name("knowledge.preview");
+
+    // Upload images for knowledge base articles
+    Route::post("/knowledge/upload-image", [
+        KnowledgeBaseController::class,
+        "uploadImage",
+    ])->name("knowledge.upload-image");
 
     // API Routes for notifications
     Route::prefix("api/notifications")->group(function () {
@@ -571,8 +625,6 @@ Route::middleware("auth")->group(function () {
     }
 });
 
-// Knowledge routes must be defined after resource routes to prevent collision with /knowledge/{id}
-// Only admin, master and technician roles can access knowledge base
 Route::middleware([
     "auth",
     \App\Http\Middleware\CheckRole::class . ":admin,master,technician",

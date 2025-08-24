@@ -15,6 +15,37 @@
             </a>
         </div>
 
+        <!-- Admin Actions -->
+        @php
+        $user = auth()->user();
+        $role = optional($user)->role ? optional($user->role)->slug : null;
+        @endphp
+
+        @if($user && in_array($role, ['admin','master','technician']))
+        <div class="flex items-center space-x-2">
+            <a href="{{ route('knowledge.edit', $article) }}"
+               class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="mr-2 -ml-1 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Редактировать
+            </a>
+            <form action="{{ route('knowledge.destroy', $article) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить эту статью?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="mr-2 -ml-1 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Удалить
+                </button>
+            </form>
+        </div>
+        @endif
+
         <!-- Article Content -->
         <article class="bg-white rounded-lg shadow-sm border border-gray-200">
             <!-- Article Header -->
@@ -51,8 +82,42 @@
 
             <!-- Article Body -->
             <div class="p-8">
+                <style>
+                    .prose img {
+                        max-width: 100%;
+                        height: auto;
+                        border-radius: 0.375rem;
+                        margin: 1.5rem 0;
+                    }
+                    @media (max-width: 640px) {
+                        .prose img {
+                            width: 100%;
+                        }
+                    }
+                </style>
                 <div class="prose max-w-none">
                     {!! $article->content !!}
+                </div>
+
+                <!-- Article Footer -->
+                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        <span>Просмотров: {{ $article->views_count }}</span>
+                        @if($article->updated_at && $article->updated_at != $article->created_at)
+                        <span class="ml-4">Обновлено: {{ $article->updated_at->format('d.m.Y H:i') }}</span>
+                        @endif
+                    </div>
+
+                    @if(auth()->check())
+                    <div class="flex items-center space-x-2">
+                        @if(in_array(optional(auth()->user()->role)->slug, ['admin','master','technician']))
+                        <a href="{{ route('knowledge.edit', $article) }}"
+                           class="text-blue-600 hover:text-blue-800">
+                            Редактировать
+                        </a>
+                        @endif
+                    </div>
+                    @endif
                 </div>
 
                 @if($article->images->isNotEmpty())

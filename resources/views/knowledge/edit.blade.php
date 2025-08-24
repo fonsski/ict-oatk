@@ -136,6 +136,16 @@
                                 </svg>
                             </button>
                             <div class="border-l border-gray-300 h-6"></div>
+                            <button type="button" class="text-gray-600 hover:text-gray-900 p-1 rounded"
+                                    onclick="openImageUpload()" title="Добавить изображение">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                            </button>
+                            <input type="file" id="image-upload" name="image" accept="image/*" class="hidden" />
+                            <div class="border-l border-gray-300 h-6"></div>
                             <button type="button"
                                     class="text-gray-600 hover:text-gray-900 px-2 py-1 text-xs rounded border border-gray-300 hover:border-gray-400"
                                     onclick="togglePreview()">
@@ -247,4 +257,122 @@ function togglePreview() {
         textarea.style.display = 'block';
     }
 }
+
+function openImageUpload() {
+    document.getElementById('image-upload').click();
+}
+
+// Показать индикатор загрузки
+function showLoadingIndicator() {
+    let loadingIndicator = document.getElementById('image-upload-loading');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
+
+    loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'image-upload-loading';
+    loadingIndicator.classList.add('fixed', 'bottom-4', 'right-4', 'bg-blue-600', 'text-white', 'px-4', 'py-2', 'rounded-md', 'flex', 'items-center', 'shadow-lg', 'z-50');
+    loadingIndicator.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Загрузка изображения...
+    `;
+    document.body.appendChild(loadingIndicator);
+}
+
+// Скрыть индикатор загрузки
+function hideLoadingIndicator() {
+    const loadingIndicator = document.getElementById('image-upload-loading');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
+}
+
+// Handle image upload
+document.addEventListener('DOMContentLoaded', function() {
+    const imageUpload = document.getElementById('image-upload');
+
+    imageUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            uploadImage(this.files[0]);
+        }
+    });
+
+    // Функция загрузки изображения
+    function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('article_id', '{{ $article->id }}');
+
+        // Получаем textarea и позицию курсора
+        const textarea = document.getElementById('content');
+        const cursorPos = textarea.selectionStart;
+        const placeholderText = '![Загрузка изображения...]()';
+
+        // Вставляем плейсхолдер на месте курсора
+        textarea.value =
+            textarea.value.substring(0, cursorPos) +
+            placeholderText +
+            textarea.value.substring(cursorPos);
+
+        // Показываем индикатор загрузки
+        showLoadingIndicator();
+
+        // Отправляем запрос
+        fetch('{{ route("knowledge.upload-image") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(handleResponse)
+        .then(data => {
+            // Заменяем плейсхолдер на маркдаун изображения
+            textarea.value = textarea.value.replace(placeholderText, data.markdown);
+        })
+        .catch(error => {
+            // Заменяем плейсхолдер на сообщение об ошибке
+            textarea.value = textarea.value.replace(
+                placeholderText,
+                '<!-- Ошибка загрузки изображения: ' + error.message + ' -->'
+            );
+            console.error('Ошибка загрузки:', error);
+            alert('Ошибка загрузки изображения: ' + error.message);
+        })
+        .finally(() => {
+            // Скрываем индикатор загрузки
+            hideLoadingIndicator();
+            // Сбрасываем input
+            imageUpload.value = '';
+        });
+    }
+
+    // Обработка ответа сервера
+    function handleResponse(response) {
+        if (!response.ok) {
+            if (response.status === 500) {
+                return response.text().then(text => {
+                    throw new Error('Внутренняя ошибка сервера (500)');
+                });
+            }
+            if (response.status === 413) {
+                throw new Error('Файл слишком большой');
+            }
+            throw new Error('Ошибка сервера: ' + response.status);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error('Сервер вернул некорректный ответ');
+            });
+        }
+
+        return response.json();
+    }
+});
 </script>

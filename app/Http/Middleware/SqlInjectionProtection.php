@@ -61,6 +61,8 @@ class SqlInjectionProtection
             "images",
             "css",
             "js",
+            "knowledge/upload-image",
+            "homepage-faq/upload-image",
         ];
         foreach ($excludedPaths as $excludedPath) {
             if (Str::startsWith($path, $excludedPath)) {
@@ -73,9 +75,11 @@ class SqlInjectionProtection
             $this->checkForSqlInjection($key, $value, $request);
         }
 
-        // Check POST parameters
-        foreach ($request->post() as $key => $value) {
-            $this->checkForSqlInjection($key, $value, $request);
+        // Check POST parameters (skip for file uploads)
+        if (!$request->hasFile("image") && !$request->hasFile("file")) {
+            foreach ($request->post() as $key => $value) {
+                $this->checkForSqlInjection($key, $value, $request);
+            }
         }
 
         // Check JSON parameters if content type is application/json
@@ -123,10 +127,12 @@ class SqlInjectionProtection
             return;
         }
 
-        // Skip if this is a JSON or file upload field
+        // Skip if this is a JSON, file upload field, or image upload
         if (
             Str::startsWith($key, "_token") ||
-            Str::startsWith($key, "_method")
+            Str::startsWith($key, "_method") ||
+            $key === "image" ||
+            $key === "file"
         ) {
             return;
         }

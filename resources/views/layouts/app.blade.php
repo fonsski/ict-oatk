@@ -57,7 +57,7 @@
                         @if(user_can_manage_users())
                             <!-- Admin Dropdown Menu -->
                             <div class="relative">
-                                <button type="button" id="admin-menu-button" class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs(['equipment.*', 'room.*', 'user.*', 'homepage-faq.*']) ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                <button type="button" id="admin-menu-button" class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs(['equipment.*', 'room.*', 'user.*', 'homepage-faq.*', 'drawing-canvas.*']) ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                     <span>Управление</span>
                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6,9 12,15 18,9"></polyline>
@@ -90,6 +90,10 @@
                                         <a href="{{ route('equipment.equipment-categories.index') }}"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('equipment.equipment-categories.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                                             Категории оборудования
+                                        </a>
+                                        <a href="{{ route('drawing-canvas.index') }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('drawing-canvas.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                                            Инструмент рисования
                                         </a>
 
                                         @if(config('app.debug'))
@@ -248,6 +252,10 @@
                             <a href="{{ route('equipment.equipment-categories.index') }}"
                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('equipment.equipment-categories.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                 Категории оборудования
+                            </a>
+                            <a href="{{ route('drawing-canvas.index') }}"
+                               class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('drawing-canvas.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                Инструмент рисования
                             </a>
                         </div>
                     @endif
@@ -876,6 +884,9 @@
         startNotificationPolling();
         window.addEventListener('beforeunload', stopNotificationPolling);
     </script>
+
+    <!-- Common JS libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
     @stack('scripts')
 </body>

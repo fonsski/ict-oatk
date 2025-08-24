@@ -100,6 +100,19 @@
 
         <!-- Content -->
         <div class="px-6 py-8">
+            <style>
+                .prose img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 0.375rem;
+                    margin: 1.5rem 0;
+                }
+                @media (max-width: 640px) {
+                    .prose img {
+                        width: 100%;
+                    }
+                }
+            </style>
             <div class="prose prose-slate max-w-none">
                 @if($faq->content)
                     {!! $faq->content !!}

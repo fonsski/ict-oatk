@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Str;
 
 class XssProtection
 {
@@ -15,29 +16,29 @@ class XssProtection
      */
     protected $patterns = [
         // Script tags
-        '/<script.*?>.*?<\/script>/is',
+        "/<script.*?>.*?<\/script>/is",
         // Script attributes
         '/on\w+\s*=\s*".*?"/is',
         '/on\w+\s*=\s*\'.*?\'/is',
         // JavaScript URLs
-        '/javascript\s*:/is',
+        "/javascript\s*:/is",
         // CSS expression
-        '/expression\s*\(.*?\)/is',
+        "/expression\s*\(.*?\)/is",
         // Inline event handlers
-        '/onclick|ondblclick|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|onkeydown|onkeypress|onkeyup|onload|onunload|onchange|onsubmit|onreset|onselect|onblur|onfocus/is',
+        "/onclick|ondblclick|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|onkeydown|onkeypress|onkeyup|onload|onunload|onchange|onsubmit|onreset|onselect|onblur|onfocus/is",
         // Data URLs
-        '/data:text\/html.*?base64/is',
+        "/data:text\/html.*?base64/is",
         // Common attack vectors
-        '/<base\s+href/is',
-        '/<iframe.*?>/is',
-        '/<embed.*?>/is',
-        '/<object.*?>/is',
-        '/<form.*?>/is',
+        "/<base\s+href/is",
+        "/<iframe.*?>/is",
+        "/<embed.*?>/is",
+        "/<object.*?>/is",
+        "/<form.*?>/is",
         // JavaScript eval() and Function()
-        '/eval\s*\(.*?\)/is',
-        '/Function\s*\(.*?\)/is',
-        '/document\..*?\(.*?\)/is',
-        '/window\..*?\(.*?\)/is',
+        "/eval\s*\(.*?\)/is",
+        "/Function\s*\(.*?\)/is",
+        "/document\..*?\(.*?\)/is",
+        "/window\..*?\(.*?\)/is",
     ];
 
     /**
@@ -76,7 +77,7 @@ class XssProtection
         $response = $next($request);
 
         // Add security headers
-        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        $response->headers->set("X-XSS-Protection", "1; mode=block");
 
         return $response;
     }
@@ -90,7 +91,16 @@ class XssProtection
     protected function shouldSkip(Request $request): bool
     {
         // Skip XSS validation for file uploads
-        if ($request->isMethod('post') && $request->hasFile('file')) {
+        if (
+            $request->isMethod("post") &&
+            ($request->hasFile("file") || $request->hasFile("image"))
+        ) {
+            return true;
+        }
+
+        // Skip XSS validation for image upload routes
+        $path = $request->path();
+        if (Str::contains($path, ["upload-image", "images"])) {
             return true;
         }
 
@@ -124,12 +134,12 @@ class XssProtection
      */
     protected function logXssAttempt(string $value): void
     {
-        \Log::warning('Potential XSS attack detected', [
-            'value' => $value,
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'url' => request()->fullUrl(),
-            'user_id' => auth()->id() ?? 'guest',
+        \Log::warning("Potential XSS attack detected", [
+            "value" => $value,
+            "ip" => request()->ip(),
+            "user_agent" => request()->userAgent(),
+            "url" => request()->fullUrl(),
+            "user_id" => auth()->id() ?? "guest",
         ]);
     }
 
@@ -143,10 +153,10 @@ class XssProtection
     {
         // First, remove all known dangerous patterns
         foreach ($this->patterns as $pattern) {
-            $value = preg_replace($pattern, '', $value);
+            $value = preg_replace($pattern, "", $value);
         }
 
         // Then encode special characters
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars($value, ENT_QUOTES, "UTF-8");
     }
 }

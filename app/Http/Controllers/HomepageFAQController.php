@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\HomepageFAQ;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Parsedown;
 
@@ -205,6 +207,161 @@ class HomepageFAQController extends Controller
     }
 
     /**
+     * Handle image uploads for FAQ content
+     */
+    public function uploadImage(Request $request)
+    {
+        $this->checkPermission();
+
+        // Убедимся, что всегда возвращаем JSON-ответ
+        $request->headers->set("Accept", "application/json");
+
+        // Validate the request
+        try {
+            $validated = $request->validate([
+                "image" => "required|image|max:5120", // 5MB max
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(
+                [
+                    "success" => false,
+                    "message" =>
+                        "Ошибка валидации: " .
+                        implode(
+                            ", ",
+                            $e->errors()["image"] ?? ["Неверное изображение"],
+                        ),
+                ],
+                422,
+            );
+        }
+
+        try {
+            // Get the uploaded file
+            $file = $request->file("image");
+
+            \Log::info("Попытка загрузки изображения", [
+                "file_exists" => (bool) $file,
+                "original_name" => $file
+                    ? $file->getClientOriginalName()
+                    : null,
+                "size" => $file ? $file->getSize() : null,
+                "mime" => $file ? $file->getMimeType() : null,
+            ]);
+
+            if (!$file || !$file->isValid()) {
+                \Log::error("Файл недействителен", [
+                    "is_valid" => $file ? $file->isValid() : false,
+                    "error" => $file ? $file->getError() : "Файл не найден",
+                ]);
+                return response()->json(
+                    [
+                        "success" => false,
+                        "message" =>
+                            "Загруженный файл недействителен или поврежден",
+                    ],
+                    400,
+                );
+            }
+
+            // Generate a unique filename
+            $extension = $file->getClientOriginalExtension();
+            $filename =
+                Str::slug(
+                    pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                ) .
+                "_" .
+                Str::random(10) .
+                "." .
+                $extension;
+
+            // Ensure upload directory exists
+            $directory = "public/faq/images";
+            $storagePath = storage_path("app/{$directory}");
+            \Log::info("Проверка директории для загрузки", [
+                "directory" => $directory,
+                "storage_path" => $storagePath,
+                "exists" => file_exists($storagePath),
+            ]);
+
+            if (!file_exists($storagePath)) {
+                try {
+                    File::makeDirectory($storagePath, 0755, true, true);
+                    \Log::info("Директория создана успешно");
+                } catch (\Exception $e) {
+                    \Log::error("Ошибка создания директории", [
+                        "error" => $e->getMessage(),
+                        "trace" => $e->getTraceAsString(),
+                    ]);
+                    throw new \Exception(
+                        "Не удалось создать директорию для загрузки: " .
+                            $e->getMessage(),
+                    );
+                }
+            }
+
+            // Store the file directly without processing
+            try {
+                $path = Storage::putFileAs($directory, $file, $filename);
+                \Log::info("Файл успешно сохранен", [
+                    "path" => $path,
+                    "full_path" => Storage::path($path),
+                ]);
+            } catch (\Exception $e) {
+                \Log::error("Ошибка сохранения файла", [
+                    "error" => $e->getMessage(),
+                    "trace" => $e->getTraceAsString(),
+                ]);
+                throw new \Exception(
+                    "Ошибка при сохранении файла: " . $e->getMessage(),
+                );
+            }
+
+            // Return the image URL and markdown for embedding
+            $url = url("storage/" . str_replace("public/", "", $path));
+            return response()->json([
+                "success" => true,
+                "url" => $url,
+                "markdown" =>
+                    "![" . $file->getClientOriginalName() . "](" . $url . ")",
+            ]);
+        } catch (\Exception $e) {
+            // Log the error details
+            \Log::error("Image upload error in FAQ", [
+                "error" => $e->getMessage(),
+                "file" => $e->getFile(),
+                "line" => $e->getLine(),
+                "trace" => $e->getTraceAsString(),
+                "request_data" => $request->all(),
+                "request_headers" => $request->headers->all(),
+                "php_version" => PHP_VERSION,
+                "storage_permissions" => [
+                    "public_writable" => is_writable(
+                        storage_path("app/public"),
+                    ),
+                    "storage_writable" => is_writable(storage_path()),
+                ],
+            ]);
+
+            return response()->json(
+                [
+                    "success" => false,
+                    "message" =>
+                        "Ошибка загрузки изображения: " . $e->getMessage(),
+                    "debug_info" => [
+                        "php_version" => PHP_VERSION,
+                        "storage_path" => storage_path("app/public"),
+                        "is_writable" => is_writable(
+                            storage_path("app/public"),
+                        ),
+                    ],
+                ],
+                500,
+            );
+        }
+    }
+
+    /**
      * Sanitize HTML output
      */
     private function sanitizeHtml(string $html): string
@@ -213,7 +370,7 @@ class HomepageFAQController extends Controller
             $config = \HTMLPurifier_Config::createDefault();
             $config->set(
                 "HTML.Allowed",
-                "p,strong,em,ul,ol,li,br,pre,code,h1,h2,h3,h4,h5,h6,blockquote,a[href],img[src|alt|width|height]",
+                "p,strong,em,ul,ol,li,br,pre,code,h1,h2,h3,h4,h5,h6,blockquote,a[href|title|target],img[src|alt|width|height|class|style]",
             );
             $purifier = new \HTMLPurifier($config);
             return $purifier->purify($html);
@@ -234,7 +391,7 @@ class HomepageFAQController extends Controller
         );
 
         $allowed =
-            "<p><a><strong><em><ul><ol><li><br><pre><code><h1><h2><h3><h4><h5><h6><blockquote><img>";
+            "<p><a><strong><em><ul><ol><li><br><pre><code><h1><h2><h3><h4><h5><h6><blockquote><img><div><span>";
         return strip_tags($html, $allowed);
     }
 }

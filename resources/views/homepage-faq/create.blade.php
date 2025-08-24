@@ -102,6 +102,16 @@
                             </svg>
                         </button>
                         <div class="border-l border-slate-300 h-6"></div>
+                        <button type="button" class="text-slate-600 hover:text-slate-900 p-1 rounded"
+                                onclick="openImageUpload()" title="Добавить изображение">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </button>
+                        <input type="file" id="image-upload" name="image" accept="image/*" class="hidden" />
+                        <div class="border-l border-slate-300 h-6"></div>
                         <button type="button"
                                 class="text-slate-600 hover:text-slate-900 px-2 py-1 text-xs rounded border border-slate-300 hover:border-slate-400"
                                 onclick="togglePreview()">
@@ -235,5 +245,103 @@ function togglePreview() {
         textarea.style.display = 'block';
     }
 }
+
+function openImageUpload() {
+    document.getElementById('image-upload').click();
+}
+
+// Handle image upload
+document.addEventListener('DOMContentLoaded', function() {
+    const imageUpload = document.getElementById('image-upload');
+
+    imageUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const formData = new FormData();
+            formData.append('image', this.files[0]);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+            // Show loading indicator
+            const textarea = document.getElementById('content');
+            const cursorPos = textarea.selectionStart;
+            const placeholderText = '![Загрузка изображения...]()';
+
+            // Create loading indicator
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'image-upload-loading';
+            loadingIndicator.classList.add('fixed', 'bottom-4', 'right-4', 'bg-blue-600', 'text-white', 'px-4', 'py-2', 'rounded-md', 'flex', 'items-center', 'shadow-lg', 'z-50');
+            loadingIndicator.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Загрузка изображения...
+            `;
+            document.body.appendChild(loadingIndicator);
+
+            // Insert placeholder at cursor position
+            textarea.value =
+                textarea.value.substring(0, cursorPos) +
+                placeholderText +
+                textarea.value.substring(cursorPos);
+
+            // Upload the image
+            fetch('{{ route("homepage-faq.upload-image") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка сервера: ' + response.status);
+                }
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    return response.text().then(text => {
+                        throw new Error('Сервер вернул не JSON: ' + (text.substring(0, 100) + '...'));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Replace placeholder with actual markdown image
+                    textarea.value = textarea.value.replace(
+                        placeholderText,
+                        data.markdown
+                    );
+                } else {
+                    // Replace placeholder with error message
+                    textarea.value = textarea.value.replace(
+                        placeholderText,
+                        '<!-- Ошибка загрузки изображения: ' + data.message + ' -->'
+                    );
+                    console.error('Image upload failed:', data.message);
+                    alert('Ошибка загрузки изображения: ' + data.message);
+                }
+            })
+            .catch(error => {
+                // Replace placeholder with error message
+                textarea.value = textarea.value.replace(
+                    placeholderText,
+                    '<!-- Ошибка загрузки изображения: ' + (error.message || 'Неизвестная ошибка') + ' -->'
+                );
+                console.error('Image upload error:', error);
+                alert('Ошибка загрузки изображения: ' + (error.message || 'Неизвестная ошибка'));
+            })
+            .finally(() => {
+                // Reset file input
+                this.value = '';
+                // Remove loading indicator
+                const loadingIndicator = document.getElementById('image-upload-loading');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+            });
+        }
+    });
+});
 </script>
 @endsection
