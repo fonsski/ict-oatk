@@ -46,20 +46,8 @@
             </span>
         </td>
         <td class="px-6 py-4">
-            @php
-                $priorityColors = [
-                    'low' => 'bg-green-100 text-green-800',
-                    'medium' => 'bg-yellow-100 text-yellow-800',
-                    'high' => 'bg-red-100 text-red-800'
-                ];
-                $priorityLabels = [
-                    'low' => 'Низкий',
-                    'medium' => 'Средний',
-                    'high' => 'Высокий'
-                ];
-            @endphp
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-800' }}">
-                {{ $priorityLabels[$ticket->priority] ?? $ticket->priority }}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}">
+                {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
             </span>
         </td>
         <td class="px-6 py-4">

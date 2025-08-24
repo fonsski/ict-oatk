@@ -56,6 +56,7 @@
                         <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>Низкий</option>
                         <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>Средний</option>
                         <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>Высокий</option>
+                        <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Срочный</option>
                     </select>
                 </div>
                 <div>
@@ -97,7 +98,7 @@
                             <tr class="hover:bg-slate-50 transition-colors duration-200">
                                 <td class="px-6 py-4">
                                     <div>
-                                        <a href="{{ route('tickets.show', $ticket) }}" 
+                                        <a href="{{ route('tickets.show', $ticket) }}"
                                            class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200">
                                             {{ $ticket->title }}
                                         </a>
@@ -126,20 +127,8 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @php
-                                        $priorityColors = [
-                                            'low' => 'bg-green-100 text-green-800',
-                                            'medium' => 'bg-yellow-100 text-yellow-800',
-                                            'high' => 'bg-red-100 text-red-800'
-                                        ];
-                                        $priorityLabels = [
-                                            'low' => 'Низкий',
-                                            'medium' => 'Средний',
-                                            'high' => 'Высокий'
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-800' }}">
-                                        {{ $priorityLabels[$ticket->priority] ?? $ticket->priority }}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}">
+                                        {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
@@ -154,7 +143,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <a href="{{ route('tickets.show', $ticket) }}" 
+                                    <a href="{{ route('tickets.show', $ticket) }}"
                                        class="text-blue-600 hover:text-blue-700 font-medium text-sm">
                                         Просмотр
                                     </a>

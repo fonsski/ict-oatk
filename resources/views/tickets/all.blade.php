@@ -76,6 +76,7 @@
                     <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>Низкий</option>
                     <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>Средний</option>
                     <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>Высокий</option>
+                    <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Срочный</option>
                 </select>
             </div>
             <div>
@@ -287,16 +288,19 @@ document.addEventListener('DOMContentLoaded', function() {
             'closed': 'Закрыта'
         };
 
+        // Используем те же цвета приоритетов, что и в глобальных функциях
         const priorityColors = {
             'low': 'bg-green-100 text-green-800',
             'medium': 'bg-yellow-100 text-yellow-800',
-            'high': 'bg-red-100 text-red-800'
+            'high': 'bg-red-100 text-red-800',
+            'urgent': 'bg-red-200 text-red-900'
         };
 
         const priorityLabels = {
             'low': 'Низкий',
             'medium': 'Средний',
-            'high': 'Высокий'
+            'high': 'Высокий',
+            'urgent': 'Срочный'
         };
 
         const roomInfo = ticket.room ? `<div class="text-xs text-slate-500 mt-1">🏢 ${ticket.room.number} - ${ticket.room.name}</div>` :
@@ -328,8 +332,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}">
-                        ${priorityLabels[ticket.priority] || ticket.priority}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-200 text-red-900' : (priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800')}">
+                        ${ticket.priority === 'urgent' ? 'Срочный' : (priorityLabels[ticket.priority] || ticket.priority)}
                     </span>
                 </td>
                 <td class="px-6 py-4">

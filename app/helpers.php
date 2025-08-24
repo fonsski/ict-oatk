@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('user_has_role')) {
+if (!function_exists("user_has_role")) {
     /**
      * Проверить, имеет ли текущий пользователь определенную роль
      *
@@ -19,7 +19,7 @@ if (!function_exists('user_has_role')) {
     }
 }
 
-if (!function_exists('user_can_manage_tickets')) {
+if (!function_exists("user_can_manage_tickets")) {
     /**
      * Проверить, может ли пользователь управлять заявками
      *
@@ -27,11 +27,11 @@ if (!function_exists('user_can_manage_tickets')) {
      */
     function user_can_manage_tickets()
     {
-        return user_has_role(['admin', 'master', 'technician']);
+        return user_has_role(["admin", "master", "technician"]);
     }
 }
 
-if (!function_exists('user_can_manage_equipment')) {
+if (!function_exists("user_can_manage_equipment")) {
     /**
      * Проверить, может ли пользователь управлять оборудованием
      *
@@ -39,11 +39,11 @@ if (!function_exists('user_can_manage_equipment')) {
      */
     function user_can_manage_equipment()
     {
-        return user_has_role(['admin', 'master']);
+        return user_has_role(["admin", "master"]);
     }
 }
 
-if (!function_exists('user_can_manage_users')) {
+if (!function_exists("user_can_manage_users")) {
     /**
      * Проверить, может ли пользователь управлять пользователями
      *
@@ -51,11 +51,11 @@ if (!function_exists('user_can_manage_users')) {
      */
     function user_can_manage_users()
     {
-        return user_has_role(['admin', 'master']);
+        return user_has_role(["admin", "master"]);
     }
 }
 
-if (!function_exists('user_is_technician')) {
+if (!function_exists("user_is_technician")) {
     /**
      * Проверить, является ли пользователь техником
      *
@@ -63,11 +63,11 @@ if (!function_exists('user_is_technician')) {
      */
     function user_is_technician()
     {
-        return user_has_role('technician');
+        return user_has_role("technician");
     }
 }
 
-if (!function_exists('user_is_admin')) {
+if (!function_exists("user_is_admin")) {
     /**
      * Проверить, является ли пользователь администратором
      *
@@ -75,11 +75,11 @@ if (!function_exists('user_is_admin')) {
      */
     function user_is_admin()
     {
-        return user_has_role('admin');
+        return user_has_role("admin");
     }
 }
 
-if (!function_exists('format_ticket_status')) {
+if (!function_exists("format_ticket_status")) {
     /**
      * Форматировать статус заявки для отображения
      *
@@ -89,17 +89,17 @@ if (!function_exists('format_ticket_status')) {
     function format_ticket_status($status)
     {
         $statuses = [
-            'open' => 'Открыта',
-            'in_progress' => 'В работе',
-            'resolved' => 'Решена',
-            'closed' => 'Закрыта'
+            "open" => "Открыта",
+            "in_progress" => "В работе",
+            "resolved" => "Решена",
+            "closed" => "Закрыта",
         ];
 
         return $statuses[$status] ?? $status;
     }
 }
 
-if (!function_exists('format_ticket_priority')) {
+if (!function_exists("format_ticket_priority")) {
     /**
      * Форматировать приоритет заявки для отображения
      *
@@ -109,17 +109,17 @@ if (!function_exists('format_ticket_priority')) {
     function format_ticket_priority($priority)
     {
         $priorities = [
-            'low' => 'Низкий',
-            'medium' => 'Средний',
-            'high' => 'Высокий',
-            'urgent' => 'Срочный'
+            "low" => "Низкий",
+            "medium" => "Средний",
+            "high" => "Высокий",
+            "urgent" => "Срочный",
         ];
 
         return $priorities[$priority] ?? $priority;
     }
 }
 
-if (!function_exists('get_status_badge_class')) {
+if (!function_exists("get_status_badge_class")) {
     /**
      * Получить CSS классы для badge статуса заявки
      *
@@ -129,17 +129,17 @@ if (!function_exists('get_status_badge_class')) {
     function get_status_badge_class($status)
     {
         $classes = [
-            'open' => 'bg-blue-100 text-blue-800',
-            'in_progress' => 'bg-yellow-100 text-yellow-800',
-            'resolved' => 'bg-green-100 text-green-800',
-            'closed' => 'bg-slate-100 text-slate-800'
+            "open" => "bg-blue-100 text-blue-800",
+            "in_progress" => "bg-yellow-100 text-yellow-800",
+            "resolved" => "bg-green-100 text-green-800",
+            "closed" => "bg-slate-100 text-slate-800",
         ];
 
-        return $classes[$status] ?? 'bg-slate-100 text-slate-800';
+        return $classes[$status] ?? "bg-slate-100 text-slate-800";
     }
 }
 
-if (!function_exists('get_priority_badge_class')) {
+if (!function_exists("get_priority_badge_class")) {
     /**
      * Получить CSS классы для badge приоритета заявки
      *
@@ -149,17 +149,25 @@ if (!function_exists('get_priority_badge_class')) {
     function get_priority_badge_class($priority)
     {
         $classes = [
-            'low' => 'bg-green-100 text-green-800',
-            'medium' => 'bg-yellow-100 text-yellow-800',
-            'high' => 'bg-red-100 text-red-800',
-            'urgent' => 'bg-red-200 text-red-900'
+            "low" => "bg-green-100 text-green-800",
+            "medium" => "bg-yellow-100 text-yellow-800",
+            "high" => "bg-red-100 text-red-800",
+            "urgent" => "bg-red-200 text-red-900",
         ];
 
-        return $classes[$priority] ?? 'bg-slate-100 text-slate-800';
+        // Для отладки: логируем входящий параметр и возвращаемое значение
+        \Illuminate\Support\Facades\Log::debug("Priority badge requested", [
+            "input_priority" => $priority,
+            "returned_class" => isset($classes[$priority])
+                ? $classes[$priority]
+                : "bg-slate-100 text-slate-800",
+        ]);
+
+        return $classes[$priority] ?? "bg-slate-100 text-slate-800";
     }
 }
 
-if (!function_exists('truncate_text')) {
+if (!function_exists("truncate_text")) {
     /**
      * Обрезать текст до указанной длины
      *
@@ -168,7 +176,7 @@ if (!function_exists('truncate_text')) {
      * @param string $suffix
      * @return string
      */
-    function truncate_text($text, $length = 100, $suffix = '...')
+    function truncate_text($text, $length = 100, $suffix = "...")
     {
         if (strlen($text) <= $length) {
             return $text;
@@ -178,7 +186,7 @@ if (!function_exists('truncate_text')) {
     }
 }
 
-if (!function_exists('format_datetime')) {
+if (!function_exists("format_datetime")) {
     /**
      * Форматировать дату и время для отображения
      *
@@ -186,10 +194,10 @@ if (!function_exists('format_datetime')) {
      * @param string $format
      * @return string
      */
-    function format_datetime($datetime, $format = 'd.m.Y H:i')
+    function format_datetime($datetime, $format = "d.m.Y H:i")
     {
         if (!$datetime) {
-            return '—';
+            return "—";
         }
 
         if (is_string($datetime)) {
@@ -200,7 +208,7 @@ if (!function_exists('format_datetime')) {
     }
 }
 
-if (!function_exists('format_date')) {
+if (!function_exists("format_date")) {
     /**
      * Форматировать дату для отображения
      *
@@ -209,11 +217,11 @@ if (!function_exists('format_date')) {
      */
     function format_date($date)
     {
-        return format_datetime($date, 'd.m.Y');
+        return format_datetime($date, "d.m.Y");
     }
 }
 
-if (!function_exists('get_room_display_name')) {
+if (!function_exists("get_room_display_name")) {
     /**
      * Получить отображаемое имя кабинета
      *
@@ -223,22 +231,22 @@ if (!function_exists('get_room_display_name')) {
     function get_room_display_name($room)
     {
         if (!$room) {
-            return '—';
+            return "—";
         }
 
         $name = $room->number;
 
         if ($room->name) {
-            $name .= ' - ' . $room->name;
+            $name .= " - " . $room->name;
         } elseif ($room->type_name) {
-            $name .= ' - ' . $room->type_name;
+            $name .= " - " . $room->type_name;
         }
 
         return $name;
     }
 }
 
-if (!function_exists('get_ticket_icon')) {
+if (!function_exists("get_ticket_icon")) {
     /**
      * Получить иконку для категории заявки
      *
@@ -248,18 +256,18 @@ if (!function_exists('get_ticket_icon')) {
     function get_ticket_icon($category)
     {
         $icons = [
-            'hardware' => '🖥️',
-            'software' => '💾',
-            'network' => '🌐',
-            'account' => '👤',
-            'other' => '❓'
+            "hardware" => "🖥️",
+            "software" => "💾",
+            "network" => "🌐",
+            "account" => "👤",
+            "other" => "❓",
         ];
 
-        return $icons[$category] ?? '📝';
+        return $icons[$category] ?? "📝";
     }
 }
 
-if (!function_exists('is_current_route')) {
+if (!function_exists("is_current_route")) {
     /**
      * Проверить, является ли маршрут текущим
      *
@@ -282,7 +290,7 @@ if (!function_exists('is_current_route')) {
     }
 }
 
-if (!function_exists('nav_link_class')) {
+if (!function_exists("nav_link_class")) {
     /**
      * Получить CSS классы для навигационной ссылки
      *
@@ -291,8 +299,11 @@ if (!function_exists('nav_link_class')) {
      * @param string $inactiveClass
      * @return string
      */
-    function nav_link_class($routes, $activeClass = 'text-blue-600 bg-blue-50', $inactiveClass = 'text-gray-600 hover:text-blue-600 hover:bg-blue-50')
-    {
+    function nav_link_class(
+        $routes,
+        $activeClass = "text-blue-600 bg-blue-50",
+        $inactiveClass = "text-gray-600 hover:text-blue-600 hover:bg-blue-50",
+    ) {
         return is_current_route($routes) ? $activeClass : $inactiveClass;
     }
 }

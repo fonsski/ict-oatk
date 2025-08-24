@@ -35,18 +35,7 @@
                                 'resolved' => 'Решена',
                                 'closed' => 'Закрыта'
                             ];
-                            $priorityColors = [
-                                'low' => 'bg-green-100 text-green-800',
-                                'medium' => 'bg-yellow-100 text-yellow-800',
-                                'high' => 'bg-orange-100 text-orange-800',
-                                'urgent' => 'bg-red-100 text-red-800'
-                            ];
-                            $priorityLabels = [
-                                'low' => 'Низкий',
-                                'medium' => 'Средний',
-                                'high' => 'Высокий',
-                                'urgent' => 'Срочный'
-                            ];
+                            // Используем глобальные функции вместо объявления массивов здесь
                             $categoryLabels = [
                                 'hardware' => 'Оборудование',
                                 'software' => 'Программное обеспечение',
@@ -77,8 +66,8 @@
                         </span>
 
                         <!-- Priority -->
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $priorityColors[$ticket->priority] }}">
-                            {{ $priorityLabels[$ticket->priority] }}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}">
+                            {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
                         </span>
 
                         <!-- Category -->

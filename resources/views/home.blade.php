@@ -230,20 +230,8 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    @php
-                                        $priorityColors = [
-                                            'low' => 'bg-green-100 text-green-800',
-                                            'medium' => 'bg-yellow-100 text-yellow-800',
-                                            'high' => 'bg-red-100 text-red-800'
-                                        ];
-                                        $priorityLabels = [
-                                            'low' => 'Низкий',
-                                            'medium' => 'Средний',
-                                            'high' => 'Высокий'
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-800' }}">
-                                        {{ $priorityLabels[$ticket->priority] ?? $ticket->priority }}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}">
+                                        {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
@@ -598,11 +586,12 @@
                 'closed': 'Закрыта'
             };
 
+            // Жестко заданные цвета приоритетов
             const priorityColors = {
-                'low': 'bg-slate-100 text-slate-800',
+                'low': 'bg-green-100 text-green-800',
                 'medium': 'bg-yellow-100 text-yellow-800',
-                'high': 'bg-orange-100 text-orange-800',
-                'urgent': 'bg-red-100 text-red-800'
+                'high': 'bg-red-100 text-red-800',
+                'urgent': 'bg-red-200 text-red-900'
             };
 
             const priorityLabels = {
@@ -663,8 +652,13 @@
             priorityCell.className = 'px-4 py-3';
 
             const prioritySpan = document.createElement('span');
-            prioritySpan.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}`;
-            prioritySpan.textContent = priorityLabels[ticket.priority] || ticket.priority;
+            if (ticket.priority === 'urgent') {
+                prioritySpan.className = 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-900';
+                prioritySpan.textContent = 'Срочный';
+            } else {
+                prioritySpan.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}`;
+                prioritySpan.textContent = priorityLabels[ticket.priority] || ticket.priority;
+            }
 
             priorityCell.appendChild(prioritySpan);
 
