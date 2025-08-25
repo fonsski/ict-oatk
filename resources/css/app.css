@@ -3,77 +3,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Стили для переноса строк в тексте */
+.prose,
+.ticket-description,
+.ticket-comment-content,
+.knowledge-content {
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+/* Исправление странного подчеркивания у заявителя */
+.text-slate-600 {
+    text-decoration: none !important;
+}
+
+/* Форматирование содержимого заявок */
+.ticket-card p,
+.ticket-details p {
+    margin-bottom: 0.5rem;
+}
+
 @layer components {
     /* Основная кнопка - для главных действий (создание, сохранение, отправка) */
     .btn-primary {
         @apply inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200;
     }
-    
+
     /* Вторичная кнопка - для вспомогательных действий (экспорт, статистика) */
     .btn-secondary {
         @apply inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all duration-200;
     }
-    
+
     /* Контурная кнопка - для отмены и возврата */
     .btn-outline {
         @apply inline-flex items-center justify-center px-6 py-3 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 hover:border-slate-400 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all duration-200;
     }
-    
+
     /* Маленькие кнопки */
     .btn-sm {
         @apply px-4 py-2 text-sm;
     }
-    
+
     /* Большие кнопки */
     .btn-lg {
         @apply px-8 py-4 text-lg;
     }
-    
+
     /* Кнопки на всю ширину */
     .btn-full {
         @apply w-full;
     }
-    
+
     /* Отключенные кнопки */
     .btn-primary:disabled,
     .btn-secondary:disabled,
     .btn-outline:disabled {
         @apply opacity-50 cursor-not-allowed;
     }
-    
+
     /* Кнопки с иконками */
     .btn-icon {
         @apply inline-flex items-center space-x-2;
     }
-    
+
     .card {
         @apply bg-white rounded-xl border border-slate-200 shadow-sm;
     }
-    
+
     .card-hover {
         @apply hover:shadow-md hover:border-slate-300 transition-all duration-200;
     }
-    
+
     .form-input {
         @apply w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
     }
-    
+
+    /* Исправление проблемы с наложением текста на стрелку в выпадающих списках */
+    select.form-input {
+        @apply pr-10;
+        text-overflow: ellipsis;
+    }
+
     .form-label {
         @apply block text-sm font-medium text-slate-700 mb-2;
     }
-    
-.nav-link {
+
+    .nav-link {
         @apply text-slate-600 hover:text-slate-900 transition-colors duration-200;
     }
-    
+
     .nav-link-active {
         @apply text-slate-900 font-medium;
     }
-    
+
     .section-padding {
         @apply py-16;
     }
-    
+
     .container-width {
         @apply max-w-6xl mx-auto px-6;
     }

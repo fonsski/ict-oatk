@@ -88,10 +88,8 @@
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 bg-violet-500 rounded-lg flex items-center justify-center">
                             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 12l2 2 4-4"></path>
-                                <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"></path>
-                                <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2z"></path>
-                                <path d="M12 3c0 1-1 2-2 2s-2 1-2 2 1 2 2 2 2 1 2 2 1-2 2-2 2-1 2-2-1-2-2-2-2-1-2-2z"></path>
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
                             </svg>
                         </div>
                         <div class="flex-1">
@@ -412,7 +410,13 @@
                 console.log('Начинаем обновление заявок...');
                 techStatusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
 
-                const response = await fetch('{{ route("home.technician.tickets") }}');
+                const response = await fetch('{{ route("home.technician.tickets") }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
                 console.log('Получен ответ от API:', response.status);
 
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -440,10 +444,18 @@
 
                 if (data.tickets && Array.isArray(data.tickets)) {
                     console.log(`Получено ${data.tickets.length} заявок от API:`, data.tickets.map(t => t.title));
-                    updateTechTicketsTable(data.tickets.slice(0, 10));
-                    console.log(`Обновлена таблица с ${data.tickets.length} заявками`);
+                    if (data.tickets.length > 0) {
+                        updateTechTicketsTable(data.tickets.slice(0, 10));
+                        console.log(`Обновлена таблица с ${data.tickets.length} заявками`);
+                    } else {
+                        // Если заявок нет, показываем пустое состояние
+                        updateTechTicketsTable([]);
+                        console.log('Нет активных заявок для отображения');
+                    }
                 } else {
                     console.warn('Заявки не найдены в ответе API:', data);
+                    // В случае проблемы с форматом данных, очищаем таблицу
+                    updateTechTicketsTable([]);
                 }
 
                 if (techLastUpdated) techLastUpdated.textContent = `Обновлено: ${data.last_updated}`;
@@ -472,14 +484,24 @@
             }
 
             try {
-                // Полностью очищаем таблицу, создавая новый tbody
-                const newTbody = document.createElement('tbody');
-                newTbody.className = 'divide-y divide-slate-200';
+                // Очищаем текущую таблицу
+                while (tbody.firstChild) {
+                    tbody.removeChild(tbody.firstChild);
+                }
 
                 if (tickets.length === 0) {
-                    const emptyRow = createEmptyRow();
-                    newTbody.appendChild(emptyRow);
-                    tbody.parentNode.replaceChild(newTbody, tbody);
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                        <td colspan="6" class="px-6 py-10 text-center">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <p class="mt-2 text-sm font-medium">Нет активных заявок</p>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(emptyRow);
                     return;
                 }
 
@@ -487,15 +509,13 @@
                 tickets.forEach((ticket, index) => {
                     try {
                         const row = createTechTicketRowElement(ticket);
-                        newTbody.appendChild(row);
+                        tbody.appendChild(row);
                         console.log(`Добавлена новая строка ${index + 1}: ${ticket.title}`);
                     } catch (error) {
                         console.error(`Ошибка при создании строки для заявки ${ticket.id}:`, error, ticket);
                     }
                 });
 
-                // Заменяем старый tbody на новый
-                tbody.parentNode.replaceChild(newTbody, tbody);
                 console.log(`Таблица обновлена с ${tickets.length} строками`);
             } catch (error) {
                 console.error('Ошибка при обновлении таблицы:', error);

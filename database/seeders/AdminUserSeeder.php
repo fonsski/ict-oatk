@@ -14,7 +14,7 @@ class AdminUserSeeder extends Seeder
         $adminRole = Role::where('slug', 'admin')->first();
         
         User::create([
-            'name' => 'Администратор',
+            'name' => 'Хоробров Владислав Дмитриевич',
             'phone' => '+79953940601',
             'password' => Hash::make('admin123'),
             'role_id' => $adminRole->id,

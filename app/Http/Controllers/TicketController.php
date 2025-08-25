@@ -105,19 +105,40 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            "title" => "required|string|max:255",
-            "category" => "required|string",
-            "priority" => "required|string",
-            "description" => "required|string",
-            "reporter_name" => "nullable|string|max:255",
-            "reporter_id" => "nullable|string|max:50",
-            "reporter_email" => "nullable|email|max:255",
-            "reporter_phone" => "nullable|string|max:20",
-            "location_id" => "nullable|exists:locations,id",
-            "room_id" => "nullable|exists:rooms,id",
-            "equipment_id" => "nullable|exists:equipment,id",
-        ]);
+        $messages = [
+            "title.required" => "Пожалуйста, укажите заголовок заявки",
+            "title.min" => "Заголовок должен содержать не менее 5 символов",
+            "title.max" => "Заголовок не должен превышать 255 символов",
+            "category.required" => "Пожалуйста, выберите категорию заявки",
+            "priority.required" => "Пожалуйста, выберите приоритет заявки",
+            "description.required" => "Пожалуйста, добавьте описание проблемы",
+            "description.min" =>
+                "Описание должно содержать не менее 10 символов",
+            "description.max" => "Описание не должно превышать 5000 символов",
+            "reporter_email.email" => "Пожалуйста, укажите корректный email",
+            "reporter_phone.max" =>
+                "Номер телефона не должен превышать 20 символов",
+            "location_id.exists" => "Выбранное местоположение не существует",
+            "room_id.exists" => "Выбранный кабинет не существует",
+            "equipment_id.exists" => "Выбранное оборудование не существует",
+        ];
+
+        $data = $request->validate(
+            [
+                "title" => "required|string|min:5|max:255",
+                "category" => "required|string",
+                "priority" => "required|string",
+                "description" => "required|string|min:10|max:5000",
+                "reporter_name" => "nullable|string|max:255",
+                "reporter_id" => "nullable|string|max:50",
+                "reporter_email" => "nullable|email|max:255",
+                "reporter_phone" => "nullable|string|max:20",
+                "location_id" => "nullable|exists:locations,id",
+                "room_id" => "nullable|exists:rooms,id",
+                "equipment_id" => "nullable|exists:equipment,id",
+            ],
+            $messages,
+        );
 
         // Автозаполняем reporter данные из текущего пользователя, если не указано
         $user = Auth::user();
@@ -187,20 +208,42 @@ class TicketController extends Controller
             abort(403);
         }
 
-        $data = $request->validate([
-            "title" => "required|string|max:255",
-            "category" => "required|string",
-            "priority" => "required|string",
-            "description" => "required|string",
-            "reporter_name" => "nullable|string|max:255",
-            "reporter_id" => "nullable|string|max:50",
-            "reporter_email" => "nullable|email|max:255",
-            "reporter_phone" => "nullable|string|max:20",
-            "location_id" => "nullable|exists:locations,id",
-            "room_id" => "nullable|exists:rooms,id",
-            "equipment_id" => "nullable|exists:equipment,id",
-            "status" => "nullable|string",
-        ]);
+        $messages = [
+            "title.required" => "Пожалуйста, укажите заголовок заявки",
+            "title.min" => "Заголовок должен содержать не менее 5 символов",
+            "title.max" => "Заголовок не должен превышать 255 символов",
+            "category.required" => "Пожалуйста, выберите категорию заявки",
+            "priority.required" => "Пожалуйста, выберите приоритет заявки",
+            "description.required" => "Пожалуйста, добавьте описание проблемы",
+            "description.min" =>
+                "Описание должно содержать не менее 10 символов",
+            "description.max" => "Описание не должно превышать 5000 символов",
+            "reporter_email.email" => "Пожалуйста, укажите корректный email",
+            "reporter_phone.max" =>
+                "Номер телефона не должен превышать 20 символов",
+            "location_id.exists" => "Выбранное местоположение не существует",
+            "room_id.exists" => "Выбранный кабинет не существует",
+            "equipment_id.exists" => "Выбранное оборудование не существует",
+            "status.required" => "Пожалуйста, укажите статус заявки",
+        ];
+
+        $data = $request->validate(
+            [
+                "title" => "required|string|min:5|max:255",
+                "category" => "required|string",
+                "priority" => "required|string",
+                "description" => "required|string|min:10|max:5000",
+                "reporter_name" => "nullable|string|max:255",
+                "reporter_id" => "nullable|string|max:50",
+                "reporter_email" => "nullable|email|max:255",
+                "reporter_phone" => "nullable|string|max:20",
+                "location_id" => "nullable|exists:locations,id",
+                "room_id" => "nullable|exists:rooms,id",
+                "equipment_id" => "nullable|exists:equipment,id",
+                "status" => "nullable|string",
+            ],
+            $messages,
+        );
 
         $ticket->update($data);
         return Redirect::route("tickets.show", $ticket)->with(
@@ -314,9 +357,18 @@ class TicketController extends Controller
     // Добавить комментарий
     public function commentStore(Request $request, Ticket $ticket)
     {
-        $data = $request->validate([
-            "content" => "required|string",
-        ]);
+        $messages = [
+            "content.required" => "Пожалуйста, введите текст комментария",
+            "content.min" => "Комментарий должен содержать не менее 2 символов",
+            "content.max" => "Комментарий не должен превышать 1000 символов",
+        ];
+
+        $data = $request->validate(
+            [
+                "content" => "required|string|min:2|max:1000",
+            ],
+            $messages,
+        );
 
         $comment = TicketComment::create([
             "ticket_id" => $ticket->id,
@@ -335,9 +387,17 @@ class TicketController extends Controller
     {
         $this->authorizeAssign();
 
-        $data = $request->validate([
-            "assigned_to_id" => "nullable|exists:users,id",
-        ]);
+        $messages = [
+            "assigned_to_id.exists" =>
+                "Выбранный исполнитель не существует в системе",
+        ];
+
+        $data = $request->validate(
+            [
+                "assigned_to_id" => "nullable|exists:users,id",
+            ],
+            $messages,
+        );
 
         $oldAssignedId = $ticket->assigned_to_id;
         $ticket->update(["assigned_to_id" => $data["assigned_to_id"] ?? null]);

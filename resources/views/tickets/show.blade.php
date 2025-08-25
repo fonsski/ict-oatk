@@ -122,7 +122,7 @@
                 <!-- Description -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Описание проблемы</h2>
-                    <div class="prose max-w-none">
+                    <div class="prose max-w-none ticket-description">
                         {{ $ticket->description }}
                     </div>
                 </div>
@@ -148,7 +148,7 @@
                                                     <h3 class="text-sm font-medium text-blue-600">Система</h3>
                                                     <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                                 </div>
-                                                <div class="mt-1 text-sm text-gray-700">
+                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content">
                                                     {{ $comment->content }}
                                                 </div>
                                             </div>
@@ -168,7 +168,7 @@
                                                 <h3 class="text-sm font-medium text-gray-900">{{ $comment->user->name }}</h3>
                                                 <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                             </div>
-                                            <div class="mt-2 text-sm text-gray-700">
+                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content">
                                                 {{ $comment->content }}
                                             </div>
                                         </div>
@@ -183,7 +183,7 @@
                 @if($ticket->status !== 'closed')
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h2 class="text-lg font-medium text-gray-900 mb-4">Добавить комментарий</h2>
-                        <form action="{{ route('tickets.comment.store', $ticket) }}" method="POST">
+                        <form action="{{ route('tickets.comment.store', $ticket) }}" method="POST" id="commentForm">
                             @csrf
                             <div>
                                 <textarea name="content"
@@ -194,11 +194,36 @@
                             </div>
                             <div class="mt-4">
                                 <button type="submit"
+                                        id="commentSubmitBtn"
                                         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Отправить комментарий
                                 </button>
                             </div>
                         </form>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const commentForm = document.getElementById('commentForm');
+                                const commentBtn = document.getElementById('commentSubmitBtn');
+
+                                commentForm.addEventListener('submit', function(e) {
+                                    // Если кнопка уже отключена, прерываем отправку
+                                    if (commentBtn.disabled) {
+                                        e.preventDefault();
+                                        return;
+                                    }
+
+                                    // Отключаем кнопку и меняем текст
+                                    commentBtn.disabled = true;
+                                    commentBtn.innerHTML = 'Отправка...';
+
+                                    // Разрешаем повторную отправку через 5 секунд на случай ошибки
+                                    setTimeout(function() {
+                                        commentBtn.disabled = false;
+                                        commentBtn.innerHTML = 'Отправить комментарий';
+                                    }, 5000);
+                                });
+                            });
+                        </script>
                     </div>
                 @endif
             </div>
@@ -228,6 +253,7 @@
                                 <span class="text-sm text-gray-900">{{ $ticket->reporter_phone ?? 'Не указан' }}</span>
                             </dd>
                         </div>
+                        @if(!empty($ticket->reporter_email))
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Email</dt>
                             <dd class="mt-1 flex items-center">
@@ -237,6 +263,7 @@
                                 <span class="text-sm text-gray-900">{{ $ticket->reporter_email }}</span>
                             </dd>
                         </div>
+                        @endif
 
                         @if($ticket->room)
                         <div>
@@ -311,7 +338,7 @@
                 @if(Auth::check() && in_array(optional(Auth::user()->role)->slug, ['admin','master','technician']))
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 class="text-md font-medium text-gray-900 mb-3">Назначить исполнителя</h3>
-                        <form action="{{ route('tickets.assign', $ticket) }}" method="POST">
+                        <form action="{{ route('tickets.assign', $ticket) }}" method="POST" id="assignForm">
                             @csrf
                             <div>
                                 <label for="assigned_to_id" class="block text-sm font-medium text-gray-700">Исполнитель</label>
@@ -325,9 +352,43 @@
                                 </select>
                             </div>
                             <div class="mt-4">
-                                <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Назначить</button>
+                                <button type="submit" id="assignButton" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Назначить</button>
                             </div>
                         </form>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const assignForm = document.getElementById('assignForm');
+                                const assignButton = document.getElementById('assignButton');
+                                const assignSelect = document.getElementById('assigned_to_id');
+                                const currentAssignee = '{{ $ticket->assigned_to_id }}';
+
+                                // Отслеживаем отправку формы
+                                assignForm.addEventListener('submit', function(e) {
+                                    // Если не изменился исполнитель, не отправляем форму
+                                    if (assignSelect.value === currentAssignee) {
+                                        e.preventDefault();
+                                        return;
+                                    }
+
+                                    // Предотвращаем многократное нажатие
+                                    if (assignButton.disabled) {
+                                        e.preventDefault();
+                                        return;
+                                    }
+
+                                    // Отключаем кнопку и меняем текст
+                                    assignButton.disabled = true;
+                                    assignButton.innerHTML = 'Назначаем...';
+
+                                    // Восстанавливаем кнопку через 3 секунды на случай ошибки
+                                    setTimeout(function() {
+                                        assignButton.disabled = false;
+                                        assignButton.innerHTML = 'Назначить';
+                                    }, 3000);
+                                });
+                            });
+                        </script>
                     </div>
                 @endif
             </div>

@@ -63,7 +63,12 @@
                         name="title"
                         value="{{ old('title') }}"
                         required
+                        maxlength="255"
+                        minlength="5"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="mt-1 text-sm text-gray-500">
+                        Минимум 5, максимум 255 символов
+                    </p>
                 </div>
 
                 <!-- Категория -->
@@ -108,9 +113,11 @@
                         name="description"
                         rows="6"
                         required
+                        maxlength="5000"
+                        minlength="10"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description') }}</textarea>
                     <p class="mt-1 text-sm text-gray-500">
-                        Пожалуйста, опишите вашу проблему как можно подробнее
+                        Пожалуйста, опишите вашу проблему как можно подробнее (минимум 10, максимум 5000 символов)
                     </p>
                 </div>
 
@@ -127,6 +134,7 @@
                             name="reporter_name"
                             value="{{ old('reporter_name', auth()->user()->name ?? '') }}"
                             required
+                            maxlength="255"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
@@ -138,23 +146,32 @@
                             name="reporter_phone"
                             value="{{ old('reporter_phone', auth()->user()->phone ?? '') }}"
                             placeholder="+7 (___) ___-__-__"
+                            maxlength="20"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-sm text-gray-500">
+                            Формат: +7 (999) 999-99-99
+                        </p>
                     </div>
                     <div>
                         <label for="room_id" class="block text-sm font-medium text-gray-700 mb-1">Кабинет</label>
-                        <select id="room_id" name="room_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">Не указано</option>
-                            @foreach(\App\Models\Room::active()->orderBy('number')->get() as $room)
-                            <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                                {{ $room->number }} - {{ $room->name ?? $room->type_name }}
-                                @if($room->building || $room->floor)
-                                    ({{ $room->full_address }})
-                                @endif
-                            </option>
-                            @endforeach
-                        </select>
+                        <div class="relative">
+                            <input type="text" id="room_search"
+                                placeholder="Поиск кабинета по номеру..."
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
+                            <select id="room_id" name="room_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Не указано</option>
+                                @foreach(\App\Models\Room::active()->orderBy('number')->get() as $room)
+                                <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }} data-number="{{ $room->number }}" data-name="{{ $room->name ?? $room->type_name }}">
+                                    {{ $room->number }} - {{ $room->name ?? $room->type_name }}
+                                    @if($room->building || $room->floor)
+                                        ({{ $room->full_address }})
+                                    @endif
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
                         <p class="mt-1 text-sm text-gray-500">
-                            Выберите кабинет, где возникла проблема
+                            Найдите кабинет по номеру или выберите из списка
                         </p>
                     </div>
 
@@ -188,7 +205,62 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const roomSelect = document.getElementById('room_id');
+    const roomSearch = document.getElementById('room_search');
     const equipmentSelect = document.getElementById('equipment_id');
+    const phoneInput = document.getElementById('reporter_phone');
+
+    // Инициализация маски для телефона
+    function initPhoneMask() {
+        if (!phoneInput) return;
+
+        const maskOptions = {
+            mask: '+7 (000) 000-00-00',
+            lazy: false
+        };
+
+        const mask = IMask(phoneInput, maskOptions);
+
+        // Автоматически добавляем +7 при фокусе, если поле пустое
+        phoneInput.addEventListener('focus', function() {
+            if (!this.value) {
+                mask.value = '+7 ';
+            }
+        });
+    }
+
+    // Загружаем библиотеку IMask динамически
+    function loadIMask() {
+        if (window.IMask) {
+            initPhoneMask();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
+        script.onload = initPhoneMask;
+        document.head.appendChild(script);
+    }
+
+    // Загружаем маску для телефона
+    loadIMask();
+
+    // Поиск по кабинетам
+    roomSearch.addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        const options = roomSelect.options;
+
+        for (let i = 0; i < options.length; i++) {
+            const roomNumber = options[i].getAttribute('data-number') || '';
+            const roomName = options[i].getAttribute('data-name') || '';
+            const optionText = (roomNumber + ' ' + roomName).toLowerCase();
+
+            if (optionText.includes(searchText) || !searchText) {
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+    });
 
     // Функция для загрузки оборудования по ID кабинета
     function loadEquipmentByRoom(roomId) {

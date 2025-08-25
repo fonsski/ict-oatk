@@ -148,7 +148,7 @@
                         <div class="relative">
                             <button type="button" id="user-menu-button" class="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50">
                                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                    {{ mb_substr(auth()->user()->name, 0, 1, 'UTF-8') }}
                                 </div>
                                 <span>{{ auth()->user()->name }}</span>
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
