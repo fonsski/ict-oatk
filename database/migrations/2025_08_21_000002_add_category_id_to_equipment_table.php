@@ -4,19 +4,24 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddCategoryIdToEquipmentTable extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('equipment', function (Blueprint $table) {
-            $table->foreignId('category_id')->nullable()->after('inventory_number')
-                  ->constrained('equipment_categories')
-                  ->nullOnDelete();
+        Schema::table("equipment", function (Blueprint $table) {
+            // Check if equipment_categories table exists
+            if (Schema::hasTable("equipment_categories")) {
+                $table
+                    ->foreignId("category_id")
+                    ->nullable()
+                    ->after("inventory_number")
+                    ->constrained("equipment_categories")
+                    ->nullOnDelete();
+            }
         });
     }
 
@@ -25,11 +30,13 @@ class AddCategoryIdToEquipmentTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::table('equipment', function (Blueprint $table) {
-            $table->dropForeign(['category_id']);
-            $table->dropColumn('category_id');
+        Schema::table("equipment", function (Blueprint $table) {
+            if (Schema::hasColumn("equipment", "category_id")) {
+                $table->dropForeign(["category_id"]);
+                $table->dropColumn("category_id");
+            }
         });
     }
-}
+};

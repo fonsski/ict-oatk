@@ -4,24 +4,32 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddRoomIdToTicketsTable extends Migration {
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::table("tickets", function (Blueprint $table) {
-            $table
-                ->unsignedBigInteger("room_id")
-                ->nullable()
-                ->index()
-                ->after("location_id");
-            $table
-                ->foreign("room_id")
-                ->references("id")
-                ->on("rooms")
-                ->onDelete("set null");
-        });
+        if (Schema::hasTable("tickets")) {
+            Schema::table("tickets", function (Blueprint $table) {
+                if (Schema::hasColumn("tickets", "location_id")) {
+                    $table
+                        ->unsignedBigInteger("room_id")
+                        ->nullable()
+                        ->index()
+                        ->after("location_id");
+                } else {
+                    // If location_id doesn't exist, add at the end
+                    $table->unsignedBigInteger("room_id")->nullable()->index();
+                }
+
+                $table
+                    ->foreign("room_id")
+                    ->references("id")
+                    ->on("rooms")
+                    ->onDelete("set null");
+            });
+        }
     }
 
     /**
@@ -29,9 +37,14 @@ class AddRoomIdToTicketsTable extends Migration {
      */
     public function down(): void
     {
-        Schema::table("tickets", function (Blueprint $table) {
-            $table->dropForeign(["room_id"]);
-            $table->dropColumn("room_id");
-        });
+        if (
+            Schema::hasTable("tickets") &&
+            Schema::hasColumn("tickets", "room_id")
+        ) {
+            Schema::table("tickets", function (Blueprint $table) {
+                $table->dropForeign(["room_id"]);
+                $table->dropColumn("room_id");
+            });
+        }
     }
 };

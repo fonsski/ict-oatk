@@ -5,18 +5,26 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration {
+class AddReporterPhoneToTicketsTable extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::table("tickets", function (Blueprint $table) {
-            if (!Schema::hasColumn("tickets", "reporter_phone")) {
+            // Check if reporter_email column exists first
+            if (
+                Schema::hasColumn("tickets", "reporter_email") &&
+                !Schema::hasColumn("tickets", "reporter_phone")
+            ) {
                 $table
                     ->string("reporter_phone")
                     ->nullable()
                     ->after("reporter_email");
+            } elseif (!Schema::hasColumn("tickets", "reporter_phone")) {
+                // If reporter_email doesn't exist, add after status
+                $table->string("reporter_phone")->nullable()->after("status");
             }
         });
 
@@ -42,14 +50,17 @@ return new class extends Migration {
     private function updateReporterPhones(): void
     {
         try {
-            // Обновляем телефоны из связанных пользователей (где reporter_email совпадает с email пользователя)
-            DB::statement("
-                UPDATE tickets t
-                JOIN users u ON t.reporter_email = u.email
-                SET t.reporter_phone = u.phone
-                WHERE t.reporter_phone IS NULL
-                AND u.phone IS NOT NULL
-            ");
+            // Проверяем существование столбца reporter_email перед выполнением запроса
+            if (Schema::hasColumn("tickets", "reporter_email")) {
+                // Обновляем телефоны из связанных пользователей (где reporter_email совпадает с email пользователя)
+                DB::statement("
+                    UPDATE tickets t
+                    JOIN users u ON t.reporter_email = u.email
+                    SET t.reporter_phone = u.phone
+                    WHERE t.reporter_phone IS NULL
+                    AND u.phone IS NOT NULL
+                ");
+            }
 
             // Обновляем телефоны из связанных пользователей (где user_id указан)
             DB::statement("
@@ -70,4 +81,4 @@ return new class extends Migration {
             );
         }
     }
-};
+}
