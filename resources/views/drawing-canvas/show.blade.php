@@ -68,49 +68,93 @@
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
+let canvas;
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация холста fabric.js в режиме только для чтения
-    const canvas = new fabric.Canvas('drawing-canvas', {
-        width: document.getElementById('canvas-container').offsetWidth,
-        height: document.getElementById('canvas-container').offsetHeight,
-        selection: false,
-        interactive: false,
-        backgroundColor: '#fff'
-    });
+    console.log('DOM загружен, инициализация canvas...');
 
-    // Запрещаем интерактивность всех объектов
-    function disableInteractivity() {
-        canvas.forEachObject(function(obj) {
-            obj.selectable = false;
-            obj.evented = false;
-        });
-    }
-
-    // Загружаем данные холста из JSON
-    try {
-        const canvasData = @json($drawing->canvas_data);
-        canvas.loadFromJSON(canvasData, function() {
-            canvas.renderAll();
-            disableInteractivity();
-        });
-    } catch (error) {
-        console.error('Ошибка загрузки данных холста:', error);
-        // Show error message next to the canvas
-        const container = document.getElementById('canvas-container');
-        if (container) {
-            container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-red-500">Ошибка загрузки чертежа. Возможно, данные повреждены.</p></div>';
-        }
-    }
-
-    // Обработка изменения размера окна
-    window.addEventListener('resize', function() {
-        const container = document.getElementById('canvas-container');
-        if (container) {
-            canvas.setWidth(container.offsetWidth);
-            canvas.setHeight(container.offsetHeight);
-            canvas.renderAll();
-        }
-    });
+    // Задержка для обеспечения полной загрузки DOM и Fabric.js
+    setTimeout(initCanvas, 300);
 });
+
+function initCanvas() {
+    try {
+        // Получаем контейнер
+        const container = document.getElementById('canvas-container');
+        if (!container) {
+            console.error('Ошибка: элемент canvas-container не найден');
+            return;
+        }
+
+        // Находим canvas
+        const canvasEl = document.getElementById('drawing-canvas');
+        if (!canvasEl) {
+            console.error('Ошибка: элемент drawing-canvas не найден');
+            return;
+        }
+
+        // Получаем размеры
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+
+        // Создаем новый canvas в режиме только для чтения
+        canvas = new fabric.Canvas('drawing-canvas', {
+            width: width,
+            height: height,
+            selection: false,
+            interactive: false,
+            backgroundColor: '#ffffff'
+        });
+
+        console.log('Canvas создан успешно', { width, height });
+
+        // Функция для отключения интерактивности объектов
+        function disableInteractivity() {
+            canvas.forEachObject(function(obj) {
+                obj.selectable = false;
+                obj.evented = false;
+            });
+        }
+
+        // Загружаем данные холста из JSON
+        try {
+            const canvasData = @json($drawing->canvas_data);
+
+            canvas.loadFromJSON(canvasData, function() {
+                // Отключаем интерактивность всех объектов
+                disableInteractivity();
+
+                // Обновляем координаты и рендерим
+                canvas.forEachObject(function(obj) {
+                    obj.setCoords();
+                });
+                canvas.renderAll();
+
+                console.log('Данные холста загружены успешно');
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки данных холста:', error);
+            // Показываем сообщение об ошибке
+            const container = document.getElementById('canvas-container');
+            if (container) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-red-500">Ошибка загрузки чертежа. Возможно, данные повреждены.</p></div>';
+            }
+        }
+
+        // Обработчик изменения размера окна
+        window.addEventListener('resize', function() {
+            const container = document.getElementById('canvas-container');
+            if (container) {
+                canvas.setWidth(container.offsetWidth);
+                canvas.setHeight(container.offsetHeight);
+                canvas.renderAll();
+            }
+        });
+
+    } catch (error) {
+        console.error('Ошибка при инициализации canvas:', error);
+        alert('Произошла ошибка при отображении холста. Пожалуйста, перезагрузите страницу.');
+    }
+}
 </script>
 @endpush

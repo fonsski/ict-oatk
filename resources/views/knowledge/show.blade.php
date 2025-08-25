@@ -107,30 +107,6 @@
                         <span class="ml-4">Обновлено: {{ $article->updated_at->format('d.m.Y H:i') }}</span>
                         @endif
                     </div>
-
-                    @if(auth()->check())
-                    <div class="flex items-center space-x-2">
-                        @if(in_array(optional(auth()->user()->role)->slug, ['admin','master','technician']))
-                        <a href="{{ route('knowledge.edit', $article) }}"
-                           class="text-blue-600 hover:text-blue-800">
-                            Редактировать
-                        </a>
-                        @endif
-                    </div>
-                    @endif
-                </div>
-
-                @if($article->images->isNotEmpty())
-                <div class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
-                    @foreach($article->images as $image)
-                    <div class="relative aspect-w-16 aspect-h-9 rounded-lg overflow-hidden">
-                        <img src="{{ Storage::url($image->path) }}"
-                            alt="{{ $image->alt }}"
-                            class="object-cover">
-                    </div>
-                    @endforeach
-                </div>
-                @endif
             </div>
         </article>
 

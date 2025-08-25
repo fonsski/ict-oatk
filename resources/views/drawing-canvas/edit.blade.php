@@ -194,33 +194,132 @@
         color: #1e40af;
     }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация холста fabric.js
-    const canvasContainer = document.getElementById('canvas-container');
-    const canvasWidth = canvasContainer ? canvasContainer.offsetWidth : 800;
-    const canvasHeight = canvasContainer ? canvasContainer.offsetHeight : 600;
+// Глобальная переменная для холста
+let canvas = null;
 
-    // Создание и настройка холста
-    const canvas = new fabric.Canvas('drawing-board', {
-        width: canvasWidth,
-        height: canvasHeight,
-        backgroundColor: '#fff',
-        selection: true,
-        isDrawingMode: false
+// Запускаем инициализацию при загрузке DOM
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded, initializing canvas...');
+    // Даем небольшую задержку для полной готовности DOM
+    setTimeout(initializeCanvas, 200);
+});
+
+// Функция инициализации холста - вынесена для возможности перезапуска
+function initializeCanvas() {
+    // Проверка, если холст уже инициализирован, удаляем его
+    if (canvas) {
+        console.log('Disposing existing canvas instance');
+        canvas.dispose();
+        canvas = null;
+    }
+
+    // Удаляем существующие элементы canvas из DOM
+    const existingCanvas = document.querySelectorAll('canvas');
+    existingCanvas.forEach(el => {
+        if (el.id === 'drawing-board' && el.parentNode) {
+            el.parentNode.removeChild(el);
+        }
     });
 
-    console.log('Canvas initialized:', canvas);
+    // Создаем новый элемент canvas
+    const canvasContainer = document.getElementById('canvas-container');
+    if (!canvasContainer) {
+        console.error('Ошибка: контейнер canvas-container не найден!');
+        return false;
+    }
+
+    // Создаем новый элемент canvas
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = 'drawing-board';
+    newCanvas.className = 'w-full h-full bg-gray-50 border border-dashed border-gray-300';
+    newCanvas.style.touchAction = 'none';
+    canvasContainer.appendChild(newCanvas);
+
+    // Получаем размеры контейнера
+    const canvasWidth = canvasContainer.offsetWidth || 800;
+    const canvasHeight = canvasContainer.offsetHeight || 600;
+
+    try {
+        // Динамически загружаем Fabric.js
+        if (typeof fabric === 'undefined') {
+            console.error('Fabric.js не загружен, пробуем загрузить динамически...');
+
+            // Создаем и загружаем скрипт Fabric.js
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js';
+            script.async = true;
+
+            script.onload = function() {
+                console.log('Fabric.js загружен динамически, версия:', fabric.version);
+                completeCanvasInitialization();
+            };
+
+            script.onerror = function() {
+                console.error('Не удалось загрузить Fabric.js');
+                alert('Ошибка загрузки библиотеки для рисования. Пожалуйста, перезагрузите страницу.');
+            };
+
+            document.head.appendChild(script);
+            return false;
+        } else {
+            console.log('Fabric.js уже загружен, версия:', fabric.version);
+            return completeCanvasInitialization();
+        }
+    } catch (error) {
+        console.error('Ошибка при инициализации canvas:', error);
+        alert('Произошла ошибка при инициализации инструмента рисования. Пожалуйста, перезагрузите страницу.');
+        return false;
+    }
+}
+
+// Завершающий этап инициализации canvas
+function completeCanvasInitialization() {
+    const canvasContainer = document.getElementById('canvas-container');
+    const canvasWidth = canvasContainer.offsetWidth || 800;
+    const canvasHeight = canvasContainer.offsetHeight || 600;
+
+    try {
+        // Создание и настройка холста
+        canvas = new fabric.Canvas('drawing-board', {
+            width: canvasWidth,
+            height: canvasHeight,
+            backgroundColor: '#fff',
+            selection: true,
+            isDrawingMode: false,
+            renderOnAddRemove: true,
+            fireRightClick: true, // Включает события правой кнопки мыши
+            stopContextMenu: true // Отключает контекстное меню браузера
+        });
+
+        console.log('Canvas initialized:', canvas);
+
+        // Критически важно: необходимо дождаться завершения рендеринга
+        setTimeout(() => {
+            canvas.calcOffset();
+            canvas.renderAll();
+            console.log('Canvas offset calculated and rendered');
+        }, 100);
 
     // Загружаем существующие данные холста
     try {
         const canvasData = @json($drawing->canvas_data);
-        canvas.loadFromJSON(canvasData, function() {
-            canvas.renderAll();
-        });
+
+        // Загружаем данные с отложенным запуском
+        setTimeout(() => {
+            canvas.loadFromJSON(canvasData, function() {
+                // Обновляем координаты всех объектов после загрузки
+                canvas.forEachObject(function(obj) {
+                    obj.setCoords();
+                });
+                canvas.calcOffset();
+                canvas.renderAll();
+                console.log('Canvas data loaded successfully');
+            });
+        }, 200);
     } catch (error) {
         console.error('Ошибка загрузки данных холста:', error);
+        alert('Произошла ошибка при загрузке данных чертежа.');
     }
 
     // Текущий инструмент
@@ -233,182 +332,211 @@ document.addEventListener('DOMContentLoaded', function() {
         fillColor: '#ffffff'
     };
 
+    // Обработчик клика по холсту
+    function handleCanvasClick(options) {
+        if (!canvas || !isCanvasReady) return;
+
+        const pointer = canvas.getPointer(options.e);
+
+        switch (currentTool) {
+            case 'shape':
+                // Создаем прямоугольник
+                const rect = new fabric.Rect({
+                    left: pointer.x,
+                    top: pointer.y,
+                    width: 100,
+                    height: 100,
+                    fill: settings.fillColor,
+                    stroke: settings.strokeColor,
+                    strokeWidth: settings.strokeWidth
+                });
+                canvas.add(rect);
+                canvas.setActiveObject(rect);
+                break;
+
+            case 'line':
+                // Создаем линию
+                const line = new fabric.Line([
+                    pointer.x, pointer.y,
+                    pointer.x + 100, pointer.y
+                ], {
+                    stroke: settings.strokeColor,
+                    strokeWidth: settings.strokeWidth
+                });
+                canvas.add(line);
+                canvas.setActiveObject(line);
+                break;
+
+            case 'text':
+                // Создаем текст
+                const text = new fabric.IText('Двойной клик для редактирования', {
+                    left: pointer.x,
+                    top: pointer.y,
+                    fontFamily: 'Arial',
+                    fill: settings.strokeColor,
+                    fontSize: 16
+                });
+                canvas.add(text);
+                canvas.setActiveObject(text);
+                break;
+        }
+
+        // Обновляем холст
+        canvas.renderAll();
+    }
+
+    // Обработчик изменения размера окна
+    function handleResize() {
+        if (!canvas || !isCanvasReady) return;
+
+        const container = document.getElementById('canvas-container');
+        if (container) {
+            canvas.setWidth(container.offsetWidth);
+            canvas.setHeight(container.offsetHeight);
+            canvas.renderAll();
+        }
+    }
+
     // Настройка инструментов
-    document.querySelectorAll('.tool-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tool = this.dataset.tool;
-            currentTool = tool;
-
-            // Сбросить выбор всех кнопок
-            document.querySelectorAll('.tool-btn').forEach(b => {
-                b.classList.remove('bg-blue-100', 'border-blue-500', 'active');
+    function setupTools() {
+        // Кнопки инструментов
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tool = this.dataset.tool;
+                setActiveTool(tool);
             });
+        });
 
-            // Выделить текущую кнопку
-            this.classList.add('bg-blue-100', 'border-blue-500', 'active');
+        // Настройка цвета линии
+        document.getElementById('stroke-color').addEventListener('input', function(e) {
+            settings.strokeColor = e.target.value;
+            updateActiveObject();
+        });
 
-            // Настройка режима холста в зависимости от инструмента
-            switch(tool) {
-                case 'select':
-                    canvas.isDrawingMode = false;
-                    canvas.selection = true;
-                    break;
-                case 'line':
-                    canvas.isDrawingMode = false;
-                    canvas.selection = false;
-                    break;
-                case 'shape':
-                    canvas.isDrawingMode = false;
-                    canvas.selection = false;
-                    break;
-                case 'text':
-                    canvas.isDrawingMode = false;
-                    canvas.selection = false;
-                    break;
-                case 'eraser':
-                    canvas.isDrawingMode = true;
-                    // Создаем кисть если её нет
-                    if (!canvas.freeDrawingBrush) {
-                        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-                    }
-                    canvas.freeDrawingBrush.color = '#ffffff';
-                    canvas.freeDrawingBrush.width = 20;
-                    break;
-                case 'image':
-                    canvas.isDrawingMode = false;
-                    canvas.selection = false;
-                    // Открыть диалог выбора файла
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
-                    input.onchange = function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(f) {
-                                const data = f.target.result;
-                                fabric.Image.fromURL(data, function(img) {
-                                    img.scaleToWidth(200);
-                                    canvas.add(img);
-                                    canvas.renderAll();
-                                });
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    };
-                    input.click();
-                    break;
+        // Настройка толщины линии
+        document.getElementById('stroke-width').addEventListener('input', function(e) {
+            settings.strokeWidth = parseInt(e.target.value);
+            updateActiveObject();
+        });
+
+        // Настройка цвета заливки
+        document.getElementById('fill-color').addEventListener('input', function(e) {
+            settings.fillColor = e.target.value;
+            updateActiveObject();
+        });
+
+        // Кнопка очистки холста
+        document.getElementById('clear-canvas').addEventListener('click', function() {
+            if (confirm('Вы уверены, что хотите очистить холст? Все несохранённые изменения будут потеряны.')) {
+                clearCanvas();
             }
         });
-    });
 
-    // Настройка цвета линии
-    document.getElementById('stroke-color').addEventListener('input', function(e) {
-        settings.strokeColor = e.target.value;
+        // Кнопка сохранения
+        document.getElementById('save-drawing').addEventListener('click', function() {
+            saveDrawing();
+        });
+    }
 
-        if (canvas.isDrawingMode) {
-            canvas.freeDrawingBrush.color = settings.strokeColor;
+    // Установка активного инструмента
+    function setActiveTool(tool) {
+        if (!canvas) return;
+
+        currentTool = tool;
+
+        // Сбросить выбор всех кнопок
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Выделить текущую кнопку
+        const activeBtn = document.querySelector(`.tool-btn[data-tool="${tool}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
         }
 
-        const activeObj = canvas.getActiveObject();
-        if (activeObj) {
-            activeObj.set('stroke', settings.strokeColor);
-            canvas.renderAll();
+        // Настройка режима холста
+        switch(tool) {
+            case 'select':
+                canvas.isDrawingMode = false;
+                canvas.selection = true;
+                break;
+            case 'shape':
+            case 'line':
+            case 'text':
+                canvas.isDrawingMode = false;
+                canvas.selection = false;
+                break;
+            case 'eraser':
+                canvas.isDrawingMode = true;
+                if (!canvas.freeDrawingBrush) {
+                    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                }
+                canvas.freeDrawingBrush.color = '#ffffff';
+                canvas.freeDrawingBrush.width = 20;
+                break;
+            case 'image':
+                addImage();
+                break;
         }
-    });
+    }
 
-    // Настройка толщины линии
-    document.getElementById('stroke-width').addEventListener('input', function(e) {
-        settings.strokeWidth = parseInt(e.target.value);
+    // Обновление свойств активного объекта
+    function updateActiveObject() {
+        if (!canvas) return;
 
-        if (canvas.isDrawingMode) {
-            canvas.freeDrawingBrush.width = settings.strokeWidth;
-        }
+        const obj = canvas.getActiveObject();
+        if (!obj) return;
 
-        const activeObj = canvas.getActiveObject();
-        if (activeObj) {
-            activeObj.set('strokeWidth', settings.strokeWidth);
-            canvas.renderAll();
-        }
-    });
-
-    // Настройка цвета заливки
-    document.getElementById('fill-color').addEventListener('input', function(e) {
-        settings.fillColor = e.target.value;
-
-        const activeObj = canvas.getActiveObject();
-        if (activeObj) {
-            activeObj.set('fill', settings.fillColor);
-            canvas.renderAll();
-        }
-    });
-
-    // Создание фигур при клике на холст
-    canvas.on('mouse:down', function(options) {
-        if (currentTool === 'shape') {
-            const rect = new fabric.Rect({
-                left: options.pointer.x,
-                top: options.pointer.y,
-                width: 100,
-                height: 100,
-                fill: settings.fillColor,
-                stroke: settings.strokeColor,
-                strokeWidth: settings.strokeWidth
-            });
-            canvas.add(rect);
-            canvas.setActiveObject(rect);
-        } else if (currentTool === 'line') {
-            const line = new fabric.Line([
-                options.pointer.x,
-                options.pointer.y,
-                options.pointer.x + 100,
-                options.pointer.y
-            ], {
-                stroke: settings.strokeColor,
-                strokeWidth: settings.strokeWidth
-            });
-            canvas.add(line);
-            canvas.setActiveObject(line);
-        } else if (currentTool === 'text') {
-            const text = new fabric.IText('Двойной клик для редактирования', {
-                left: options.pointer.x,
-                top: options.pointer.y,
-                fontFamily: 'Arial',
-                fill: settings.strokeColor,
-                fontSize: 16
-            });
-            canvas.add(text);
-            canvas.setActiveObject(text);
-        }
-    });
-
-    // Кнопка очистки холста
-    document.getElementById('clear-canvas').addEventListener('click', function() {
-        if (confirm('Вы уверены, что хотите очистить холст? Все несохранённые изменения будут потеряны.')) {
-            canvas.clear();
-            canvas.backgroundColor = '#fff';
-            canvas.renderAll();
-        }
-    });
-
-    // Кнопка сохранения чертежа
-    document.getElementById('save-drawing').addEventListener('click', function() {
-        // Получаем JSON-представление холста
-        const canvasData = JSON.stringify(canvas.toJSON());
-
-        // Сохраняем в скрытом поле формы
-        document.getElementById('canvas_data').value = canvasData;
-
-        // Проверяем заполнение обязательных полей
-        const title = document.getElementById('title').value.trim();
-        if (!title) {
-            alert('Пожалуйста, укажите название чертежа');
-            return;
+        if (obj.stroke !== undefined) {
+            obj.set('stroke', settings.strokeColor);
         }
 
-        // Отправляем форму
-        document.getElementById('drawing-form').submit();
-    });
+        if (obj.strokeWidth !== undefined) {
+            obj.set('strokeWidth', settings.strokeWidth);
+        }
+
+        if (obj.fill !== undefined && obj.type !== 'i-text') {
+            obj.set('fill', settings.fillColor);
+        }
+
+        canvas.renderAll();
+    }
+
+    // Очистка холста
+    function clearCanvas() {
+        if (!canvas) return;
+
+        canvas.clear();
+        canvas.backgroundColor = '#ffffff';
+        canvas.renderAll();
+    }
+
+    // Сохранение рисунка
+    function saveDrawing() {
+        if (!canvas) return;
+
+        try {
+            // Получаем JSON-представление холста
+            const canvasData = JSON.stringify(canvas.toJSON());
+
+            // Сохраняем в скрытом поле формы
+            document.getElementById('canvas_data').value = canvasData;
+
+            // Проверяем заполнение обязательных полей
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+                alert('Пожалуйста, укажите название чертежа');
+                return;
+            }
+
+            // Отправляем форму
+            document.getElementById('drawing-form').submit();
+        } catch (error) {
+            console.error('Ошибка при сохранении рисунка:', error);
+            alert('Произошла ошибка при сохранении. Пожалуйста, попробуйте еще раз.');
+        }
+    }
 
     // Устанавливаем начальный инструмент
     document.querySelector('[data-tool="select"]').click();
@@ -416,18 +544,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Логируем для отладки
     console.log('Canvas ready, current tool:', currentTool);
 
-    // Обработка изменения размера окна
-    window.addEventListener('resize', function() {
-        const container = document.getElementById('canvas-container');
-        if (container) {
-            console.log('Resizing canvas to:', container.offsetWidth, container.offsetHeight);
-            canvas.setWidth(container.offsetWidth);
-            canvas.setHeight(container.offsetHeight);
-            canvas.renderAll();
-        }
-    });
+    // Добавление изображения
+    function addImage() {
+        if (!canvas) return;
 
-    // Обновляем параметры для активного объекта
+        // Открыть диалог выбора файла
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(f) {
+                    const data = f.target.result;
+                    fabric.Image.fromURL(data, function(img) {
+                        img.scaleToWidth(200);
+                        canvas.add(img);
+                        canvas.renderAll();
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        input.click();
+    }
+
+    // Обновляем параметры при выборе объекта
     canvas.on('object:selected', function(options) {
         if (options.target) {
             if (options.target.stroke) {
@@ -441,6 +586,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+}
+
+// Обработчик для кнопки восстановления холста
+document.getElementById('clear-canvas')?.addEventListener('click', function() {
+    if (confirm('Хотите перезапустить холст? Это может помочь, если инструменты рисования не работают.')) {
+        console.log('Reinitializing canvas...');
+        initializeCanvas();
+    }
 });
 </script>
 @endpush

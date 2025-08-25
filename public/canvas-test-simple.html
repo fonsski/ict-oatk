@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Canvas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            border: 2px dashed #d1d5db;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            touch-action: none;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        #log {
+            background-color: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            border: 1px solid #e5e7eb;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        .tab.active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест Canvas</h1>
+
+        <div class="tab-container">
+            <div class="tab active" data-tab="fabric">FabricJS Canvas</div>
+            <div class="tab" data-tab="html5">Нативный Canvas</div>
+        </div>
+
+        <div id="fabric-tab" class="tab-content active">
+            <p>Тестирование FabricJS Canvas. Выберите инструмент и нарисуйте что-нибудь:</p>
+
+            <div class="controls">
+                <button id="select-tool">Выбрать</button>
+                <button id="rect-tool">Прямоугольник</button>
+                <button id="circle-tool">Круг</button>
+                <button id="line-tool">Линия</button>
+                <button id="text-tool">Текст</button>
+                <button id="clear-canvas">Очистить</button>
+            </div>
+
+            <div id="canvas-container">
+                <canvas id="fabric-canvas"></canvas>
+            </div>
+        </div>
+
+        <div id="html5-tab" class="tab-content">
+            <p>Тестирование нативного HTML5 Canvas. Кликните и перетащите для рисования:</p>
+
+            <div class="controls">
+                <button id="pencil-native">Карандаш</button>
+                <button id="rect-native">Прямоугольник</button>
+                <button id="clear-native">Очистить</button>
+            </div>
+
+            <div id="native-canvas-container" style="width: 100%; height: 500px; border: 2px dashed #d1d5db;">
+                <canvas id="html5-canvas" width="1000" height="500" style="background-color: white;"></canvas>
+            </div>
+        </div>
+
+        <h3>Лог событий:</h3>
+        <div id="log"></div>
+    </div>
+
+    <!-- Загрузка FabricJS с CDN -->
+    <script>
+        // Функция для логирования сообщений
+        function logMessage(message) {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.prepend(entry);
+        }
+
+        // Переключение вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Удаляем активный класс со всех вкладок
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Добавляем активный класс на выбранную вкладку
+                this.classList.add('active');
+
+                // Скрываем все контенты вкладок
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                // Показываем выбранный контент
+                document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
+
+                logMessage(`Переключено на вкладку: ${this.dataset.tab}`);
+            });
+        });
+
+        // Загрузка FabricJS
+        function loadFabricJS() {
+            return new Promise((resolve, reject) => {
+                logMessage('Попытка загрузки FabricJS...');
+
+                // Проверяем, загружен ли уже FabricJS
+                if (typeof fabric !== 'undefined') {
+                    logMessage(`FabricJS уже загружен, версия: ${fabric.version}`);
+                    resolve();
+                    return;
+                }
+
+                // Создаем скрипт
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js';
+                script.async = true;
+
+                // Обработка успешной загрузки
+                script.onload = function() {
+                    logMessage(`FabricJS успешно загружен, версия: ${fabric.version}`);
+                    resolve();
+                };
+
+                // Обработка ошибки загрузки
+                script.onerror = function() {
+                    const error = 'Ошибка загрузки FabricJS';
+                    logMessage(error);
+                    reject(new Error(error));
+                };
+
+                // Добавляем скрипт в документ
+                document.head.appendChild(script);
+            });
+        }
+
+        // Инициализация FabricJS Canvas
+        function initFabricCanvas() {
+            const canvasContainer = document.getElementById('canvas-container');
+            const canvasElement = document.getElementById('fabric-canvas');
+
+            if (!canvasContainer || !canvasElement) {
+                logMessage('Ошибка: не найдены элементы canvas');
+                return;
+            }
+
+            try {
+                // Устанавливаем размеры canvas
+                const width = canvasContainer.offsetWidth;
+                const height = canvasContainer.offsetHeight;
+
+                // Создаем экземпляр canvas
+                const canvas = new fabric.Canvas('fabric-canvas', {
+                    width: width,
+                    height: height,
+                    backgroundColor: '#ffffff',
+                    selection: true
+                });
+
+                logMessage(`FabricJS Canvas инициализирован (${width}x${height})`);
+
+                // Инициализация инструментов
+                let currentTool = 'select';
+
+                // Инструмент "Выбрать"
+                document.getElementById('select-tool').addEventListener('click', function() {
+                    currentTool = 'select';
+                    canvas.isDrawingMode = false;
+                    canvas.selection = true;
+                    logMessage('Выбран инструмент: Выбрать');
+                });
+
+                // Инструмент "Прямоугольник"
+                document.getElementById('rect-tool').addEventListener('click', function() {
+                    currentTool = 'rect';
+                    canvas.isDrawingMode = false;
+                    canvas.selection = false;
+                    logMessage('Выбран инструмент: Прямоугольник');
+                });
+
+                // Инструмент "Круг"
+                document.getElementById('circle-tool').addEventListener('click', function() {
+                    currentTool = 'circle';
+                    canvas.isDrawingMode = false;
+                    canvas.selection = false;
+                    logMessage('Выбран инструмент: Круг');
+                });
+
+                // Инструмент "Линия"
+                document.getElementById('line-tool').addEventListener('click', function() {
+                    currentTool = 'line';
+                    canvas.isDrawingMode = false;
+                    canvas.selection = false;
+                    logMessage('Выбран инструмент: Линия');
+                });
+
+                // Инструмент "Текст"
+                document.getElementById('text-tool').addEventListener('click', function() {
+                    currentTool = 'text';
+                    canvas.isDrawingMode = false;
+                    canvas.selection = false;
+                    logMessage('Выбран инструмент: Текст');
+                });
+
+                // Кнопка "Очистить"
+                document.getElementById('clear-canvas').addEventListener('click', function() {
+                    canvas.clear();
+                    canvas.backgroundColor = '#ffffff';
+                    canvas.renderAll();
+                    logMessage('Canvas очищен');
+                });
+
+                // Обработка клика на canvas
+                canvas.on('mouse:down', function(options) {
+                    const pointer = canvas.getPointer(options.e);
+
+                    switch(currentTool) {
+                        case 'rect':
+                            const rect = new fabric.Rect({
+                                left: pointer.x,
+                                top: pointer.y,
+                                width: 100,
+                                height: 50,
+                                fill: 'rgba(255, 0, 0, 0.5)',
+                                stroke: 'red',
+                                strokeWidth: 2
+                            });
+                            canvas.add(rect);
+                            canvas.setActiveObject(rect);
+                            logMessage('Добавлен прямоугольник');
+                            break;
+
+                        case 'circle':
+                            const circle = new fabric.Circle({
+                                left: pointer.x,
+                                top: pointer.y,
+                                radius: 50,
+                                fill: 'rgba(0, 255, 0, 0.5)',
+                                stroke: 'green',
+                                strokeWidth: 2
+                            });
+                            canvas.add(circle);
+                            canvas.setActiveObject(circle);
+                            logMessage('Добавлен круг');
+                            break;
+
+                        case 'line':
+                            const line = new fabric.Line([
+                                pointer.x, pointer.y,
+                                pointer.x + 100, pointer.y
+                            ], {
+                                stroke: 'blue',
+                                strokeWidth: 2
+                            });
+                            canvas.add(line);
+                            canvas.setActiveObject(line);
+                            logMessage('Добавлена линия');
+                            break;
+
+                        case 'text':
+                            const text = new fabric.IText('Двойной клик для редактирования', {
+                                left: pointer.x,
+                                top: pointer.y,
+                                fontSize: 20,
+                                fill: 'black'
+                            });
+                            canvas.add(text);
+                            canvas.setActiveObject(text);
+                            logMessage('Добавлен текст');
+                            break;
+                    }
+
+                    canvas.renderAll();
+                });
+
+                // Устанавливаем начальный инструмент
+                document.getElementById('select-tool').click();
+
+                return canvas;
+
+            } catch (error) {
+                logMessage(`Ошибка инициализации FabricJS Canvas: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        // Инициализация нативного HTML5 Canvas
+        function initNativeCanvas() {
+            const canvas = document.getElementById('html5-canvas');
+            if (!canvas) {
+                logMessage('Ошибка: не найден элемент html5-canvas');
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                logMessage('Ошибка: не удалось получить 2D контекст');
+                return;
+            }
+
+            logMessage(`Нативный Canvas инициализирован (${canvas.width}x${canvas.height})`);
+
+            // Переменные для рисования
+            let isDrawing = false;
+            let startX, startY;
+            let currentTool = 'pencil';
+
+            // Инструмент "Карандаш"
+            document.getElementById('pencil-native').addEventListener('click', function() {
+                currentTool = 'pencil';
+                logMessage('Выбран инструмент: Карандаш');
+            });
+
+            // Инструмент "Прямоугольник"
+            document.getElementById('rect-native').addEventListener('click', function() {
+                currentTool = 'rect';
+                logMessage('Выбран инструмент: Прямоугольник');
+            });
+
+            // Кнопка "Очистить"
+            document.getElementById('clear-native').addEventListener('click', function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                logMessage('Canvas очищен');
+            });
+
+            // Обработчики событий для рисования
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Функция начала рисования
+            function startDrawing(e) {
+                isDrawing = true;
+
+                const rect = canvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+
+                if (currentTool === 'pencil') {
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                }
+
+                logMessage(`Начало рисования: ${currentTool} (${startX}, ${startY})`);
+            }
+
+            // Функция рисования
+            function draw(e) {
+                if (!isDrawing) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                if (currentTool === 'pencil') {
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else if (currentTool === 'rect') {
+                    // Для предварительного просмотра очищаем canvas и перерисовываем
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeRect(
+                        startX,
+                        startY,
+                        x - startX,
+                        y - startY
+                    );
+                }
+            }
+
+            // Функция завершения рисования
+            function stopDrawing() {
+                isDrawing = false;
+                logMessage('Завершено рисование');
+            }
+
+            return { canvas, ctx };
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async function() {
+            logMessage('Страница загружена');
+
+            try {
+                // Загружаем FabricJS
+                await loadFabricJS();
+
+                // Инициализируем FabricJS Canvas
+                const fabricCanvas = initFabricCanvas();
+
+                // Инициализируем нативный Canvas
+                const nativeCanvas = initNativeCanvas();
+
+                // Загрузка успешна
+                logMessage('Инициализация canvas завершена успешно');
+
+            } catch (error) {
+                logMessage(`Ошибка инициализации: ${error.message}`);
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>

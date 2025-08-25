@@ -886,7 +886,53 @@
     </script>
 
     <!-- Common JS libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script>
+        // Функция для загрузки Fabric.js по требованию
+        window.loadFabricJS = function(callback) {
+            // Если библиотека уже загружена, просто выполняем callback
+            if (typeof fabric !== 'undefined') {
+                console.log('Fabric.js уже загружен, версия:', fabric.version);
+                if (callback && typeof callback === 'function') {
+                    callback(true);
+                }
+                return true;
+            }
+
+            console.log('Загрузка Fabric.js...');
+
+            // Создаем и добавляем скрипт
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js';
+            script.async = true;
+
+            // Обработчик успешной загрузки
+            script.onload = function() {
+                console.log('Fabric.js успешно загружен, версия:', fabric.version);
+                if (callback && typeof callback === 'function') {
+                    callback(true);
+                }
+            };
+
+            // Обработчик ошибки загрузки
+            script.onerror = function() {
+                console.error('Не удалось загрузить Fabric.js');
+                if (callback && typeof callback === 'function') {
+                    callback(false);
+                }
+            };
+
+            document.head.appendChild(script);
+        };
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, есть ли на странице canvas-container
+            if (document.getElementById('canvas-container')) {
+                console.log('Обнаружен canvas-container, загружаем Fabric.js');
+                window.loadFabricJS();
+            }
+        });
+    </script>
 
     @stack('scripts')
 </body>

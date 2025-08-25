@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        h1 {
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            border: 1px dashed #cbd5e1;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+        canvas {
+            touch-action: none;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #log {
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест Canvas</h1>
+        <p>Эта страница предназначена для тестирования работы canvas в изолированной среде.</p>
+
+        <div class="controls">
+            <button id="btn-pencil">Карандаш</button>
+            <button id="btn-rect">Прямоугольник</button>
+            <button id="btn-circle">Круг</button>
+            <button id="btn-line">Линия</button>
+            <button id="btn-clear">Очистить</button>
+            <div class="color-picker">
+                <label for="color">Цвет:</label>
+                <input type="color" id="color" value="#000000">
+            </div>
+        </div>
+
+        <div id="canvas-container">
+            <canvas id="test-canvas"></canvas>
+        </div>
+
+        <div id="log">
+            <div>Лог событий:</div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        logMessage('DOM загружен');
+
+        // Получаем элементы
+        const canvasContainer = document.getElementById('canvas-container');
+        const canvas = document.getElementById('test-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Настройка размеров canvas
+        function setupCanvas() {
+            canvas.width = canvasContainer.clientWidth;
+            canvas.height = canvasContainer.clientHeight;
+            logMessage(`Canvas размеры: ${canvas.width} x ${canvas.height}`);
+        }
+
+        // Обработчик изменения размера окна
+        window.addEventListener('resize', setupCanvas);
+        setupCanvas();
+
+        // Переменные для рисования
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let tool = 'pencil';
+        let color = '#000000';
+        let startX, startY;
+
+        // Кнопки инструментов
+        document.getElementById('btn-pencil').addEventListener('click', () => {
+            tool = 'pencil';
+            logMessage('Выбран инструмент: Карандаш');
+        });
+        document.getElementById('btn-rect').addEventListener('click', () => {
+            tool = 'rect';
+            logMessage('Выбран инструмент: Прямоугольник');
+        });
+        document.getElementById('btn-circle').addEventListener('click', () => {
+            tool = 'circle';
+            logMessage('Выбран инструмент: Круг');
+        });
+        document.getElementById('btn-line').addEventListener('click', () => {
+            tool = 'line';
+            logMessage('Выбран инструмент: Линия');
+        });
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            logMessage('Холст очищен');
+        });
+
+        // Выбор цвета
+        document.getElementById('color').addEventListener('input', function(e) {
+            color = e.target.value;
+            logMessage(`Выбран цвет: ${color}`);
+        });
+
+        // Функции для рисования
+        function startDrawing(e) {
+            isDrawing = true;
+
+            // Получаем координаты
+            const rect = canvas.getBoundingClientRect();
+            if (e.type.includes('touch')) {
+                lastX = e.touches[0].clientX - rect.left;
+                lastY = e.touches[0].clientY - rect.top;
+            } else {
+                lastX = e.clientX - rect.left;
+                lastY = e.clientY - rect.top;
+            }
+
+            startX = lastX;
+            startY = lastY;
+
+            logMessage(`Начало рисования: (${Math.round(lastX)}, ${Math.round(lastY)})`);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            // Получаем текущие координаты
+            const rect = canvas.getBoundingClientRect();
+            let currentX, currentY;
+
+            if (e.type.includes('touch')) {
+                currentX = e.touches[0].clientX - rect.left;
+                currentY = e.touches[0].clientY - rect.top;
+            } else {
+                currentX = e.clientX - rect.left;
+                currentY = e.clientY - rect.top;
+            }
+
+            // Выбираем инструмент
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+
+            switch(tool) {
+                case 'pencil':
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    break;
+
+                case 'rect':
+                case 'circle':
+                case 'line':
+                    // Для предварительного просмотра сохраняем текущее состояние холста
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    if (tool === 'rect') {
+                        ctx.beginPath();
+                        ctx.rect(
+                            Math.min(startX, currentX),
+                            Math.min(startY, currentY),
+                            Math.abs(currentX - startX),
+                            Math.abs(currentY - startY)
+                        );
+                        ctx.stroke();
+                    } else if (tool === 'circle') {
+                        const radius = Math.sqrt(
+                            Math.pow(currentX - startX, 2) +
+                            Math.pow(currentY - startY, 2)
+                        );
+                        ctx.beginPath();
+                        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                    } else if (tool === 'line') {
+                        ctx.beginPath();
+                        ctx.moveTo(startX, startY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.stroke();
+                    }
+                    break;
+            }
+
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        function stopDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            logMessage(`Конец рисования: (${Math.round(lastX)}, ${Math.round(lastY)})`);
+        }
+
+        // Добавляем обработчики событий
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Поддержка сенсорных устройств
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            startDrawing(e);
+        });
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            draw(e);
+        });
+        canvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            stopDrawing();
+        });
+
+        // Функция для логирования
+        function logMessage(message) {
+            const log = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div>${time} - ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        logMessage('Canvas инициализирован');
+    });
+    </script>
+</body>
+</html>

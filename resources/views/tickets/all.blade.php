@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-6 py-4">
                     <div class="text-sm">
                         <div class="font-medium text-slate-900">${ticket.reporter_name || '—'}</div>
-                        <div class="text-slate-600">${ticket.reporter_email || '—'}</div>
+                        <div class="text-slate-600">${ticket.reporter_phone || ticket.reporter_email || '—'}</div>
                     </div>
                 </td>
                 <td class="px-6 py-4">

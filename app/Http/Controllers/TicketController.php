@@ -52,11 +52,9 @@ class TicketController extends Controller
         if ($request->filled("search")) {
             $search = $request->get("search");
             $query->where(function ($q) use ($search) {
-                $q->where("reporter_email", "like", "%{$search}%")->orWhere(
-                    "title",
-                    "like",
-                    "%{$search}%",
-                );
+                $q->where("reporter_email", "like", "%{$search}%")
+                    ->orWhere("reporter_phone", "like", "%{$search}%")
+                    ->orWhere("title", "like", "%{$search}%");
             });
         }
 
@@ -115,6 +113,7 @@ class TicketController extends Controller
             "reporter_name" => "nullable|string|max:255",
             "reporter_id" => "nullable|string|max:50",
             "reporter_email" => "nullable|email|max:255",
+            "reporter_phone" => "nullable|string|max:20",
             "location_id" => "nullable|exists:locations,id",
             "room_id" => "nullable|exists:rooms,id",
             "equipment_id" => "nullable|exists:equipment,id",
@@ -128,6 +127,9 @@ class TicketController extends Controller
             }
             if (empty($data["reporter_email"])) {
                 $data["reporter_email"] = $user->email;
+            }
+            if (empty($data["reporter_phone"])) {
+                $data["reporter_phone"] = $user->phone;
             }
         }
 
@@ -193,10 +195,11 @@ class TicketController extends Controller
             "reporter_name" => "nullable|string|max:255",
             "reporter_id" => "nullable|string|max:50",
             "reporter_email" => "nullable|email|max:255",
+            "reporter_phone" => "nullable|string|max:20",
             "location_id" => "nullable|exists:locations,id",
             "room_id" => "nullable|exists:rooms,id",
             "equipment_id" => "nullable|exists:equipment,id",
-            "assigned_to_id" => "nullable|exists:users,id",
+            "status" => "nullable|string",
         ]);
 
         $ticket->update($data);

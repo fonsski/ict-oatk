@@ -15,6 +15,7 @@ class Ticket extends Model
         "description",
         "reporter_name",
         "reporter_email",
+        "reporter_phone",
         "reporter_id",
         "status",
         "user_id",
