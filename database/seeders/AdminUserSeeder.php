@@ -15,7 +15,7 @@ class AdminUserSeeder extends Seeder
         
         User::create([
             'name' => 'Администратор',
-            'email' => 'admin@ict.local',
+            'phone' => '+79953940601',
             'password' => Hash::make('admin123'),
             'role_id' => $adminRole->id,
         ]);
