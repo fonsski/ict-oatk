@@ -161,20 +161,43 @@ class TicketController extends Controller
     public function show(Ticket $ticket)
     {
         // Просмотр отдельной заявки
-        $locations = Cache::remember("locations_list", 3600, function () {
-            return Location::select("id", "name")->orderBy("name")->get();
-        });
+        try {
+            $locations = Cache::remember("locations_list", 3600, function () {
+                return Location::select(["id", "name"])
+                    ->orderBy("name")
+                    ->get();
+            });
 
-        $assignable = User::whereHas("role", function ($q) {
-            $q->whereIn("slug", ["admin", "master", "technician"]);
-        })
-            ->select("id", "name")
-            ->get();
+            $assignable = User::whereHas("role", function ($q) {
+                $q->whereIn("slug", ["admin", "master", "technician"]);
+            })
+                ->select(["id", "name"])
+                ->get();
 
-        return view(
-            "tickets.show",
-            compact("ticket", "locations", "assignable"),
-        );
+            // Формирование массива для категорий, аналогично массиву в представлении
+            $categoryLabels = [
+                "hardware" => "Оборудование",
+                "software" => "Программное обеспечение",
+                "network" => "Сеть и интернет",
+                "account" => "Учетная запись",
+                "other" => "Другое",
+            ];
+
+            return view(
+                "tickets.show",
+                compact("ticket", "locations", "assignable", "categoryLabels"),
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error(
+                "Ошибка при отображении тикета: " . $e->getMessage(),
+            );
+            return redirect()
+                ->route("tickets.index")
+                ->with(
+                    "error",
+                    "Не удалось отобразить данные заявки. Пожалуйста, попробуйте позднее.",
+                );
+        }
     }
 
     /**
