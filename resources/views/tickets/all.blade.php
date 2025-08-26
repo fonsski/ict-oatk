@@ -56,9 +56,9 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-slate-900">Фильтры</h3>
-            <button id="clear-filters" class="text-sm text-slate-600 hover:text-slate-900">Очистить</button>
+            <button id="clear-filters" class="text-sm text-slate-600 hover:text-slate-900 px-3 py-1 border border-slate-300 rounded-md hover:bg-slate-50">Очистить</button>
         </div>
-        <form method="GET" id="filters-form" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <form method="GET" id="filters-form" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
                 <label for="status" class="form-label">Статус</label>
                 <select id="status" name="status" class="form-input">
@@ -115,34 +115,47 @@
             </div>
             <div>
                 <label for="search" class="form-label">Поиск</label>
-                <input type="text" id="search" name="search" value="{{ request('search') }}"
-                       placeholder="Поиск по заявкам..." class="form-input">
+                <div class="relative">
+                    <input type="text" id="search" name="search" value="{{ request('search') }}"
+                       placeholder="Поиск по заявкам..." class="form-input pl-10">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-3 lg:col-span-6 flex justify-end items-end">
+                <button type="submit" class="btn-primary px-4 py-2 h-full">
+                    Применить фильтры
+                </button>
             </div>
         </form>
     </div>
 
     <!-- Tickets Table -->
-    <div class="card overflow-hidden">
+    <div class="card">
         <div id="loading-indicator" class="hidden">
             <div class="flex items-center justify-center py-8">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span class="ml-3 text-slate-600">Загрузка заявок...</span>
+                <span class="ml-4 text-slate-600">Загрузка заявок...</span>
             </div>
         </div>
 
-        <div id="tickets-container">
+        <div id="tickets-container" class="overflow-x-auto">
             @if($tickets->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div class="w-full min-w-max">
+                    <table class="w-full table-fixed">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Заявка</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Заявитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Статус</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Приоритет</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Исполнитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Дата</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Действия</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 250px;">Заявка</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 150px;">Заявитель</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Статус</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Приоритет</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 180px;">Исполнитель</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Дата</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -213,11 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Автоматическое обновление
     function startAutoRefresh() {
         refreshInterval = setInterval(refreshTickets, REFRESH_INTERVAL);
+        console.log('Авто-обновление запущено с интервалом', REFRESH_INTERVAL, 'мс');
     }
 
     function stopAutoRefresh() {
         if (refreshInterval) {
             clearInterval(refreshInterval);
+            console.log('Авто-обновление остановлено');
         }
     }
 
@@ -229,7 +244,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(filtersForm);
             const params = new URLSearchParams(formData);
 
-            const response = await fetch(`{{ route('all-tickets.api') }}?${params}`);
+            const response = await fetch(`{{ route('all-tickets.api') }}?${params}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                cache: 'no-store'
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
             const data = await response.json();
 
             updateStats(data.stats);
@@ -242,6 +268,13 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Ошибка при обновлении заявок:', error);
             statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
             lastUpdated.textContent = 'Ошибка обновления';
+
+            // Redirect to login if unauthorized in production
+            if (error.message.includes('403') || error.message.includes('401')) {
+                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    window.location.href = '/login';
+                }
+            }
         }
     }
 
@@ -306,16 +339,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const roomInfo = ticket.room ? `<div class="text-xs text-slate-500 mt-1">🏢 ${ticket.room.number} - ${ticket.room.name}</div>` :
                         (ticket.location_name ? `<div class="text-xs text-slate-500 mt-1">📍 ${ticket.location_name}</div>` : '');
 
+        // Escape HTML in title and description for safety
+        const safeTitle = ticket.title ? ticket.title.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Без названия';
+        const safeDescription = ticket.description ? ticket.description.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+
         return `
             <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="${ticket.id}">
                 <td class="px-6 py-4">
                     <div>
                         <a href="${ticket.url}"
-                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200">
-                            ${ticket.title}
+                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
+                            <span class="line-clamp-1 ticket-title">${safeTitle}</span>
                         </a>
-                        <p class="text-sm text-slate-600 mt-1 line-clamp-2">
-                            ${ticket.description.substring(0, 80)}${ticket.description.length > 80 ? '...' : ''}
+                        <p class="text-sm text-slate-600 mt-1 line-clamp-2 break-words">
+                            ${safeDescription.substring(0, 80)}${safeDescription.length > 80 ? '...' : ''}
                         </p>
                         ${roomInfo}
                     </div>

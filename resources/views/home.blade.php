@@ -350,8 +350,8 @@
                             </div>
                             <div class="text-blue-600 group-hover:text-blue-700 transition-colors duration-200">
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
                             </div>
                         </div>
@@ -411,11 +411,13 @@
                 techStatusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
 
                 const response = await fetch('{{ route("home.technician.tickets") }}', {
+                    method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    cache: 'no-store'
                 });
                 console.log('Получен ответ от API:', response.status);
 
@@ -469,6 +471,10 @@
 
                 if (error.message.includes('403') || error.message.includes('Unauthorized')) {
                     console.warn('Нет доступа к API заявок');
+                    // Redirect to login if unauthorized in production
+                    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                        window.location.href = `${appURL}/login`;
+                    }
                 } else {
                     console.error('Детали ошибки:', error.message);
                 }

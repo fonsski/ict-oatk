@@ -15,7 +15,7 @@ class EquipmentCategoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Contracts\View\View
     {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
@@ -25,13 +25,20 @@ class EquipmentCategoryController extends Controller
         $query = EquipmentCategory::query();
 
         // Поиск по имени или описанию
-        if ($request->filled("search")) {
-            $query->search($request->input("search"));
+        if ($request->has("search") && !empty($request->get("search"))) {
+            $query->where(function ($q) use ($request) {
+                $search = $request->get("search");
+                $q->where("name", "like", "%{$search}%")->orWhere(
+                    "description",
+                    "like",
+                    "%{$search}%",
+                );
+            });
         }
 
         // Сортировка
-        $sortField = $request->input("sort", "name");
-        $sortDirection = $request->input("direction", "asc");
+        $sortField = $request->get("sort", "name");
+        $sortDirection = $request->get("direction", "asc");
 
         if (in_array($sortField, ["name", "created_at", "updated_at"])) {
             $query->orderBy($sortField, $sortDirection);
@@ -50,7 +57,7 @@ class EquipmentCategoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): \Illuminate\Contracts\View\View
     {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
@@ -66,7 +73,7 @@ class EquipmentCategoryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
@@ -91,47 +98,51 @@ class EquipmentCategoryController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\EquipmentCategory  $category
+     * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
      */
-    public function show(EquipmentCategory $category)
-    {
-        $equipment = $category
+    public function show(
+        EquipmentCategory $equipmentCategory,
+    ): \Illuminate\Contracts\View\View {
+        $equipment = $equipmentCategory
             ->equipment()
             ->with(["status", "room"])
             ->paginate(15);
 
         return view(
             "equipment.categories.show",
-            compact("category", "equipment"),
+            compact("equipmentCategory", "equipment"),
         );
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\EquipmentCategory  $category
+     * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
      */
-    public function edit(EquipmentCategory $category)
-    {
+    public function edit(
+        EquipmentCategory $equipmentCategory,
+    ): \Illuminate\Contracts\View\View {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
-        return view("equipment.categories.edit", compact("category"));
+        return view("equipment.categories.edit", compact("equipmentCategory"));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\EquipmentCategory  $category
+     * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, EquipmentCategory $category)
-    {
+    public function update(
+        Request $request,
+        EquipmentCategory $equipmentCategory,
+    ): \Illuminate\Http\RedirectResponse {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
@@ -142,17 +153,19 @@ class EquipmentCategoryController extends Controller
                 "required",
                 "string",
                 "max:255",
-                Rule::unique("equipment_categories")->ignore($category->id),
+                Rule::unique("equipment_categories")->ignore(
+                    $equipmentCategory->id,
+                ),
             ],
             "description" => "nullable|string",
         ]);
 
         // Обновляем slug только если изменилось имя
-        if ($validated["name"] !== $category->name) {
+        if ($validated["name"] !== $equipmentCategory->name) {
             $validated["slug"] = Str::slug($validated["name"]);
         }
 
-        $category->update($validated);
+        $equipmentCategory->update($validated);
 
         return redirect()
             ->route("equipment.equipment-categories.index")
@@ -162,18 +175,19 @@ class EquipmentCategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\EquipmentCategory  $category
+     * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
      */
-    public function destroy(EquipmentCategory $category)
-    {
+    public function destroy(
+        EquipmentCategory $equipmentCategory,
+    ): \Illuminate\Http\RedirectResponse {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
         // Проверяем, есть ли оборудование в этой категории
-        if ($category->equipment()->count() > 0) {
+        if ($equipmentCategory->equipment()->count() > 0) {
             return redirect()
                 ->route("equipment.equipment-categories.index")
                 ->with(
@@ -182,7 +196,7 @@ class EquipmentCategoryController extends Controller
                 );
         }
 
-        $category->delete();
+        $equipmentCategory->delete();
 
         return redirect()
             ->route("equipment.equipment-categories.index")

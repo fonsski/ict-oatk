@@ -79,10 +79,10 @@
         </div>
 
     <!-- Tickets Table -->
-    <div class="card overflow-hidden">
+    <div class="card">
         @if($tickets->count() > 0)
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full min-w-max">
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Заявка</th>

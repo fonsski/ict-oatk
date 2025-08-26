@@ -80,31 +80,31 @@
                     </div>
                 </div>
 
-                @if($ticket->status !== 'closed')
-                    @if(Auth::check() && in_array(optional(Auth::user()->role)->slug, ['admin','master','technician']))
-                        <div class="mt-4 lg:mt-0 flex flex-wrap gap-2">
-                            @if($ticket->status === 'open')
-                                <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        Начать работу
-                                    </button>
-                                </form>
-                            @endif
+                <div class="mt-4 lg:mt-0 flex flex-wrap gap-2">
+                    <!-- Action Buttons -->
+                    @if(can_manage_ticket($ticket))
+                        @if($ticket->status === 'open')
+                            <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Взять в работу
+                                </button>
+                            </form>
+                        @endif
 
-                            @if($ticket->status === 'in_progress')
-                                <form action="{{ route('tickets.resolve', $ticket) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        Отметить как решенную
-                                    </button>
-                                </form>
-                            @endif
+                        @if($ticket->status === 'in_progress')
+                            <form action="{{ route('tickets.resolve', $ticket) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="whitespace-nowrap inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Отметить как решенную
+                                </button>
+                            </form>
+                        @endif
 
                             @if($ticket->status === 'resolved')
                                 <form action="{{ route('tickets.close', $ticket) }}" method="POST" class="inline">
                                     @csrf
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <button type="submit" class="whitespace-nowrap inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                         Закрыть заявку
                                     </button>
                                 </form>
@@ -192,6 +192,7 @@
                                           required
                                           maxlength="1000"
                                           minlength="2"
+                                          onkeyup="checkCommentLength(this)"
                                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('content') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
                                           placeholder="Введите ваш комментарий..."></textarea>
                                 <div class="flex justify-between mt-1">
@@ -200,7 +201,7 @@
                                             <p class="text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>
-                                    <div id="charCounter" class="text-xs text-gray-500">0/1000 символов</div>
+                                    <div id="charCounter" class="text-xs text-gray-500 font-medium">0/1000 символов</div>
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -212,31 +213,42 @@
                             </div>
                         </form>
                         <script>
+                            // Функция для проверки длины комментария
+                            function checkCommentLength(textarea) {
+                                const charCounter = document.getElementById('charCounter');
+                                const currentLength = textarea.value.length;
+                                charCounter.textContent = currentLength + '/1000 символов';
+
+                                // Меняем цвет счетчика, если приближаемся к лимиту
+                                if (currentLength > 950 && currentLength < 1000) {
+                                    charCounter.classList.remove('text-gray-500', 'text-red-500');
+                                    charCounter.classList.add('text-orange-500');
+                                } else if (currentLength >= 1000) {
+                                    charCounter.classList.remove('text-gray-500', 'text-orange-500');
+                                    charCounter.classList.add('text-red-500');
+
+                                    // Обрезаем текст, если он превышает максимальную длину
+                                    textarea.value = textarea.value.substring(0, 1000);
+                                } else {
+                                    charCounter.classList.remove('text-orange-500', 'text-red-500');
+                                    charCounter.classList.add('text-gray-500');
+                                }
+                            }
+
                             document.addEventListener('DOMContentLoaded', function() {
                                 const commentForm = document.getElementById('commentForm');
                                 const commentBtn = document.getElementById('commentSubmitBtn');
                                 const commentContent = document.getElementById('commentContent');
                                 const charCounter = document.getElementById('charCounter');
 
+                                // Инициализируем счетчик при загрузке страницы
+                                if (commentContent && commentContent.value.length > 0) {
+                                    checkCommentLength(commentContent);
+                                }
+
                                 // Счетчик символов
                                 commentContent.addEventListener('input', function() {
-                                    const currentLength = this.value.length;
-                                    charCounter.textContent = currentLength + '/1000 символов';
-
-                                    // Меняем цвет счетчика, если приближаемся к лимиту
-                                    if (currentLength > 950) {
-                                        charCounter.classList.remove('text-gray-500');
-                                        charCounter.classList.add('text-orange-500');
-                                    } else {
-                                        charCounter.classList.remove('text-orange-500', 'text-red-500');
-                                        charCounter.classList.add('text-gray-500');
-                                    }
-
-                                    // Если превышен лимит
-                                    if (currentLength >= 1000) {
-                                        charCounter.classList.remove('text-orange-500');
-                                        charCounter.classList.add('text-red-500');
-                                    }
+                                    checkCommentLength(this);
                                 });
 
                                 commentForm.addEventListener('submit', function(e) {
@@ -245,12 +257,7 @@
                                     if (commentLength < 2) {
                                         e.preventDefault();
                                         alert('Комментарий должен содержать не менее 2 символов');
-                                        return;
-                                    }
-
-                                    if (commentLength > 1000) {
-                                        e.preventDefault();
-                                        alert('Комментарий не должен превышать 1000 символов');
+                                        commentContent.focus();
                                         return;
                                     }
 
@@ -301,7 +308,6 @@
                                 <span class="text-sm text-gray-900">{{ $ticket->reporter_phone ?? 'Не указан' }}</span>
                             </dd>
                         </div>
-                        @if($ticket->room)
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Кабинет</dt>
                             <dd class="mt-1 flex items-center">
@@ -310,6 +316,7 @@
                                     <path d="M5 21V7l8-4v18"></path>
                                     <path d="M19 21V11l-6-4"></path>
                                 </svg>
+                                @if($ticket->room)
                                 <div>
                                     <span class="text-sm text-gray-900">{{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</span>
                                     @if($ticket->room->building || $ticket->room->floor)
@@ -317,11 +324,12 @@
                                         <span class="text-xs text-gray-500">{{ $ticket->room->full_address }}</span>
                                     @endif
                                 </div>
+                                @else
+                                <span class="text-sm text-gray-500">Не указан</span>
+                                @endif
                             </dd>
                         </div>
-                        @endif
 
-                        @if($ticket->equipment)
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Оборудование</dt>
                             <dd class="mt-1 flex items-center">
@@ -329,12 +337,15 @@
                                     <rect x="2" y="6" width="20" height="12" rx="2"></rect>
                                     <path d="M6 12h12"></path>
                                 </svg>
+                                @if($ticket->equipment)
                                 <a href="{{ route('equipment.show', $ticket->equipment) }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
                                     {{ $ticket->equipment->name ?: 'Оборудование' }} ({{ $ticket->equipment->inventory_number }})
                                 </a>
+                                @else
+                                <span class="text-sm text-gray-500">Не указано</span>
+                                @endif
                             </dd>
                         </div>
-                        @elseif($ticket->location)
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Локация</dt>
                             <dd class="mt-1 flex items-center">
@@ -342,10 +353,13 @@
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
+                                @if($ticket->location)
                                 <span class="text-sm text-gray-900">{{ $ticket->location->name }}</span>
+                                @else
+                                <span class="text-sm text-gray-500">Не указана</span>
+                                @endif
                             </dd>
                         </div>
-                        @endif
 
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Создано</dt>

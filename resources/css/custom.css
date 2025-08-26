@@ -44,13 +44,17 @@
 }
 
 .text-truncate-indicator::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 0;
     top: 0;
     bottom: 0;
     width: 30px;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 1)
+    );
     pointer-events: none;
 }
 
@@ -65,4 +69,37 @@
         max-width: 200px;
         min-width: 150px;
     }
+}
+
+/* Fix for tickets display in all.blade.php */
+#tickets-container table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#tickets-container .line-clamp-1,
+#tickets-container .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+#tickets-container .line-clamp-1 {
+    -webkit-line-clamp: 1;
+}
+
+#tickets-container .line-clamp-2 {
+    -webkit-line-clamp: 2;
+}
+
+#tickets-container td {
+    vertical-align: top;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Prevent horizontal scrolling in card containers */
+.card {
+    overflow-x: hidden;
 }

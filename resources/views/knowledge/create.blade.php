@@ -189,15 +189,25 @@
                 </div>
 
                 <!-- Кнопки -->
-                <div class="pt-4 flex justify-end space-x-4">
-                    <a href="{{ route('knowledge.index') }}"
-                       class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Отмена
-                    </a>
-                    <button type="submit"
-                            class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Создать статью
-                    </button>
+                <div class="pt-4 flex justify-between items-center">
+                    <div id="autosave-status" class="text-sm text-gray-500">
+                        <span id="autosave-indicator" class="hidden">
+                            <svg class="inline-block w-4 h-4 mr-1 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            <span id="autosave-message">Черновик сохранен</span>
+                        </span>
+                    </div>
+                    <div class="flex space-x-4">
+                        <a href="{{ route('knowledge.index') }}"
+                           class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Отмена
+                        </a>
+                        <button type="submit"
+                                class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Создать статью
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -205,11 +215,128 @@
 </div>
 @endsection
 
+@push('scripts')
 <script>
-function insertMarkdown(before, after) {
-    const textarea = document.getElementById('content');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    // Store for autosave
+    const AUTOSAVE_KEY = 'knowledge_article_draft';
+    let autosaveTimer = null;
+    const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+
+    // Load draft on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDraft();
+        setupAutosave();
+
+        // Setup event listener for beforeunload
+        window.addEventListener('beforeunload', function(e) {
+            const contentField = document.getElementById('content');
+            const titleField = document.getElementById('title');
+
+            if (contentField.value.trim().length > 0 || titleField.value.trim().length > 0) {
+                // Save the draft one last time
+                saveDraft();
+
+                // Show a confirmation dialog
+                e.preventDefault();
+                e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+                return e.returnValue;
+            }
+        });
+    });
+
+    function loadDraft() {
+        try {
+            const savedDraft = localStorage.getItem(AUTOSAVE_KEY);
+            if (savedDraft) {
+                const draftData = JSON.parse(savedDraft);
+
+                // Check if data is recent (less than 24 hours old)
+                const now = new Date();
+                const savedTime = new Date(draftData.timestamp);
+                const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
+
+                if (hoursDiff < 24) {
+                    if (draftData.title) document.getElementById('title').value = draftData.title;
+                    if (draftData.category_id) document.getElementById('category_id').value = draftData.category_id;
+                    if (draftData.description) document.getElementById('description').value = draftData.description;
+                    if (draftData.content) document.getElementById('content').value = draftData.content;
+                    if (draftData.tags) document.getElementById('tags').value = draftData.tags;
+
+                    // Show notification
+                    showAutosaveNotification('Черновик загружен');
+                    setTimeout(() => hideAutosaveNotification(), 3000);
+                } else {
+                    // Clear old draft
+                    localStorage.removeItem(AUTOSAVE_KEY);
+                }
+            }
+        } catch (e) {
+            console.error('Error loading draft:', e);
+            localStorage.removeItem(AUTOSAVE_KEY);
+        }
+    }
+
+    function setupAutosave() {
+        // Attach to input events
+        const fields = ['title', 'category_id', 'description', 'content', 'tags'];
+        fields.forEach(field => {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener('input', scheduleAutosave);
+            }
+        });
+
+        // Start the timer
+        autosaveTimer = setInterval(saveDraft, AUTOSAVE_INTERVAL);
+    }
+
+    function scheduleAutosave() {
+        if (autosaveTimer) {
+            clearTimeout(autosaveTimer);
+        }
+        autosaveTimer = setTimeout(saveDraft, 2000); // 2 seconds delay after typing
+    }
+
+    function saveDraft() {
+        try {
+            const draftData = {
+                title: document.getElementById('title').value,
+                category_id: document.getElementById('category_id').value,
+                description: document.getElementById('description').value,
+                content: document.getElementById('content').value,
+                tags: document.getElementById('tags').value,
+                timestamp: new Date().toISOString()
+            };
+
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draftData));
+            showAutosaveNotification('Черновик сохранен');
+            setTimeout(() => hideAutosaveNotification(), 3000);
+        } catch (e) {
+            console.error('Error saving draft:', e);
+        }
+    }
+
+    function showAutosaveNotification(message) {
+        const indicator = document.getElementById('autosave-indicator');
+        const messageEl = document.getElementById('autosave-message');
+
+        if (indicator && messageEl) {
+            messageEl.textContent = message;
+            indicator.classList.remove('hidden');
+        }
+    }
+
+    function hideAutosaveNotification() {
+        const indicator = document.getElementById('autosave-indicator');
+        if (indicator) {
+            indicator.classList.add('hidden');
+        }
+    }
+
+    function insertMarkdown(before, after) {
+        const textarea = document.getElementById('content');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
 
     const newText = before + selectedText + after;
@@ -374,5 +501,11 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingIndicator.remove();
         }
     }
+
+    // Clear draft when form is submitted
+    document.querySelector('form').addEventListener('submit', function() {
+        localStorage.removeItem(AUTOSAVE_KEY);
+    });
 });
 </script>
+@endpush

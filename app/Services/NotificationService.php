@@ -11,6 +11,37 @@ use Illuminate\Support\Str;
 class NotificationService
 {
     /**
+     * Отправить уведомление о снятии исполнителя с заявки
+     */
+    public function notifyTicketUnassigned(Ticket $ticket, User $user)
+    {
+        try {
+            // Создаем уведомление о снятии с заявки
+            $notification = [
+                "title" => "Вы сняты с заявки",
+                "message" => "Вы были сняты с заявки #{$ticket->id}: \"{$ticket->title}\"",
+                "icon" => "info",
+                "color" => "blue",
+                "link" => route("tickets.show", $ticket),
+            ];
+
+            // Отправляем уведомление в базу данных
+            $user->notify(
+                new \App\Notifications\TicketNotification($notification),
+            );
+
+            Log::info(
+                "Отправлено уведомление о снятии с заявки #{$ticket->id} пользователю {$user->name}",
+            );
+        } catch (\Exception $e) {
+            Log::error(
+                "Ошибка при отправке уведомления о снятии с заявки: " .
+                    $e->getMessage(),
+            );
+        }
+    }
+
+    /**
      * Отправить уведомление о новой заявке
      */
     public function notifyNewTicket(Ticket $ticket)

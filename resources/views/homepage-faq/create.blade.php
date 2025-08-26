@@ -174,25 +174,164 @@
 
             <!-- Actions -->
             <div class="flex items-center justify-end space-x-4 pt-6 border-t border-slate-200">
-                <a href="{{ route('homepage-faq.index') }}"
-                    class="px-4 py-2 text-slate-700 hover:text-slate-900 transition-colors duration-200">
-                    Отмена
-                </a>
-                <button type="submit"
-                        class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                        <polyline points="17,21 17,13 7,13 7,21"></polyline>
-                        <polyline points="7,3 7,8 15,8"></polyline>
-                    </svg>
-                    Создать FAQ
-                </button>
-            </div>
+                <div class="flex justify-between items-center mt-8">
+                    <div id="autosave-status" class="text-sm text-slate-500">
+                        <span id="autosave-indicator" class="hidden">
+                            <svg class="inline-block w-4 h-4 mr-1 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            <span id="autosave-message">Черновик сохранен</span>
+                        </span>
+                    </div>
+                    <div class="flex gap-4">
+                        <a href="{{ route('homepage-faq.index') }}"
+                           class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+                            Отмена
+                        </a>
+                        <button type="submit"
+                                class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17,21 17,13 7,13 7,21"></polyline>
+                                <polyline points="7,3 7,8 15,8"></polyline>
+                            </svg>
+                            Создать FAQ
+                        </button>
+                    </div>
+                </div>
         </form>
     </div>
 </div>
 
 <script>
+    // Store for autosave
+    const AUTOSAVE_KEY = 'faq_draft';
+    let autosaveTimer = null;
+    const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+
+    // Load draft on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDraft();
+        setupAutosave();
+
+        // Setup event listener for beforeunload
+        window.addEventListener('beforeunload', function(e) {
+            const contentField = document.getElementById('content');
+            const titleField = document.getElementById('title');
+
+            if (contentField.value.trim().length > 0 || titleField.value.trim().length > 0) {
+                // Save the draft one last time
+                saveDraft();
+
+                // Show a confirmation dialog
+                e.preventDefault();
+                e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+                return e.returnValue;
+            }
+        });
+    });
+
+    function loadDraft() {
+        try {
+            const savedDraft = localStorage.getItem(AUTOSAVE_KEY);
+            if (savedDraft) {
+                const draftData = JSON.parse(savedDraft);
+
+                // Check if data is recent (less than 24 hours old)
+                const now = new Date();
+                const savedTime = new Date(draftData.timestamp);
+                const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
+
+                if (hoursDiff < 24) {
+                    if (draftData.title) document.getElementById('title').value = draftData.title;
+                    if (draftData.excerpt) document.getElementById('excerpt').value = draftData.excerpt;
+                    if (draftData.content) document.getElementById('content').value = draftData.content;
+                    if (draftData.is_active !== undefined) {
+                        const checkbox = document.getElementById('is_active');
+                        if (checkbox) checkbox.checked = draftData.is_active;
+                    }
+                    if (draftData.sort_order) document.getElementById('sort_order').value = draftData.sort_order;
+
+                    // Show notification
+                    showAutosaveNotification('Черновик загружен');
+                    setTimeout(() => hideAutosaveNotification(), 3000);
+                } else {
+                    // Clear old draft
+                    localStorage.removeItem(AUTOSAVE_KEY);
+                }
+            }
+        } catch (e) {
+            console.error('Error loading draft:', e);
+            localStorage.removeItem(AUTOSAVE_KEY);
+        }
+    }
+
+    function setupAutosave() {
+        // Attach to input events
+        const fields = ['title', 'excerpt', 'content', 'is_active', 'sort_order'];
+        fields.forEach(field => {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener('input', scheduleAutosave);
+                element.addEventListener('change', scheduleAutosave);
+            }
+        });
+
+        // Start the timer
+        autosaveTimer = setInterval(saveDraft, AUTOSAVE_INTERVAL);
+    }
+
+    function scheduleAutosave() {
+        if (autosaveTimer) {
+            clearTimeout(autosaveTimer);
+        }
+        autosaveTimer = setTimeout(saveDraft, 2000); // 2 seconds delay after typing
+    }
+
+    function saveDraft() {
+        try {
+            const draftData = {
+                title: document.getElementById('title').value,
+                excerpt: document.getElementById('excerpt').value,
+                content: document.getElementById('content').value,
+                timestamp: new Date().toISOString()
+            };
+
+            const isActiveCheckbox = document.getElementById('is_active');
+            if (isActiveCheckbox) {
+                draftData.is_active = isActiveCheckbox.checked;
+            }
+
+            const sortOrder = document.getElementById('sort_order');
+            if (sortOrder) {
+                draftData.sort_order = sortOrder.value;
+            }
+
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draftData));
+            showAutosaveNotification('Черновик сохранен');
+            setTimeout(() => hideAutosaveNotification(), 3000);
+        } catch (e) {
+            console.error('Error saving draft:', e);
+        }
+    }
+
+    function showAutosaveNotification(message) {
+        const indicator = document.getElementById('autosave-indicator');
+        const messageEl = document.getElementById('autosave-message');
+
+        if (indicator && messageEl) {
+            messageEl.textContent = message;
+            indicator.classList.remove('hidden');
+        }
+    }
+
+    function hideAutosaveNotification() {
+        const indicator = document.getElementById('autosave-indicator');
+        if (indicator) {
+            indicator.classList.add('hidden');
+        }
+    }
+
 function insertMarkdown(before, after) {
     const textarea = document.getElementById('content');
     const start = textarea.selectionStart;
@@ -341,6 +480,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+    });
+    // Clear draft when form is submitted
+    document.querySelector('form').addEventListener('submit', function() {
+        localStorage.removeItem(AUTOSAVE_KEY);
     });
 });
 </script>

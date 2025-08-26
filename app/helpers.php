@@ -267,6 +267,36 @@ if (!function_exists("get_ticket_icon")) {
     }
 }
 
+if (!function_exists("can_manage_ticket")) {
+    /**
+     * Проверить, может ли пользователь управлять конкретной заявкой
+     *
+     * @param \App\Models\Ticket $ticket
+     * @return bool
+     */
+    function can_manage_ticket($ticket)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false;
+        }
+
+        // Админ/мастер могут управлять всеми заявками
+        if ($user->hasRole(["admin", "master"])) {
+            return true;
+        }
+
+        // Техник может управлять заявками, которые не закрыты
+        if ($user->hasRole("technician") && $ticket->status !== "closed") {
+            return true;
+        }
+
+        // Обычный пользователь — только свои
+        return $ticket->user_id && $ticket->user_id === $user->id;
+    }
+}
+
 if (!function_exists("is_current_route")) {
     /**
      * Проверить, является ли маршрут текущим

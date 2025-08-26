@@ -122,51 +122,30 @@
                     </p>
                 </div>
 
-                <!-- Контактная информация -->
+                <!-- Информация о местоположении -->
                 <div class="space-y-4">
-                    <h3 class="text-lg font-medium text-gray-900">Контактная информация</h3>
-
-                    <div>
-                        <label for="reporter_name" class="block text-sm font-medium text-gray-700 mb-1">
-                            ФИО
-                        </label>
-                        <input type="text"
-                            id="reporter_name"
-                            name="reporter_name"
-                            value="{{ auth()->user()->name }}"
-                            required
-                            readonly
-                            maxlength="255"
-                            class="block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <p class="mt-1 text-xs text-gray-500">Используется ФИО из вашей учетной записи</p>
-                    </div>
-                    <div>
-                        <label for="reporter_phone" class="block text-sm font-medium text-gray-700 mb-1">
-                            Номер телефона
-                        </label>
-                        <input type="text"
-                            id="reporter_phone"
-                            name="reporter_phone"
-                            value="{{ auth()->user()->phone }}"
-                            placeholder="+7 (___) ___-__-__"
-                            readonly
-                            maxlength="20"
-                            class="block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <p class="mt-1 text-xs text-gray-500">
-                            Используется номер телефона из вашей учетной записи
-                        </p>
-                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">Местоположение проблемы</h3>
                     <div>
                         <label for="room_id" class="block text-sm font-medium text-gray-700 mb-1">Кабинет</label>
                         <div class="relative">
-                            <input type="text" id="room_search"
-                                    placeholder="Поиск кабинета по номеру..."
-                                    maxlength="50"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
+                            <div class="flex mb-2">
+                                <div class="relative flex-grow">
+                                    <input type="text" id="room_search"
+                                        placeholder="Поиск кабинета по номеру или названию..."
+                                        maxlength="50"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="M21 21l-4.35-4.35"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
                             <select id="room_id" name="room_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Не указано</option>
                                 @foreach(\App\Models\Room::active()->orderBy('number')->get() as $room)
-                                <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }} data-number="{{ $room->number }}" data-name="{{ $room->name ?? $room->type_name }}">
+                                <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }} data-number="{{ $room->number }}" data-name="{{ $room->name ?? $room->type_name }}" data-building="{{ $room->building }}" data-floor="{{ $room->floor }}">
                                     {{ $room->number }} - {{ $room->name ?? $room->type_name }}
                                     @if($room->building || $room->floor)
                                         ({{ $room->full_address }})
@@ -176,7 +155,7 @@
                             </select>
                         </div>
                         <p class="mt-1 text-sm text-gray-500">
-                            Найдите кабинет по номеру или выберите из списка
+                            Найдите кабинет по номеру или названию или выберите из списка
                         </p>
                     </div>
 
@@ -283,41 +262,78 @@ document.addEventListener('DOMContentLoaded', function() {
     const equipmentSelect = document.getElementById('equipment_id');
     // Поиск по кабинетам и загрузка оборудования происходит независимо от маски телефона
 
-    // Поиск по кабинетам
+    // Улучшенный поиск по кабинетам
     roomSearch.addEventListener('input', function() {
-        const searchText = this.value.toLowerCase();
+        const searchText = this.value.toLowerCase().trim();
         const options = roomSelect.options;
 
         // Убедимся, что опция "Не указано" всегда видна
         options[0].style.display = '';
 
-        for (let i = 0; i < options.length; i++) {
+        // Сохраняем текущий выбор
+        const currentSelectedValue = roomSelect.value;
+        let foundExactMatch = false;
+        let firstMatchIndex = -1;
+
+        for (let i = 1; i < options.length; i++) {
             const roomNumber = options[i].getAttribute('data-number') || '';
             const roomName = options[i].getAttribute('data-name') || '';
-            const optionText = (roomNumber + ' ' + roomName).toLowerCase();
+            const building = options[i].getAttribute('data-building') || '';
+            const floor = options[i].getAttribute('data-floor') || '';
 
+            const optionText = `${roomNumber} ${roomName} ${building} ${floor}`.toLowerCase();
+            const isExactMatch = roomNumber.toLowerCase() === searchText;
+
+            if (isExactMatch) {
+                foundExactMatch = true;
+            }
+
+            // Проверяем, содержит ли опция текст поиска или пуст ли поиск
             if (optionText.includes(searchText) || !searchText) {
                 options[i].style.display = '';
+
+                // Запоминаем индекс первого совпадения
+                if (firstMatchIndex === -1 && searchText) {
+                    firstMatchIndex = i;
+                }
             } else {
                 options[i].style.display = 'none';
             }
+        }
 
-            // Показать сообщение, если ничего не найдено
-            const visibleOptions = Array.from(options).filter(opt => opt.style.display !== 'none' && opt.value !== '');
-            const noResultsMsg = document.getElementById('no-results-message');
+        // Показать сообщение, если ничего не найдено
+        const visibleOptions = Array.from(options).filter(opt => opt.style.display !== 'none' && opt.value !== '');
+        const noResultsMsg = document.getElementById('no-results-message');
 
-            if (visibleOptions.length === 0 && searchText) {
-                if (!noResultsMsg) {
-                    const message = document.createElement('div');
-                    message.id = 'no-results-message';
-                    message.className = 'text-sm text-gray-500 mt-2';
-                    message.textContent = 'По данному запросу ничего не найдено';
-                    roomSelect.parentNode.appendChild(message);
-                }
-            } else if (noResultsMsg) {
-                noResultsMsg.remove();
+        if (visibleOptions.length === 0 && searchText) {
+            if (!noResultsMsg) {
+                const message = document.createElement('div');
+                message.id = 'no-results-message';
+                message.className = 'text-sm text-gray-500 mt-2';
+                message.textContent = 'По данному запросу ничего не найдено';
+                roomSelect.parentNode.appendChild(message);
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+
+        // Если есть точное совпадение или первое совпадение, и поле поиска не пустое
+        if (searchText && (foundExactMatch || firstMatchIndex > 0)) {
+            const indexToSelect = foundExactMatch ?
+                Array.from(options).findIndex(opt => opt.getAttribute('data-number')?.toLowerCase() === searchText) :
+                firstMatchIndex;
+
+            if (indexToSelect > 0) {
+                roomSelect.selectedIndex = indexToSelect;
+                // При изменении выбора кабинета загружаем соответствующее оборудование
+                loadEquipmentByRoom(roomSelect.value);
             }
         }
+    });
+
+    // Слушаем изменения в выборе кабинета напрямую
+    roomSelect.addEventListener('change', function() {
+        loadEquipmentByRoom(this.value);
     });
 
     // Функция для загрузки оборудования по ID кабинета

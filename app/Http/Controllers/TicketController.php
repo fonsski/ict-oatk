@@ -270,7 +270,7 @@ class TicketController extends Controller
             abort(403);
         }
 
-        // Проверяем, не закрыта ли заявка
+        // Проверяем, можно ли взять заявку в работу
         if ($ticket->status === "closed") {
             return Redirect::back()->with(
                 "error",
@@ -448,6 +448,12 @@ class TicketController extends Controller
             // Уведомление о снятии назначения
             $oldAssignedUser = User::find($oldAssignedId);
             if ($oldAssignedUser) {
+                // Отправляем уведомление о снятии с заявки
+                $this->notificationService->notifyTicketUnassigned(
+                    $ticket,
+                    $oldAssignedUser,
+                );
+
                 // Добавляем комментарий о снятии назначения
                 TicketComment::create([
                     "ticket_id" => $ticket->id,
@@ -500,5 +506,13 @@ class TicketController extends Controller
         }
         // Обычный пользователь — только свои
         return $ticket->user_id && $ticket->user_id === $user->id;
+    }
+
+    /**
+     * Check if the ticket can be taken in work
+     */
+    private function canTakeInWork(Ticket $ticket): bool
+    {
+        return $ticket->status !== "closed";
     }
 }

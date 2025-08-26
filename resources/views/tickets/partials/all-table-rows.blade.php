@@ -41,7 +41,7 @@
                     'closed' => 'Закрыта'
                 ];
             @endphp
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; display: inline-block;">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; display: inline-block; min-width: 80px; text-align: center;">
                 {{ $statusLabels[$ticket->status] ?? $ticket->status }}
             </span>
         </td>
@@ -53,9 +53,6 @@
         <td class="px-6 py-4">
             @if($ticket->assignedTo)
                 <div class="flex items-center">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2 transition-all duration-300 hover:bg-blue-600">
-                        {{ mb_substr($ticket->assignedTo->name, 0, 1, 'UTF-8') }}
-                    </div>
                     <span class="text-sm text-slate-900">{{ $ticket->assignedTo->name }}</span>
                 </div>
             @else
@@ -86,7 +83,7 @@
                             </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10 hidden animate-fade-in" data-dropdown-menu>
                             <div class="py-1">
-                                @if($ticket->status !== 'in_progress')
+                                @if($ticket->status !== 'in_progress' && $ticket->status !== 'closed')
                                     <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
@@ -120,7 +117,8 @@
 @endforeach
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Инициализация меню действий для каждой строки таблицы
+function initTableDropdowns() {
     // Обработка выпадающих меню в таблице
     document.querySelectorAll('[data-dropdown]').forEach(function(dropdown) {
         const toggle = dropdown.querySelector('[data-dropdown-toggle]');
@@ -143,6 +141,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    initTableDropdowns();
 
     // Закрытие меню при клике вне его
     document.addEventListener('click', function(e) {
@@ -152,5 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Перезапускаем инициализацию меню каждые 10 секунд для новых элементов
+    setInterval(initTableDropdowns, 10000);
 });
 </script>
