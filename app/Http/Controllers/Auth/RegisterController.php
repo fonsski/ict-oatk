@@ -8,6 +8,7 @@ use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
@@ -18,39 +19,106 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate(
-            [
-                "name" => "required|string|max:255",
-                "phone" => [
-                    "required",
-                    "string",
-                    "max:20",
-                    "unique:users",
-                    'regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
-                ],
-                "password" => "required|string|min:8|confirmed",
-            ],
-            [
-                "phone.regex" =>
-                    "Номер телефона должен быть в формате: +7 (999) 999-99-99",
-            ],
-        );
+        $request->validate([
+            "name" => "required|string|max:255",
+            "phone" => "required|string|max:20",
+            "password" => "required|string|min:8|confirmed",
+        ]);
 
+        // Очищаем номер телефона от форматирования
+        $phone = preg_replace("/[^0-9+]/", "", $request->phone);
+
+        // Нормализуем номер телефона в формат +7XXXXXXXXXX
+        if (strlen($phone) >= 10) {
+            if (substr($phone, 0, 1) === "8" && strlen($phone) === 11) {
+                // Преобразуем 8XXXXXXXXXX в +7XXXXXXXXXX
+                $phone = "+7" . substr($phone, 1);
+            } elseif (
+                substr($phone, 0, 1) === "7" &&
+                strlen($phone) === 11 &&
+                substr($phone, 0, 1) !== "+"
+            ) {
+                // Преобразуем 7XXXXXXXXXX в +7XXXXXXXXXX
+                $phone = "+7" . substr($phone, 1);
+            } elseif (
+                strlen($phone) === 10 &&
+                preg_match('/^9\d{9}$/', $phone)
+            ) {
+                // Преобразуем 9XXXXXXXXX в +79XXXXXXXXX
+                $phone = "+7" . $phone;
+            } elseif (substr($phone, 0, 1) !== "+" && strlen($phone) >= 10) {
+                // Если нет +, добавляем +7
+                $phone = "+7" . substr($phone, -10);
+            }
+        }
+
+        // Проверяем, существует ли пользователь с таким телефоном
+        $existingUser = User::where(function ($query) use ($phone) {
+            $query->where("phone", $phone);
+
+            // Проверка альтернативных форматов телефона
+            if (substr($phone, 0, 2) === "+7") {
+                $query->orWhere("phone", "8" . substr($phone, 2));
+                $query->orWhere("phone", "7" . substr($phone, 2));
+                $query->orWhere("phone", substr($phone, 1)); // без +
+            }
+        })->first();
+
+        if ($existingUser) {
+            return back()
+                ->withErrors([
+                    "phone" =>
+                        "Этот номер телефона уже зарегистрирован в системе.",
+                ])
+                ->withInput();
+        }
+
+        // Находим роль пользователя
         $userRole = Role::where("slug", "user")->first();
+        if (!$userRole) {
+            // Если роль не найдена, используем первую доступную
+            $userRole = Role::first();
+            if (!$userRole) {
+                return back()
+                    ->withErrors([
+                        "error" =>
+                            "Ошибка при регистрации: роли пользователей не настроены",
+                    ])
+                    ->withInput();
+            }
+        }
 
         // Генерируем случайный email для совместимости с системой
         $randomEmail = $request->email ?? "user_" . time() . "@example.com";
 
-        $user = User::create([
-            "name" => $request->name,
-            "phone" => $request->phone,
-            "email" => $randomEmail,
-            "password" => Hash::make($request->password),
-            "role_id" => $userRole->id,
-        ]);
+        try {
+            $user = User::create([
+                "name" => $request->name,
+                "phone" => $phone,
+                "email" => $randomEmail,
+                "password" => Hash::make($request->password),
+                "role_id" => $userRole->id,
+                "is_active" => true,
+            ]);
 
-        Auth::login($user);
+            Auth::login($user);
 
-        return redirect()->route("home");
+            return redirect()->route("home");
+        } catch (\Exception $e) {
+            Log::error(
+                "Ошибка при регистрации пользователя: " . $e->getMessage(),
+                [
+                    "phone" => $phone,
+                    "name" => $request->name,
+                ],
+            );
+
+            return back()
+                ->withErrors([
+                    "error" =>
+                        "Ошибка при регистрации. Пожалуйста, попробуйте еще раз или обратитесь к администратору.",
+                ])
+                ->withInput();
+        }
     }
 }

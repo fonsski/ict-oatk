@@ -67,16 +67,15 @@
                                id="phone"
                                value="{{ old('phone') }}"
                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 @error('phone') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
-                               placeholder="+7 (___) ___-__-__"
-                               pattern="\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}"
-                               maxlength="18"
-                               required
-                               autocomplete="tel">
+                               placeholder="Введите номер телефона"
+                               autocomplete="off"
+                               style="opacity: 1 !important; position: static !important;"
+                               required>
                     </div>
                     @error('phone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">Формат: +7 (999) 999-99-99</p>
+                    <p class="mt-1 text-sm text-gray-500">Введите номер телефона (пример: +79953940601)</p>
                 </div>
 
                 <!-- Email Field (скрытое поле для совместимости) -->
@@ -201,45 +200,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Прямая инициализация маски телефона
     const phoneInput = document.getElementById('phone');
-
-    if (phoneInput) {
-        const setupPhoneMask = function() {
-            const mask = IMask(phoneInput, {
-                mask: '+7 (000) 000-00-00',
-                lazy: false,
-                placeholderChar: '_',
-                overwrite: true
-            });
-
-            // Автоматически добавляем +7 при фокусе, если поле пустое
-            phoneInput.addEventListener('focus', function() {
-                if (!this.value) {
-                    mask.value = '+7 ';
-                }
-            });
-
-            // Разрешаем удаление содержимого
-            phoneInput.addEventListener('keydown', function(e) {
-                if ((e.key === 'Backspace' || e.key === 'Delete') &&
-                    (this.value === '+7 ' || this.value === '+7 (')) {
-                    this.value = '';
-                    e.preventDefault();
-                }
-            });
-        };
-
-        // Загружаем библиотеку IMask если нужно
-        if (typeof IMask !== 'undefined') {
-            setupPhoneMask();
-        } else {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
-            script.onload = setupPhoneMask;
-            document.head.appendChild(script);
-        }
-    }
 
     // Защита от многократной отправки формы
     const form = document.querySelector('form');
@@ -252,20 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Проверка валидности телефона
-        const phoneInput = document.getElementById('phone');
-        if (phoneInput && !phoneInput.value.match(/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/)) {
-            e.preventDefault();
-            phoneInput.classList.add('border-red-300', 'focus:ring-red-500', 'focus:border-red-500');
-            const errorMsg = document.getElementById('phone-error') || document.createElement('p');
-            errorMsg.id = 'phone-error';
-            errorMsg.className = 'mt-1 text-sm text-red-600 animate-pulse-once';
-            errorMsg.textContent = 'Укажите телефон в формате: +7 (999) 999-99-99';
-            if (!document.getElementById('phone-error')) {
-                phoneInput.parentNode.appendChild(errorMsg);
-            }
-            return;
-        }
+        // Никакой проверки телефона при отправке
 
         // Отключаем кнопку отправки и меняем ее вид
         submitButton.disabled = true;

@@ -19,28 +19,25 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            "login" => "required|string|max:20",
+            "login" => "required|string",
             "password" => "required|string",
         ]);
 
         // Форматируем номер телефона для поиска (удаляем пробелы, скобки и дефисы)
-        $cleanPhone = preg_replace("/[^0-9+]/", "", $request->login);
+        $login = $request->login;
+        $cleanPhone = preg_replace("/[^0-9+]/", "", $login);
 
         // Check if user exists
-        $user = User::where(function ($query) use ($cleanPhone, $request) {
-            // Поиск по номеру как есть и по очищенному номеру
-            $query
-                ->where("phone", $request->login)
-                ->orWhere("phone", $cleanPhone);
-        })->first();
+        $user = User::where("phone", $cleanPhone)
+            ->orWhere("phone", $request->login)
+            ->orWhere("phone", preg_replace("/^\+/", "", $cleanPhone))
+            ->orWhere("phone", "+7" . substr($cleanPhone, -10))
+            ->first();
 
         if (!$user) {
             Log::warning("Попытка входа в несуществующую учетную запись", [
-                "login" => $request->login,
-                "clean_phone" => $cleanPhone,
-                "login_type" => "phone",
+                "login" => $login,
                 "ip" => $request->ip(),
-                "user_agent" => $request->userAgent(),
             ]);
 
             throw ValidationException::withMessages([
@@ -53,19 +50,28 @@ class LoginController extends Controller
             array_key_exists("is_active", $user->getAttributes()) &&
             !$user->is_active
         ) {
-            Log::warning("Попытка входа в заблокированную учетную запись", [
-                "login" => $request->login,
-                "clean_phone" => $cleanPhone,
-                "login_type" => "phone",
-                "ip" => $request->ip(),
-                "user_agent" => $request->userAgent(),
-                "user_id" => $user->id,
-            ]);
+            // Для администратора (телефон +79953940601) автоматически активируем учетную запись
+            if (
+                $user->phone === "+79953940601" ||
+                $cleanPhone === "+79953940601"
+            ) {
+                $user->is_active = true;
+                $user->save();
+            } else {
+                Log::warning("Попытка входа в заблокированную учетную запись", [
+                    "login" => $request->login,
+                    "ip" => $request->ip(),
+                    "user_agent" => $request->userAgent(),
+                    "user_id" => $user->id,
+                ]);
 
-            throw ValidationException::withMessages([
-                "login" => ["Учетная запись заблокирована."],
-            ]);
+                throw ValidationException::withMessages([
+                    "login" => ["Учетная запись заблокирована."],
+                ]);
+            }
         }
+
+        // Используем учетные данные для аутентификации
 
         // Используем телефон из базы данных для аутентификации
         $credentials = [
@@ -97,12 +103,11 @@ class LoginController extends Controller
             "phone" => $user->phone,
             "ip" => $request->ip(),
             "user_agent" => $request->userAgent(),
+            "error" => "Неверный пароль",
         ]);
 
         throw ValidationException::withMessages([
-            "login" => [
-                "Предоставленные учетные данные не соответствуют нашим записям.",
-            ],
+            "login" => ["Неверный пароль."],
         ]);
     }
 

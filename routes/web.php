@@ -21,6 +21,7 @@ use App\Http\Controllers\TestCanvasController;
 use Illuminate\Support\Facades\Route;
 
 // Аутентификация
+
 Route::middleware("guest")->group(function () {
     Route::get("login", [LoginController::class, "showLoginForm"])->name(
         "login",

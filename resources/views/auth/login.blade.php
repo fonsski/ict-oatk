@@ -23,7 +23,7 @@
             <form method="POST" action="{{ route('login') }}" class="space-y-6">
                 @csrf
 
-                <!-- Login Field (Email or Phone) -->
+                <!-- Login Field (Phone) -->
                 <div>
                     <label for="login" class="block text-sm font-medium text-gray-700 mb-2">
                         Номер телефона
@@ -38,15 +38,14 @@
                                name="login"
                                id="login"
                                required
-                               maxlength="18"
                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 @error('login') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
-                               placeholder="+7 (___) ___-__-__"
+                               placeholder="+79XXXXXXXXX"
                                value="{{ old('login') }}">
                     </div>
                     @error('login')
                         <p class="mt-1 text-sm text-red-600 animate-pulse-once">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">Формат: +7 (999) 999-99-99</p>
+                    <p class="mt-1 text-sm text-gray-500">Введите номер телефона</p>
                 </div>
 
                 <!-- Password Field -->
@@ -63,12 +62,12 @@
                             </svg>
                         </div>
                         <input type="password"
-                               name="password"
-                               id="password"
-                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('password') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
-                               placeholder="Введите ваш пароль"
-                               required
-                               autocomplete="current-password">
+                                   name="password"
+                                   id="password"
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('password') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
+                                   placeholder="Введите ваш пароль"
+                                   required
+                                   autocomplete="current-password">
                     </div>
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -145,54 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginButton = document.getElementById('login-button');
     const phoneInput = document.querySelector('input[name="login"]');
 
-    // Ручная инициализация маски для телефона
-    if (phoneInput) {
-        const setupPhoneMask = function() {
-            // Поддерживаем как формат с пробелами и скобками, так и обычный
-            phoneInput.value = phoneInput.value.trim();
-
-            // Обрабатываем случай, когда номер вводится без форматирования
-            // Если это похоже на телефон без форматирования, пробуем его отформатировать
-            if (phoneInput.value.match(/^\+7\d{10}$/)) {
-                const digits = phoneInput.value.substring(2).split('');
-                phoneInput.value = `+7 (${digits.slice(0,3).join('')}) ${digits.slice(3,6).join('')}-${digits.slice(6,8).join('')}-${digits.slice(8,10).join('')}`;
-            }
-
-            const mask = IMask(phoneInput, {
-                mask: '+7 (000) 000-00-00',
-                lazy: false,
-                placeholderChar: '_',
-                overwrite: true
-            });
-
-            // Автоматически добавляем +7 при фокусе, если поле пустое
-            phoneInput.addEventListener('focus', function() {
-                if (!this.value) {
-                    mask.value = '+7 ';
-                }
-            });
-
-            // Разрешаем удаление содержимого
-            phoneInput.addEventListener('keydown', function(e) {
-                if ((e.key === 'Backspace' || e.key === 'Delete') &&
-                    (this.value === '+7 ' || this.value === '+7 (')) {
-                    this.value = '';
-                    e.preventDefault();
-                }
-            });
-        };
-
-        // Загружаем библиотеку IMask если нужно
-        if (typeof IMask !== 'undefined') {
-            setupPhoneMask();
-        } else {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
-            script.onload = setupPhoneMask;
-            document.head.appendChild(script);
-        }
-    }
-
     if (form && loginButton) {
         form.addEventListener('submit', function(e) {
             // Если кнопка уже отключена, предотвращаем отправку
@@ -201,35 +152,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Подготовка номера телефона - убираем маску, если пользователь ввел номер без форматирования
-            if (phoneInput && phoneInput.value) {
-                // Если пользователь ввел телефон без маски (просто цифры)
-                // например +79991234567, преобразуем его в правильный формат для сервера
-                const cleanValue = phoneInput.value.replace(/[^0-9+]/g, '');
-
-                // Если это выглядит как полный номер телефона без форматирования
-                if (cleanValue.match(/^\+7\d{10}$/)) {
-                    // Создаем скрытое поле с очищенным номером для отправки на сервер
-                    const cleanPhoneInput = document.createElement('input');
-                    cleanPhoneInput.type = 'hidden';
-                    cleanPhoneInput.name = 'clean_phone';
-                    cleanPhoneInput.value = cleanValue;
-                    form.appendChild(cleanPhoneInput);
-                }
-            }
+            // Никакой предварительной обработки телефона при отправке формы
 
             // Отключаем кнопку отправки и добавляем анимацию
             loginButton.disabled = true;
             loginButton.classList.add('opacity-75', 'cursor-not-allowed');
             loginButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Вход...';
-
-            // Добавляем скрытое поле с CSRF-токеном заново для предотвращения ошибки 419
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
 
             // Разблокируем кнопку через 10 секунд на случай ошибки
             setTimeout(function() {
