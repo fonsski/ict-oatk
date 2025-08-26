@@ -128,7 +128,10 @@ class LoginController extends Controller
             ]);
         }
 
-        return redirect("/");
+        // Используем route() вместо redirect("/") для правильного формирования URL
+        return redirect()
+            ->route("home")
+            ->with("status", "Вы успешно вышли из системы");
     }
 
     /**

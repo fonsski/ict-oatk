@@ -64,6 +64,48 @@ Route::post("logout", [LoginController::class, "logout"])
     ->name("logout")
     ->middleware("auth");
 
+// Тестовые маршруты для страниц ошибок (только для разработки)
+Route::prefix("test-errors")
+    ->middleware("auth")
+    ->group(function () {
+        Route::get("/", [
+            \App\Http\Controllers\TestErrorController::class,
+            "showErrors",
+        ])->name("test.errors");
+        Route::get("/404", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test404",
+        ])->name("test.404");
+        Route::get("/403", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test403",
+        ])->name("test.403");
+        Route::get("/401", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test401",
+        ])->name("test.401");
+        Route::get("/500", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test500",
+        ])->name("test.500");
+        Route::get("/503", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test503",
+        ])->name("test.503");
+        Route::get("/419", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test419",
+        ])->name("test.419");
+        Route::get("/429", [
+            \App\Http\Controllers\TestErrorController::class,
+            "test429",
+        ])->name("test.429");
+        Route::get("/custom", [
+            \App\Http\Controllers\TestErrorController::class,
+            "testCustom",
+        ])->name("test.custom");
+    });
+
 Route::get("login/timeout", [LoginController::class, "timeout"])->name(
     "login.timeout",
 );

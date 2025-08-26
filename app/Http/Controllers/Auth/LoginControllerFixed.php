@@ -29,8 +29,9 @@ class LoginControllerFixed extends Controller
         // Check if user exists and is active
         $user = User::where(function ($query) use ($cleanPhone, $request) {
             // Поиск по номеру как есть и по очищенному номеру
-            $query->where("phone", $request->login)
-                  ->orWhere("phone", $cleanPhone);
+            $query
+                ->where("phone", $request->login)
+                ->orWhere("phone", $cleanPhone);
         })->first();
 
         if (!$user || !$user->is_active) {
@@ -103,7 +104,10 @@ class LoginControllerFixed extends Controller
             ]);
         }
 
-        return redirect("/");
+        // Используем route() вместо redirect("/") для правильного формирования URL
+        return redirect()
+            ->route("home")
+            ->with("status", "Вы успешно вышли из системы");
     }
 
     /**
