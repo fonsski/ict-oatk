@@ -118,6 +118,8 @@ class TicketController extends Controller
             "reporter_email.email" => "Пожалуйста, укажите корректный email",
             "reporter_phone.max" =>
                 "Номер телефона не должен превышать 20 символов",
+            "reporter_phone.regex" =>
+                "Номер телефона должен быть в формате: +7 (999) 999-99-99",
             "location_id.exists" => "Выбранное местоположение не существует",
             "room_id.exists" => "Выбранный кабинет не существует",
             "equipment_id.exists" => "Выбранное оборудование не существует",
@@ -132,7 +134,12 @@ class TicketController extends Controller
                 "reporter_name" => "nullable|string|max:255",
                 "reporter_id" => "nullable|string|max:50",
                 "reporter_email" => "nullable|email|max:255",
-                "reporter_phone" => "nullable|string|max:20",
+                "reporter_phone" => [
+                    "nullable",
+                    "string",
+                    "max:20",
+                    "regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/",
+                ],
                 "location_id" => "nullable|exists:locations,id",
                 "room_id" => "nullable|exists:rooms,id",
                 "equipment_id" => "nullable|exists:equipment,id",
@@ -149,7 +156,7 @@ class TicketController extends Controller
             if (empty($data["reporter_email"])) {
                 $data["reporter_email"] = $user->email;
             }
-            if (empty($data["reporter_phone"])) {
+            if (empty($data["reporter_phone"]) && !empty($user->phone)) {
                 $data["reporter_phone"] = $user->phone;
             }
         }
@@ -221,6 +228,8 @@ class TicketController extends Controller
             "reporter_email.email" => "Пожалуйста, укажите корректный email",
             "reporter_phone.max" =>
                 "Номер телефона не должен превышать 20 символов",
+            "reporter_phone.regex" =>
+                "Номер телефона должен быть в формате: +7 (999) 999-99-99",
             "location_id.exists" => "Выбранное местоположение не существует",
             "room_id.exists" => "Выбранный кабинет не существует",
             "equipment_id.exists" => "Выбранное оборудование не существует",
@@ -236,7 +245,12 @@ class TicketController extends Controller
                 "reporter_name" => "nullable|string|max:255",
                 "reporter_id" => "nullable|string|max:50",
                 "reporter_email" => "nullable|email|max:255",
-                "reporter_phone" => "nullable|string|max:20",
+                "reporter_phone" => [
+                    "nullable",
+                    "string",
+                    "max:20",
+                    "regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/",
+                ],
                 "location_id" => "nullable|exists:locations,id",
                 "room_id" => "nullable|exists:rooms,id",
                 "equipment_id" => "nullable|exists:equipment,id",
@@ -274,6 +288,14 @@ class TicketController extends Controller
             abort(403);
         }
 
+        // Проверяем, не закрыта ли заявка
+        if ($ticket->status === "closed") {
+            return Redirect::back()->with(
+                "error",
+                "Нельзя взять в работу закрытую заявку",
+            );
+        }
+
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "in_progress"]);
 
@@ -300,6 +322,14 @@ class TicketController extends Controller
     {
         if (!$this->canModify($ticket)) {
             abort(403);
+        }
+
+        // Проверяем, не закрыта ли заявка
+        if ($ticket->status === "closed") {
+            return Redirect::back()->with(
+                "error",
+                "Нельзя отметить как решённую закрытую заявку",
+            );
         }
 
         $oldStatus = $ticket->status;
@@ -419,6 +449,18 @@ class TicketController extends Controller
                     "ticket_id" => $ticket->id,
                     "user_id" => Auth::id(),
                     "content" => "Заявка назначена на {$assignedUser->name}",
+                    "is_system" => true,
+                ]);
+            }
+        } elseif ($oldAssignedId && empty($data["assigned_to_id"])) {
+            // Уведомление о снятии назначения
+            $oldAssignedUser = User::find($oldAssignedId);
+            if ($oldAssignedUser) {
+                // Добавляем комментарий о снятии назначения
+                TicketComment::create([
+                    "ticket_id" => $ticket->id,
+                    "user_id" => Auth::id(),
+                    "content" => "Заявка снята с {$oldAssignedUser->name}",
                     "is_system" => true,
                 ]);
             }

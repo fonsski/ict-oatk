@@ -18,11 +18,23 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
-            "name" => "required|string|max:255",
-            "phone" => "required|string|max:20|unique:users",
-            "password" => "required|string|min:8|confirmed",
-        ]);
+        $request->validate(
+            [
+                "name" => "required|string|max:255",
+                "phone" => [
+                    "required",
+                    "string",
+                    "max:20",
+                    "unique:users",
+                    'regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
+                ],
+                "password" => "required|string|min:8|confirmed",
+            ],
+            [
+                "phone.regex" =>
+                    "Номер телефона должен быть в формате: +7 (999) 999-99-99",
+            ],
+        );
 
         $userRole = Role::where("slug", "user")->first();
 

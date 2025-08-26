@@ -19,7 +19,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
                 <div class="flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">#{{ $ticket->id }} {{ $ticket->title }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2 break-words">#{{ $ticket->id }} {{ $ticket->title }}</h1>
                     <div class="flex flex-wrap gap-4 mb-4">
                         <!-- Status -->
                         @php
@@ -122,7 +122,7 @@
                 <!-- Description -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Описание проблемы</h2>
-                    <div class="prose max-w-none ticket-description">
+                    <div class="prose max-w-none ticket-description break-words">
                         {{ $ticket->description }}
                     </div>
                 </div>
@@ -148,7 +148,7 @@
                                                     <h3 class="text-sm font-medium text-blue-600">Система</h3>
                                                     <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                                 </div>
-                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content">
+                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content break-words">
                                                     {{ $comment->content }}
                                                 </div>
                                             </div>
@@ -168,7 +168,7 @@
                                                 <h3 class="text-sm font-medium text-gray-900">{{ $comment->user->name }}</h3>
                                                 <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                             </div>
-                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content">
+                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content break-words">
                                                 {{ $comment->content }}
                                             </div>
                                         </div>

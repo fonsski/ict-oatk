@@ -37,15 +37,17 @@
                         <input type="tel"
                                name="login"
                                id="login"
-                               value="{{ old('login') }}"
-                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('login') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
-                               placeholder="Введите ваш номер телефона"
                                required
-                               autocomplete="tel">
+                               pattern="\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}"
+                               maxlength="18"
+                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 @error('login') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
+                               placeholder="+7 (___) ___-__-__"
+                               value="{{ old('login') }}">
                     </div>
                     @error('login')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 animate-pulse-once">{{ $message }}</p>
                     @enderror
+                    <p class="mt-1 text-sm text-gray-500">Формат: +7 (999) 999-99-99</p>
                 </div>
 
                 <!-- Password Field -->
@@ -93,8 +95,7 @@
 
                 <!-- Submit Button -->
                 <div>
-                    <button type="submit"
-                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <button type="submit" id="login-button" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0">
                         <span class="absolute left-0 inset-y-0 flex items-center pl-3">
                             <svg class="h-5 w-5 text-blue-200 group-hover:text-blue-100 transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
@@ -102,7 +103,7 @@
                                 <line x1="15" y1="12" x2="3" y2="12"></line>
                             </svg>
                         </span>
-                        Войти в систему
+                        Войти
                     </button>
                 </div>
 
@@ -137,4 +138,56 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const loginButton = document.getElementById('login-button');
+    const phoneInput = document.querySelector('input[name="login"]');
+
+    // Инициализация маски для телефона
+    if (window.initPhoneMasks && phoneInput) {
+        window.initPhoneMasks();
+    }
+
+    if (form && loginButton) {
+        form.addEventListener('submit', function(e) {
+            // Если кнопка уже отключена, предотвращаем отправку
+            if (loginButton.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            // Отключаем кнопку отправки и добавляем анимацию
+            loginButton.disabled = true;
+            loginButton.classList.add('opacity-75', 'cursor-not-allowed');
+            loginButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Вход...';
+
+            // Добавляем скрытое поле с CSRF-токеном заново для предотвращения ошибки 419
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            // Разблокируем кнопку через 10 секунд на случай ошибки
+            setTimeout(function() {
+                loginButton.disabled = false;
+                loginButton.classList.remove('opacity-75', 'cursor-not-allowed');
+                loginButton.innerHTML = 'Войти';
+            }, 10000);
+        });
+    }
+
+    // Анимация появления формы
+    const loginForm = document.querySelector('.space-y-8');
+    if (loginForm) {
+        loginForm.classList.add('animate-fade-in');
+    }
+});
+</script>
+@endpush
+
 @endsection

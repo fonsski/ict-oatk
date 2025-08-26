@@ -1,13 +1,13 @@
 @foreach($tickets as $ticket)
-    <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="{{ $ticket->id }}">
+    <tr class="hover:bg-slate-50 transition-all duration-300 animate-fade-in" data-ticket-id="{{ $ticket->id }}">
         <td class="px-6 py-4">
             <div>
                 <a href="{{ route('tickets.show', $ticket) }}"
-                   class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200">
+                   class="text-slate-900 font-medium hover:text-blue-600 transition-all duration-300 break-words">
                     {{ $ticket->title }}
                 </a>
-                <p class="text-sm text-slate-600 mt-1 line-clamp-2">
-                    {{ Str::limit($ticket->description, 80) }}
+                <p class="text-sm text-slate-600 mt-1 break-words whitespace-pre-line">
+                    {{ Str::limit($ticket->description, 120) }}
                 </p>
                 @if($ticket->room)
                     <div class="text-xs text-slate-500 mt-1">
@@ -41,7 +41,7 @@
                     'closed' => 'Закрыта'
                 ];
             @endphp
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}" style="white-space: nowrap;">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; display: inline-block;">
                 {{ $statusLabels[$ticket->status] ?? $ticket->status }}
             </span>
         </td>
@@ -53,8 +53,8 @@
         <td class="px-6 py-4">
             @if($ticket->assignedTo)
                 <div class="flex items-center">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
-                        {{ substr($ticket->assignedTo->name, 0, 1) }}
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2 transition-all duration-300 hover:bg-blue-600">
+                        {{ mb_substr($ticket->assignedTo->name, 0, 1, 'UTF-8') }}
                     </div>
                     <span class="text-sm text-slate-900">{{ $ticket->assignedTo->name }}</span>
                 </div>
@@ -74,17 +74,17 @@
         <td class="px-6 py-4">
             <div class="flex items-center gap-2">
                 <a href="{{ route('tickets.show', $ticket) }}"
-                   class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                   class="text-blue-600 hover:text-blue-700 font-medium text-sm transition-all duration-300 hover:underline">
                     Просмотр
                 </a>
                 @if(user_can_manage_tickets())
-                    <div class="relative" data-dropdown>
-                        <button class="text-slate-400 hover:text-slate-600 p-1" data-dropdown-toggle>
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                            </svg>
-                        </button>
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10 hidden" data-dropdown-menu>
+                    <div class="relative z-10" data-dropdown>
+                            <button class="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle>
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                </svg>
+                            </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10 hidden animate-fade-in" data-dropdown-menu>
                             <div class="py-1">
                                 @if($ticket->status !== 'in_progress')
                                     <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">

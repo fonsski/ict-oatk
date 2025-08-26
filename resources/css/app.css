@@ -3,6 +3,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Стили для переноса строк в тексте */
 .prose,
 .ticket-description,
@@ -75,7 +117,7 @@
     }
 
     .form-input {
-        @apply w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+        @apply w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300;
     }
 
     /* Исправление проблемы с наложением текста на стрелку в выпадающих списках */
@@ -89,7 +131,7 @@
     }
 
     .nav-link {
-        @apply text-slate-600 hover:text-slate-900 transition-colors duration-200;
+        @apply text-slate-600 hover:text-slate-900 transition-all duration-300;
     }
 
     .nav-link-active {
@@ -102,5 +144,53 @@
 
     .container-width {
         @apply max-w-6xl mx-auto px-6;
+    }
+
+    /* Стили для анимаций */
+    .animate-fade-in {
+        animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .animate-slide-up {
+        animation: slideInUp 0.5s ease-out;
+    }
+
+    .animate-pulse-once {
+        animation: pulse 0.5s ease-in-out;
+    }
+
+    .animate-spin-slow {
+        animation: spin 2s linear infinite;
+    }
+
+    /* Анимации для карточек и контейнеров */
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Анимации для кнопок */
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-outline:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:active,
+    .btn-secondary:active,
+    .btn-outline:active {
+        transform: translateY(1px);
     }
 }

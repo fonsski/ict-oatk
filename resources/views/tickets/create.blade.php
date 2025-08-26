@@ -17,25 +17,25 @@
                 @csrf
 
                 @if ($errors->any())
-                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800">Обнаружены ошибки при заполнении формы:</h3>
-                            <div class="mt-2 text-sm text-red-700">
-                                <ul class="list-disc pl-5 space-y-1">
-                                    @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 animate-fade-in">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-red-500 animate-pulse-once" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-red-800">Обнаружены ошибки при заполнении формы:</h3>
+                                            <div class="mt-2 text-sm text-red-700">
+                                                <ul class="list-disc pl-5 space-y-1">
+                                                    @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                 @endif
 
                 @if (session('success'))
@@ -149,15 +149,16 @@
                             maxlength="20"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         <p class="mt-1 text-sm text-gray-500">
-                            Формат: +7 (999) 999-99-99
+                            Формат: +7 (999) 999-99-99 <span class="text-red-500">*</span>
                         </p>
                     </div>
                     <div>
                         <label for="room_id" class="block text-sm font-medium text-gray-700 mb-1">Кабинет</label>
                         <div class="relative">
                             <input type="text" id="room_search"
-                                placeholder="Поиск кабинета по номеру..."
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
+                                    placeholder="Поиск кабинета по номеру..."
+                                    maxlength="50"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
                             <select id="room_id" name="room_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Не указано</option>
                                 @foreach(\App\Models\Room::active()->orderBy('number')->get() as $room)
@@ -188,8 +189,8 @@
 
                 <!-- Кнопка отправки -->
                 <div class="pt-4">
-                    <button type="submit"
-                        class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" id="submit-button"
+                        class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 hover:shadow-lg">
                         <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
                         </svg>
@@ -204,50 +205,53 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const roomSelect = document.getElementById('room_id');
-    const roomSearch = document.getElementById('room_search');
-    const equipmentSelect = document.getElementById('equipment_id');
-    const phoneInput = document.getElementById('reporter_phone');
+    // Защита от многократной отправки формы
+    const form = document.querySelector('form');
+    const submitButton = document.getElementById('submit-button');
 
-    // Инициализация маски для телефона
-    function initPhoneMask() {
-        if (!phoneInput) return;
-
-        const maskOptions = {
-            mask: '+7 (000) 000-00-00',
-            lazy: false
-        };
-
-        const mask = IMask(phoneInput, maskOptions);
-
-        // Автоматически добавляем +7 при фокусе, если поле пустое
-        phoneInput.addEventListener('focus', function() {
-            if (!this.value) {
-                mask.value = '+7 ';
+    if (form && submitButton) {
+        form.addEventListener('submit', function(e) {
+            // Если форма невалидна, не блокируем кнопку
+            if (!this.checkValidity()) {
+                return;
             }
+
+            // Если кнопка уже отключена, предотвращаем отправку
+            if (submitButton.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            // Отключаем кнопку отправки
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-75', 'cursor-not-allowed');
+            submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Отправка...';
+
+            // Разблокируем кнопку через 10 секунд на случай ошибки
+            setTimeout(function() {
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
+                submitButton.innerHTML = '<svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg> Отправить заявку';
+            }, 10000);
         });
     }
 
-    // Загружаем библиотеку IMask динамически
-    function loadIMask() {
-        if (window.IMask) {
-            initPhoneMask();
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
-        script.onload = initPhoneMask;
-        document.head.appendChild(script);
+    // Используем общий модуль для масок телефона вместо собственной реализации
+    if (window.initPhoneMasks) {
+        window.initPhoneMasks();
     }
-
-    // Загружаем маску для телефона
-    loadIMask();
+    const roomSelect = document.getElementById('room_id');
+    const roomSearch = document.getElementById('room_search');
+    const equipmentSelect = document.getElementById('equipment_id');
+    // Поиск по кабинетам и загрузка оборудования происходит независимо от маски телефона
 
     // Поиск по кабинетам
     roomSearch.addEventListener('input', function() {
         const searchText = this.value.toLowerCase();
         const options = roomSelect.options;
+
+        // Убедимся, что опция "Не указано" всегда видна
+        options[0].style.display = '';
 
         for (let i = 0; i < options.length; i++) {
             const roomNumber = options[i].getAttribute('data-number') || '';
@@ -258,6 +262,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 options[i].style.display = '';
             } else {
                 options[i].style.display = 'none';
+            }
+
+            // Показать сообщение, если ничего не найдено
+            const visibleOptions = Array.from(options).filter(opt => opt.style.display !== 'none' && opt.value !== '');
+            const noResultsMsg = document.getElementById('no-results-message');
+
+            if (visibleOptions.length === 0 && searchText) {
+                if (!noResultsMsg) {
+                    const message = document.createElement('div');
+                    message.id = 'no-results-message';
+                    message.className = 'text-sm text-gray-500 mt-2';
+                    message.textContent = 'По данному запросу ничего не найдено';
+                    roomSelect.parentNode.appendChild(message);
+                }
+            } else if (noResultsMsg) {
+                noResultsMsg.remove();
             }
         }
     });

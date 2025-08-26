@@ -56,6 +56,7 @@
                            id="title"
                            name="title"
                            required
+                           maxlength="255"
                            value="{{ old('title') }}"
                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
@@ -87,6 +88,7 @@
                               name="description"
                               rows="3"
                               required
+                              maxlength="500"
                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                               placeholder="Краткое описание статьи...">{{ old('description') }}</textarea>
                 </div>
