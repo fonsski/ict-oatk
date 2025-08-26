@@ -70,12 +70,14 @@
                                placeholder="Введите номер телефона"
                                autocomplete="off"
                                style="opacity: 1 !important; position: static !important;"
+                               pattern="[0-9+\-\s\(\)]*"
+                               minlength="5"
                                required>
                     </div>
                     @error('phone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">Введите номер телефона (пример: +79953940601)</p>
+                    <p class="mt-1 text-sm text-gray-500">Введите номер телефона (пример: +79953940601) - обязательное поле</p>
                 </div>
 
                 <!-- Email Field (скрытое поле для совместимости) -->
@@ -213,7 +215,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Никакой проверки телефона при отправке
+        // Проверка телефона при отправке
+        const phoneValue = phoneInput.value.trim();
+        const cleanPhone = phoneValue.replace(/[^\d+]/g, '');
+
+        if (!cleanPhone || cleanPhone.length < 5) {
+            e.preventDefault();
+
+            // Показываем ошибку
+            phoneInput.classList.add('border-red-300', 'focus:ring-red-500', 'focus:border-red-500');
+
+            // Проверяем, существует ли уже сообщение об ошибке
+            let errorMsg = phoneInput.parentNode.parentNode.querySelector('.text-red-600');
+            if (!errorMsg) {
+                errorMsg = document.createElement('p');
+                errorMsg.className = 'mt-1 text-sm text-red-600';
+                phoneInput.parentNode.parentNode.appendChild(errorMsg);
+            }
+
+            errorMsg.textContent = 'Пожалуйста, введите действительный номер телефона';
+
+            // Прокручиваем к полю с ошибкой
+            phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            phoneInput.focus();
+
+            return;
+        }
 
         // Отключаем кнопку отправки и меняем ее вид
         submitButton.disabled = true;
@@ -226,6 +253,18 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
             submitButton.innerHTML = 'Создать аккаунт';
         }, 10000);
+    });
+
+    // Добавляем обработчик ввода для поля телефона
+    phoneInput.addEventListener('input', function() {
+        // Убираем стили ошибки при вводе
+        this.classList.remove('border-red-300', 'focus:ring-red-500', 'focus:border-red-500');
+
+        // Удаляем сообщение об ошибке если оно есть
+        const errorMsg = this.parentNode.parentNode.querySelector('.text-red-600');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
     });
 });
 </script>

@@ -21,9 +21,20 @@ class RegisterController extends Controller
     {
         $request->validate([
             "name" => "required|string|max:255",
-            "phone" => "required|string|max:20",
+            "phone" => "required|string|max:20|regex:/^[0-9+\-\s\(\)]+$/",
             "password" => "required|string|min:8|confirmed",
         ]);
+
+        // Проверка на пустой телефон после очистки от форматирования
+        $cleanPhoneForCheck = preg_replace("/[^0-9+]/", "", $request->phone);
+        if (empty($cleanPhoneForCheck)) {
+            return back()
+                ->withErrors([
+                    "phone" =>
+                        "Номер телефона не может быть пустым. Введите действительный номер телефона.",
+                ])
+                ->withInput();
+        }
 
         // Очищаем номер телефона от форматирования
         $phone = preg_replace("/[^0-9+]/", "", $request->phone);
@@ -92,6 +103,16 @@ class RegisterController extends Controller
         $randomEmail = $request->email ?? "user_" . time() . "@example.com";
 
         try {
+            // Повторная проверка номера телефона перед созданием пользователя
+            if (empty($phone) || !preg_match('/^[0-9+\-\s\(\)]+$/', $phone)) {
+                return back()
+                    ->withErrors([
+                        "phone" =>
+                            "Некорректный формат номера телефона. Пожалуйста, введите действительный номер телефона.",
+                    ])
+                    ->withInput();
+            }
+
             $user = User::create([
                 "name" => $request->name,
                 "phone" => $phone,

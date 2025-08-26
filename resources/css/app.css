@@ -1,4 +1,6 @@
 /* Все стили для ICT */
+/* Импорт пользовательских стилей */
+@import "custom.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

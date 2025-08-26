@@ -30,7 +30,8 @@
 
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Заголовок заявки</label>
-                    <input type="text" id="title" name="title" value="{{ old('title', $ticket->title) }}" required class="block w-full rounded-md border-gray-300 shadow-sm">
+                    <input type="text" id="title" name="title" value="{{ old('title', $ticket->title) }}" required class="block w-full rounded-md border-gray-300 shadow-sm" maxlength="255">
+                    <p class="mt-1 text-xs text-gray-500">Максимальная длина: 255 символов</p>
                 </div>
 
                 <div>

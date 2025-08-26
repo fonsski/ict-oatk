@@ -99,8 +99,8 @@
                                 <td class="px-6 py-4">
                                     <div>
                                         <a href="{{ route('tickets.show', $ticket) }}"
-                                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200">
-                                            {{ $ticket->title }}
+                                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
+                                            <span class="line-clamp-2">{{ $ticket->title }}</span>
                                         </a>
                                         <p class="text-sm text-slate-600 mt-1 line-clamp-2">
                                             {{ Str::limit($ticket->description, 80) }}

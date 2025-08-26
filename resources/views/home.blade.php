@@ -199,8 +199,8 @@
                             @foreach($tickets->take(10) as $ticket)
                             <tr class="hover:bg-slate-50 transition-colors duration-200">
                                 <td class="px-4 py-3">
-                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200">
-                                        {{ Str::limit($ticket->title, 40) }}
+                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
+                                        <span class="line-clamp-1">{{ Str::limit($ticket->title, 40) }}</span>
                                     </a>
                                     @if($ticket->room)
                                         <div class="text-xs text-slate-500 mt-1">🏢 {{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</div>
@@ -637,8 +637,12 @@
 
             const titleLink = document.createElement('a');
             titleLink.href = ticket.url || '#';
-            titleLink.className = 'text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200';
-            titleLink.textContent = truncatedTitle;
+            titleLink.className = 'text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block';
+
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'line-clamp-1';
+            titleSpan.textContent = truncatedTitle;
+            titleLink.appendChild(titleSpan);
 
             titleDiv.appendChild(titleLink);
 

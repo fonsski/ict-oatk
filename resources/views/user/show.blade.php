@@ -92,7 +92,7 @@
                                         #{{ $ticket->id }}
                                     </div>
                                     <div>
-                                        <div class="font-medium text-slate-900">{{ $ticket->title }}</div>
+                                        <div class="font-medium text-slate-900 break-words line-clamp-2">{{ $ticket->title }}</div>
                                         <div class="text-sm text-slate-600">{{ Str::limit($ticket->description, 100) }}</div>
                                     </div>
                                 </div>
