@@ -38,7 +38,6 @@
                                name="login"
                                id="login"
                                required
-                               pattern="\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}"
                                maxlength="18"
                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 @error('login') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
                                placeholder="+7 (___) ___-__-__"
@@ -149,6 +148,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ручная инициализация маски для телефона
     if (phoneInput) {
         const setupPhoneMask = function() {
+            // Поддерживаем как формат с пробелами и скобками, так и обычный
+            phoneInput.value = phoneInput.value.trim();
+
+            // Обрабатываем случай, когда номер вводится без форматирования
+            // Если это похоже на телефон без форматирования, пробуем его отформатировать
+            if (phoneInput.value.match(/^\+7\d{10}$/)) {
+                const digits = phoneInput.value.substring(2).split('');
+                phoneInput.value = `+7 (${digits.slice(0,3).join('')}) ${digits.slice(3,6).join('')}-${digits.slice(6,8).join('')}-${digits.slice(8,10).join('')}`;
+            }
+
             const mask = IMask(phoneInput, {
                 mask: '+7 (000) 000-00-00',
                 lazy: false,
@@ -190,6 +199,23 @@ document.addEventListener('DOMContentLoaded', function() {
             if (loginButton.disabled) {
                 e.preventDefault();
                 return;
+            }
+
+            // Подготовка номера телефона - убираем маску, если пользователь ввел номер без форматирования
+            if (phoneInput && phoneInput.value) {
+                // Если пользователь ввел телефон без маски (просто цифры)
+                // например +79991234567, преобразуем его в правильный формат для сервера
+                const cleanValue = phoneInput.value.replace(/[^0-9+]/g, '');
+
+                // Если это выглядит как полный номер телефона без форматирования
+                if (cleanValue.match(/^\+7\d{10}$/)) {
+                    // Создаем скрытое поле с очищенным номером для отправки на сервер
+                    const cleanPhoneInput = document.createElement('input');
+                    cleanPhoneInput.type = 'hidden';
+                    cleanPhoneInput.name = 'clean_phone';
+                    cleanPhoneInput.value = cleanValue;
+                    form.appendChild(cleanPhoneInput);
+                }
             }
 
             // Отключаем кнопку отправки и добавляем анимацию

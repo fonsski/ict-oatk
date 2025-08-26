@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-class LoginController extends Controller
+class LoginControllerFixed extends Controller
 {
     public function showLoginForm()
     {
@@ -26,16 +26,15 @@ class LoginController extends Controller
         // Форматируем номер телефона для поиска (удаляем пробелы, скобки и дефисы)
         $cleanPhone = preg_replace("/[^0-9+]/", "", $request->login);
 
-        // Check if user exists
+        // Check if user exists and is active
         $user = User::where(function ($query) use ($cleanPhone, $request) {
             // Поиск по номеру как есть и по очищенному номеру
-            $query
-                ->where("phone", $request->login)
-                ->orWhere("phone", $cleanPhone);
+            $query->where("phone", $request->login)
+                  ->orWhere("phone", $cleanPhone);
         })->first();
 
-        if (!$user) {
-            Log::warning("Попытка входа в несуществующую учетную запись", [
+        if (!$user || !$user->is_active) {
+            Log::warning("Попытка входа в неактивную учетную запись", [
                 "login" => $request->login,
                 "clean_phone" => $cleanPhone,
                 "login_type" => "phone",
@@ -44,26 +43,7 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                "login" => ["Учетная запись не существует."],
-            ]);
-        }
-
-        // Проверяем, активен ли пользователь, если поле is_active существует
-        if (
-            array_key_exists("is_active", $user->getAttributes()) &&
-            !$user->is_active
-        ) {
-            Log::warning("Попытка входа в заблокированную учетную запись", [
-                "login" => $request->login,
-                "clean_phone" => $cleanPhone,
-                "login_type" => "phone",
-                "ip" => $request->ip(),
-                "user_agent" => $request->userAgent(),
-                "user_id" => $user->id,
-            ]);
-
-            throw ValidationException::withMessages([
-                "login" => ["Учетная запись заблокирована."],
+                "login" => ["Учетная запись заблокирована или не существует."],
             ]);
         }
 
