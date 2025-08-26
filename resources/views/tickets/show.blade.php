@@ -187,10 +187,21 @@
                             @csrf
                             <div>
                                 <textarea name="content"
+                                          id="commentContent"
                                           rows="4"
                                           required
-                                          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                          maxlength="1000"
+                                          minlength="2"
+                                          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('content') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
                                           placeholder="Введите ваш комментарий..."></textarea>
+                                <div class="flex justify-between mt-1">
+                                    <div>
+                                        @error('content')
+                                            <p class="text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div id="charCounter" class="text-xs text-gray-500">0/1000 символов</div>
+                                </div>
                             </div>
                             <div class="mt-4">
                                 <button type="submit"
@@ -204,8 +215,45 @@
                             document.addEventListener('DOMContentLoaded', function() {
                                 const commentForm = document.getElementById('commentForm');
                                 const commentBtn = document.getElementById('commentSubmitBtn');
+                                const commentContent = document.getElementById('commentContent');
+                                const charCounter = document.getElementById('charCounter');
+
+                                // Счетчик символов
+                                commentContent.addEventListener('input', function() {
+                                    const currentLength = this.value.length;
+                                    charCounter.textContent = currentLength + '/1000 символов';
+
+                                    // Меняем цвет счетчика, если приближаемся к лимиту
+                                    if (currentLength > 950) {
+                                        charCounter.classList.remove('text-gray-500');
+                                        charCounter.classList.add('text-orange-500');
+                                    } else {
+                                        charCounter.classList.remove('text-orange-500', 'text-red-500');
+                                        charCounter.classList.add('text-gray-500');
+                                    }
+
+                                    // Если превышен лимит
+                                    if (currentLength >= 1000) {
+                                        charCounter.classList.remove('text-orange-500');
+                                        charCounter.classList.add('text-red-500');
+                                    }
+                                });
 
                                 commentForm.addEventListener('submit', function(e) {
+                                    // Проверка длины комментария
+                                    const commentLength = commentContent.value.trim().length;
+                                    if (commentLength < 2) {
+                                        e.preventDefault();
+                                        alert('Комментарий должен содержать не менее 2 символов');
+                                        return;
+                                    }
+
+                                    if (commentLength > 1000) {
+                                        e.preventDefault();
+                                        alert('Комментарий не должен превышать 1000 символов');
+                                        return;
+                                    }
+
                                     // Если кнопка уже отключена, прерываем отправку
                                     if (commentBtn.disabled) {
                                         e.preventDefault();
@@ -216,7 +264,7 @@
                                     commentBtn.disabled = true;
                                     commentBtn.innerHTML = 'Отправка...';
 
-                                    // Разрешаем повторную отправку через 5 секунд на случай ошибки
+                                    // Если сервер не ответил в течение 5 секунд, разблокируем кнопку
                                     setTimeout(function() {
                                         commentBtn.disabled = false;
                                         commentBtn.innerHTML = 'Отправить комментарий';

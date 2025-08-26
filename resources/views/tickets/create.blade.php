@@ -133,10 +133,12 @@
                         <input type="text"
                             id="reporter_name"
                             name="reporter_name"
-                            value="{{ old('reporter_name', auth()->user()->name ?? '') }}"
+                            value="{{ auth()->user()->name }}"
                             required
+                            readonly
                             maxlength="255"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            class="block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-gray-500">Используется ФИО из вашей учетной записи</p>
                     </div>
                     <div>
                         <label for="reporter_phone" class="block text-sm font-medium text-gray-700 mb-1">
@@ -145,12 +147,13 @@
                         <input type="text"
                             id="reporter_phone"
                             name="reporter_phone"
-                            value="{{ old('reporter_phone', auth()->user()->phone ?? '') }}"
+                            value="{{ auth()->user()->phone }}"
                             placeholder="+7 (___) ___-__-__"
+                            readonly
                             maxlength="20"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <p class="mt-1 text-sm text-gray-500">
-                            Формат: +7 (999) 999-99-99 <span class="text-red-500">*</span>
+                            class="block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-gray-500">
+                            Используется номер телефона из вашей учетной записи
                         </p>
                     </div>
                     <div>

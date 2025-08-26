@@ -115,11 +115,6 @@ class TicketController extends Controller
             "description.min" =>
                 "Описание должно содержать не менее 10 символов",
             "description.max" => "Описание не должно превышать 5000 символов",
-            "reporter_email.email" => "Пожалуйста, укажите корректный email",
-            "reporter_phone.max" =>
-                "Номер телефона не должен превышать 20 символов",
-            "reporter_phone.regex" =>
-                "Номер телефона должен быть в формате: +7 (999) 999-99-99",
             "location_id.exists" => "Выбранное местоположение не существует",
             "room_id.exists" => "Выбранный кабинет не существует",
             "equipment_id.exists" => "Выбранное оборудование не существует",
@@ -131,15 +126,7 @@ class TicketController extends Controller
                 "category" => "required|string",
                 "priority" => "required|string",
                 "description" => "required|string|min:10|max:5000",
-                "reporter_name" => "nullable|string|max:255",
                 "reporter_id" => "nullable|string|max:50",
-                "reporter_email" => "nullable|email|max:255",
-                "reporter_phone" => [
-                    "nullable",
-                    "string",
-                    "max:20",
-                    "regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/",
-                ],
                 "location_id" => "nullable|exists:locations,id",
                 "room_id" => "nullable|exists:rooms,id",
                 "equipment_id" => "nullable|exists:equipment,id",
@@ -147,18 +134,13 @@ class TicketController extends Controller
             $messages,
         );
 
-        // Автозаполняем reporter данные из текущего пользователя, если не указано
+        // Всегда используем данные авторизованного пользователя
         $user = Auth::user();
         if ($user) {
-            if (empty($data["reporter_name"])) {
-                $data["reporter_name"] = $user->name;
-            }
-            if (empty($data["reporter_email"])) {
-                $data["reporter_email"] = $user->email;
-            }
-            if (empty($data["reporter_phone"]) && !empty($user->phone)) {
-                $data["reporter_phone"] = $user->phone;
-            }
+            // Всегда используем данные авторизованного пользователя независимо от ввода
+            $data["reporter_name"] = $user->name;
+            $data["reporter_email"] = $user->email;
+            $data["reporter_phone"] = $user->phone;
         }
 
         $data["user_id"] = $user ? $user->id : null;
@@ -399,6 +381,16 @@ class TicketController extends Controller
             ],
             $messages,
         );
+
+        // Проверка на превышение длины перед сохранением
+        if (strlen($data["content"]) > 1000) {
+            return back()
+                ->withErrors([
+                    "content" =>
+                        "Комментарий не должен превышать 1000 символов",
+                ])
+                ->withInput();
+        }
 
         $comment = TicketComment::create([
             "ticket_id" => $ticket->id,
