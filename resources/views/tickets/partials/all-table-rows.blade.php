@@ -3,10 +3,10 @@
         <td class="px-6 py-4">
             <div>
                 <a href="{{ route('tickets.show', $ticket) }}"
-                   class="text-slate-900 font-medium hover:text-blue-600 transition-all duration-300 break-words max-w-xs inline-block">
+                   class="text-slate-900 font-medium hover:text-blue-600 transition-all duration-300 break-words inline-block">
                     <span class="line-clamp-2">{{ $ticket->title }}</span>
                 </a>
-                <p class="text-sm text-slate-600 mt-1 break-words whitespace-pre-line">
+                <p class="text-sm text-slate-600 mt-1 break-words whitespace-pre-line line-clamp-2">
                     {{ Str::limit($ticket->description, 120) }}
                 </p>
                 @if($ticket->room)
@@ -41,12 +41,12 @@
                     'closed' => 'Закрыта'
                 ];
             @endphp
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; display: inline-block; min-width: 80px; text-align: center;">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; text-align: center;">
                 {{ $statusLabels[$ticket->status] ?? $ticket->status }}
             </span>
         </td>
         <td class="px-6 py-4">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" style="white-space: nowrap;">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" style="white-space: nowrap; text-align: center;">
                 {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
             </span>
         </td>
@@ -71,7 +71,7 @@
         <td class="px-6 py-4">
             <div class="flex items-center gap-2">
                 <a href="{{ route('tickets.show', $ticket) }}"
-                   class="text-blue-600 hover:text-blue-700 font-medium text-sm transition-all duration-300 hover:underline">
+                   class="text-blue-600 hover:text-blue-700 font-medium text-sm transition-all duration-300 hover:underline whitespace-nowrap">
                     Просмотр
                 </a>
                 @if(user_can_manage_tickets())

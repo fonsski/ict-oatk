@@ -29,7 +29,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8" id="stats-cards">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6 mb-8" id="stats-cards">
         <div class="card p-6 text-center">
             <div class="text-2xl font-bold text-slate-900 mb-1" id="total-count">{{ $tickets->total() ?? 0 }}</div>
             <div class="text-sm text-slate-600">Всего</div>
@@ -54,11 +54,15 @@
 
     <!-- Filters -->
     <div class="card p-6 mb-8">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-slate-900">Фильтры</h3>
-            <button id="clear-filters" class="text-sm text-slate-600 hover:text-slate-900 px-3 py-1 border border-slate-300 rounded-md hover:bg-slate-50">Очистить</button>
+            <button type="button" id="toggle-filters" class="md:hidden btn-outline py-1 px-3 text-sm">
+                <span class="show-text">Показать фильтры</span>
+                <span class="hide-text hidden">Скрыть фильтры</span>
+            </button>
         </div>
-        <form method="GET" id="filters-form" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="filters-container md:block">
+            <form id="filters-form" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
                 <label for="status" class="form-label">Статус</label>
                 <select id="status" name="status" class="form-input">
@@ -126,12 +130,16 @@
                     </div>
                 </div>
             </div>
-            <div class="md:col-span-3 lg:col-span-6 flex justify-end items-end">
-                <button type="submit" class="btn-primary px-4 py-2 h-full">
+            <div class="sm:col-span-2 md:col-span-3 lg:col-span-6 flex justify-between items-end gap-2 mt-2">
+                <button type="button" id="clear-filters" class="btn-outline px-4 py-2">
+                    Сбросить
+                </button>
+                <button type="submit" class="btn-primary px-4 py-2">
                     Применить фильтры
                 </button>
             </div>
-        </form>
+            </form>
+        </div>
     </div>
 
     <!-- Tickets Table -->
@@ -143,19 +151,19 @@
             </div>
         </div>
 
-        <div id="tickets-container" class="overflow-x-auto">
+        <div id="tickets-container" class="overflow-x-auto rounded-lg border border-slate-200 mt-4">
             @if($tickets->count() > 0)
-                <div class="w-full min-w-max">
-                    <table class="w-full table-fixed">
+                <div class="w-full overflow-auto">
+                    <table class="w-full table-auto">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 250px;">Заявка</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 150px;">Заявитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Статус</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Приоритет</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 180px;">Исполнитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Дата</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="min-width: 120px;">Действия</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/4">Заявка</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Заявитель</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Статус</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Приоритет</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Исполнитель</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Дата</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -348,8 +356,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-6 py-4">
                     <div>
                         <a href="${ticket.url}"
-                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
-                            <span class="line-clamp-1 ticket-title">${safeTitle}</span>
+                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words inline-block w-full">
+                            <span class="line-clamp-2 ticket-title">${safeTitle}</span>
                         </a>
                         <p class="text-sm text-slate-600 mt-1 line-clamp-2 break-words">
                             ${safeDescription.substring(0, 80)}${safeDescription.length > 80 ? '...' : ''}
@@ -364,12 +372,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}">
+                    <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}" style="white-space: nowrap; min-width: 80px;">
                         ${statusLabels[ticket.status] || ticket.status}
                     </span>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-200 text-red-900' : (priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800')}">
+                    <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-200 text-red-900' : (priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800')}" style="white-space: nowrap; min-width: 80px;">
                         ${ticket.priority === 'urgent' ? 'Срочный' : (priorityLabels[ticket.priority] || ticket.priority)}
                     </span>
                 </td>
@@ -399,16 +407,27 @@ document.addEventListener('DOMContentLoaded', function() {
     refreshBtn.addEventListener('click', refreshTickets);
 
     // Автоматическое применение фильтров
-    filtersForm.addEventListener('change', function() {
-        stopAutoRefresh();
-        refreshTickets().then(startAutoRefresh);
-    });
+    const filtersForm = document.getElementById('filters-form');
+    if (filtersForm) {
+        const selectInputs = filtersForm.querySelectorAll('select');
+        selectInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                stopAutoRefresh();
+                filtersForm.submit();
+            });
+        });
+    }
 
     // Очистка фильтров
-    clearFiltersBtn.addEventListener('click', function() {
-        filtersForm.reset();
-        window.location.href = window.location.pathname;
-    });
+    const clearFiltersBtn = document.getElementById('clear-filters');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', function() {
+            if (filtersForm) {
+                filtersForm.reset();
+                window.location.href = window.location.pathname;
+            }
+        });
+    }
 
     // Поиск с задержкой
     let searchTimeout;
@@ -428,6 +447,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Начальная загрузка времени
     lastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
+});
+
+// Инициализация UI элементов
+document.addEventListener('DOMContentLoaded', function() {
+    // Переключение видимости фильтров на мобильных устройствах
+    const toggleFiltersBtn = document.getElementById('toggle-filters');
+    const filtersContainer = document.querySelector('.filters-container');
+
+    if (toggleFiltersBtn && filtersContainer) {
+        // Скрыть фильтры по умолчанию на мобильных
+        if (window.innerWidth < 768) {
+            filtersContainer.classList.add('hidden');
+        }
+
+        toggleFiltersBtn.addEventListener('click', function() {
+            const showText = toggleFiltersBtn.querySelector('.show-text');
+            const hideText = toggleFiltersBtn.querySelector('.hide-text');
+
+            filtersContainer.classList.toggle('hidden');
+            if (showText && hideText) {
+                showText.classList.toggle('hidden');
+                hideText.classList.toggle('hidden');
+            }
+        });
+    }
 });
 </script>
 @endpush

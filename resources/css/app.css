@@ -195,4 +195,40 @@
     .btn-outline:active {
         transform: translateY(1px);
     }
+
+    /* Улучшения для таблицы заявок */
+    #tickets-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #tickets-container table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #tickets-container .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Адаптивные стили для мобильных устройств */
+    @media (max-width: 768px) {
+        #tickets-container table {
+            min-width: 800px; /* Минимальная ширина для скролла на мобильных */
+        }
+
+        #tickets-container td {
+            vertical-align: top;
+        }
+
+        #tickets-container .card {
+            overflow-x: auto;
+            padding: 0;
+        }
+    }
 }
