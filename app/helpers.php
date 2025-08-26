@@ -139,6 +139,27 @@ if (!function_exists("get_status_badge_class")) {
     }
 }
 
+if (!function_exists("format_ticket_category")) {
+    /**
+     * Форматировать категорию заявки для отображения
+     *
+     * @param string $category
+     * @return string
+     */
+    function format_ticket_category($category)
+    {
+        $categories = [
+            "hardware" => "Оборудование",
+            "software" => "Программное обеспечение",
+            "network" => "Сеть и интернет",
+            "account" => "Учетная запись",
+            "other" => "Другое",
+        ];
+
+        return $categories[$category] ?? $category;
+    }
+}
+
 if (!function_exists("get_priority_badge_class")) {
     /**
      * Получить CSS классы для badge приоритета заявки

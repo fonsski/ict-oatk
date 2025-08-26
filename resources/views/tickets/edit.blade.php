@@ -70,10 +70,7 @@
                     <input type="tel" id="reporter_phone" name="reporter_phone" value="{{ old('reporter_phone', $ticket->reporter_phone) }}" placeholder="+7 (___) ___-__-__" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
 
-                <div>
-                    <label for="reporter_email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="reporter_email" name="reporter_email" value="{{ old('reporter_email', $ticket->reporter_email) }}" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
+                <!-- Поле email удалено, система не использует почту -->
 
                 <div>
                     <label for="room_id" class="block text-sm font-medium text-gray-700 mb-1">Кабинет</label>

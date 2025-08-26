@@ -122,6 +122,10 @@
         @apply w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300;
     }
 
+    .search-input {
+        @apply w-full px-4 py-4 pl-12 text-lg border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300;
+    }
+
     /* Исправление проблемы с наложением текста на стрелку в выпадающих списках */
     select.form-input {
         @apply pr-10;
@@ -229,6 +233,15 @@
         #tickets-container .card {
             overflow-x: auto;
             padding: 0;
+        }
+
+        .search-input {
+            @apply py-3 text-base;
+        }
+
+        #filters-form .btn-primary,
+        #filters-form .btn-outline {
+            @apply w-full;
         }
     }
 }

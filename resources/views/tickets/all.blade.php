@@ -63,13 +63,28 @@
         </div>
         <div class="filters-container md:block">
             <form id="filters-form" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- Большое поле поиска сверху -->
+            <div class="sm:col-span-3 md:col-span-3 lg:col-span-6 mb-4">
+                <label for="search" class="form-label">Поиск</label>
+                <div class="relative">
+                    <input type="text" id="search" name="search" value="{{ request('search') }}"
+                       placeholder="Поиск по заявкам..." class="search-input">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-6 w-6 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <label for="status" class="form-label">Статус</label>
                 <select id="status" name="status" class="form-input">
                     <option value="">Все статусы</option>
                     <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Открытые</option>
                     <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>В работе</option>
-                    <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Решённые</option>
+                    <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Решенные</option>
                     <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Закрытые</option>
                 </select>
             </div>
@@ -89,7 +104,18 @@
                     <option value="">Все категории</option>
                     @foreach($categories ?? [] as $category)
                         <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
-                            {{ $category }}
+                            {{ format_ticket_category($category) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="location_id" class="form-label">Расположение</label>
+                <select id="location_id" name="location_id" class="form-input">
+                    <option value="">Все расположения</option>
+                    @foreach($locations ?? [] as $location)
+                        <option value="{{ $location->id }}" {{ request('location_id') == $location->id ? 'selected' : '' }}>
+                            {{ $location->name }}
                         </option>
                     @endforeach
                 </select>
@@ -100,7 +126,7 @@
                     <option value="">Все кабинеты</option>
                     @foreach($rooms ?? [] as $room)
                         <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room->number }} - {{ $room->name ?? $room->type_name }}
+                            {{ $room->number }} - {{ $room->name ?: $room->type_name }}
                         </option>
                     @endforeach
                 </select>
@@ -117,24 +143,13 @@
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label for="search" class="form-label">Поиск</label>
-                <div class="relative">
-                    <input type="text" id="search" name="search" value="{{ request('search') }}"
-                       placeholder="Поиск по заявкам..." class="form-input pl-10">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="M21 21l-4.35-4.35"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-            <div class="sm:col-span-2 md:col-span-3 lg:col-span-6 flex justify-between items-end gap-2 mt-2">
-                <button type="button" id="clear-filters" class="btn-outline px-4 py-2">
+
+            <!-- Кнопки под полем поиска -->
+            <div class="sm:col-span-3 md:col-span-3 lg:col-span-6 flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
+                <button type="button" id="clear-filters" class="btn-outline px-6 py-3 sm:w-1/3 w-full">
                     Сбросить
                 </button>
-                <button type="submit" class="btn-primary px-4 py-2">
+                <button type="submit" class="btn-primary px-6 py-3 sm:w-1/3 w-full">
                     Применить фильтры
                 </button>
             </div>
@@ -368,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-6 py-4">
                     <div class="text-sm">
                         <div class="font-medium text-slate-900">${ticket.reporter_name || '—'}</div>
-                        <div class="text-slate-600">${ticket.reporter_phone || ticket.reporter_email || '—'}</div>
+                        <div class="text-slate-600">${ticket.reporter_phone || '—'}</div>
                     </div>
                 </td>
                 <td class="px-6 py-4">
@@ -450,10 +465,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Инициализация UI элементов
+// Переключение видимости фильтров на мобильных устройствах
 document.addEventListener('DOMContentLoaded', function() {
     // Переключение видимости фильтров на мобильных устройствах
     const toggleFiltersBtn = document.getElementById('toggle-filters');
     const filtersContainer = document.querySelector('.filters-container');
+    const searchInput = document.getElementById('search');
+
+    if (searchInput) {
+        // Фокус на поле поиска при загрузке страницы
+        setTimeout(() => {
+            searchInput.focus();
+        }, 100);
+    }
 
     if (toggleFiltersBtn && filtersContainer) {
         // Скрыть фильтры по умолчанию на мобильных

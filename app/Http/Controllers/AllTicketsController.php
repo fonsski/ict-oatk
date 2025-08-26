@@ -58,9 +58,9 @@ class AllTicketsController extends Controller
         if ($request->filled("search")) {
             $search = $request->get("search");
             $query->where(function ($q) use ($search) {
-                $q->where("reporter_email", "like", "%{$search}%")
-                    ->orWhere("title", "like", "%{$search}%")
+                $q->where("title", "like", "%{$search}%")
                     ->orWhere("reporter_name", "like", "%{$search}%")
+                    ->orWhere("reporter_phone", "like", "%{$search}%")
                     ->orWhere("description", "like", "%{$search}%");
             });
         }
@@ -152,9 +152,9 @@ class AllTicketsController extends Controller
         if ($request->filled("search")) {
             $search = $request->get("search");
             $query->where(function ($q) use ($search) {
-                $q->where("reporter_email", "like", "%{$search}%")
-                    ->orWhere("title", "like", "%{$search}%")
+                $q->where("title", "like", "%{$search}%")
                     ->orWhere("reporter_name", "like", "%{$search}%")
+                    ->orWhere("reporter_phone", "like", "%{$search}%")
                     ->orWhere("description", "like", "%{$search}%");
             });
         }
@@ -179,7 +179,7 @@ class AllTicketsController extends Controller
                 "priority" => $ticket->priority,
                 "category" => $ticket->category,
                 "reporter_name" => $ticket->reporter_name,
-                "reporter_email" => $ticket->reporter_email,
+                "reporter_phone" => $ticket->reporter_phone,
                 "location" => $ticket->location
                     ? $ticket->location->name
                     : null,
@@ -325,9 +325,9 @@ class AllTicketsController extends Controller
         if ($request->filled("search")) {
             $search = $request->get("search");
             $query->where(function ($q) use ($search) {
-                $q->where("reporter_email", "like", "%{$search}%")
-                    ->orWhere("title", "like", "%{$search}%")
+                $q->where("title", "like", "%{$search}%")
                     ->orWhere("reporter_name", "like", "%{$search}%")
+                    ->orWhere("reporter_phone", "like", "%{$search}%")
                     ->orWhere("description", "like", "%{$search}%");
             });
         }

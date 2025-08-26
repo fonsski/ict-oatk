@@ -52,9 +52,9 @@ class TicketController extends Controller
         if ($request->filled("search")) {
             $search = $request->get("search");
             $query->where(function ($q) use ($search) {
-                $q->where("reporter_email", "like", "%{$search}%")
-                    ->orWhere("reporter_phone", "like", "%{$search}%")
-                    ->orWhere("title", "like", "%{$search}%");
+                $q->where("reporter_phone", "like", "%{$search}%")
+                    ->orWhere("title", "like", "%{$search}%")
+                    ->orWhere("reporter_name", "like", "%{$search}%");
             });
         }
 
@@ -139,7 +139,6 @@ class TicketController extends Controller
         if ($user) {
             // Всегда используем данные авторизованного пользователя независимо от ввода
             $data["reporter_name"] = $user->name;
-            $data["reporter_email"] = $user->email;
             $data["reporter_phone"] = $user->phone;
         }
 
@@ -230,7 +229,6 @@ class TicketController extends Controller
             "description.min" =>
                 "Описание должно содержать не менее 10 символов",
             "description.max" => "Описание не должно превышать 5000 символов",
-            "reporter_email.email" => "Пожалуйста, укажите корректный email",
             "reporter_phone.max" =>
                 "Номер телефона не должен превышать 20 символов",
             "reporter_phone.regex" =>
@@ -249,7 +247,6 @@ class TicketController extends Controller
                 "description" => "required|string|min:10|max:5000",
                 "reporter_name" => "nullable|string|max:255",
                 "reporter_id" => "nullable|string|max:50",
-                "reporter_email" => "nullable|email|max:255",
                 "reporter_phone" => [
                     "nullable",
                     "string",
