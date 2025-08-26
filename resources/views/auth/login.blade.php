@@ -34,7 +34,7 @@
                                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                             </svg>
                         </div>
-                        <input type="tel"
+                        <input type="text"
                                name="login"
                                id="login"
                                required
@@ -146,9 +146,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginButton = document.getElementById('login-button');
     const phoneInput = document.querySelector('input[name="login"]');
 
-    // Инициализация маски для телефона
-    if (window.initPhoneMasks && phoneInput) {
-        window.initPhoneMasks();
+    // Ручная инициализация маски для телефона
+    if (phoneInput) {
+        const setupPhoneMask = function() {
+            const mask = IMask(phoneInput, {
+                mask: '+7 (000) 000-00-00',
+                lazy: false,
+                placeholderChar: '_',
+                overwrite: true
+            });
+
+            // Автоматически добавляем +7 при фокусе, если поле пустое
+            phoneInput.addEventListener('focus', function() {
+                if (!this.value) {
+                    mask.value = '+7 ';
+                }
+            });
+
+            // Разрешаем удаление содержимого
+            phoneInput.addEventListener('keydown', function(e) {
+                if ((e.key === 'Backspace' || e.key === 'Delete') &&
+                    (this.value === '+7 ' || this.value === '+7 (')) {
+                    this.value = '';
+                    e.preventDefault();
+                }
+            });
+        };
+
+        // Загружаем библиотеку IMask если нужно
+        if (typeof IMask !== 'undefined') {
+            setupPhoneMask();
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
+            script.onload = setupPhoneMask;
+            document.head.appendChild(script);
+        }
     }
 
     if (form && loginButton) {

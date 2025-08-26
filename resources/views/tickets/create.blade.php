@@ -141,7 +141,7 @@
                         <label for="reporter_phone" class="block text-sm font-medium text-gray-700 mb-1">
                             Номер телефона
                         </label>
-                        <input type="tel"
+                        <input type="text"
                             id="reporter_phone"
                             name="reporter_phone"
                             value="{{ old('reporter_phone', auth()->user()->phone ?? '') }}"
@@ -208,6 +208,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Защита от многократной отправки формы
     const form = document.querySelector('form');
     const submitButton = document.getElementById('submit-button');
+    const phoneInput = document.getElementById('reporter_phone');
+
+    // Инициализируем маску телефона вручную
+    if (phoneInput) {
+        const setupPhoneMask = function() {
+            const mask = IMask(phoneInput, {
+                mask: '+7 (000) 000-00-00',
+                lazy: false,
+                placeholderChar: '_',
+                overwrite: true
+            });
+
+            // Автоматически добавляем +7 при фокусе, если поле пустое
+            phoneInput.addEventListener('focus', function() {
+                if (!this.value) {
+                    mask.value = '+7 ';
+                }
+            });
+
+            // Разрешаем удаление содержимого
+            phoneInput.addEventListener('keydown', function(e) {
+                if ((e.key === 'Backspace' || e.key === 'Delete') &&
+                    (this.value === '+7 ' || this.value === '+7 (')) {
+                    this.value = '';
+                    e.preventDefault();
+                }
+            });
+        };
+
+        // Загружаем библиотеку IMask если нужно
+        if (typeof IMask !== 'undefined') {
+            setupPhoneMask();
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
+            script.onload = setupPhoneMask;
+            document.head.appendChild(script);
+        }
+    }
 
     if (form && submitButton) {
         form.addEventListener('submit', function(e) {
@@ -234,11 +273,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.innerHTML = '<svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg> Отправить заявку';
             }, 10000);
         });
-    }
-
-    // Используем общий модуль для масок телефона вместо собственной реализации
-    if (window.initPhoneMasks) {
-        window.initPhoneMasks();
     }
     const roomSelect = document.getElementById('room_id');
     const roomSearch = document.getElementById('room_search');

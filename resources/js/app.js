@@ -13,7 +13,7 @@ window.initPhoneMasks = function () {
 
     // Находим все поля ввода телефона
     const phoneInputs = document.querySelectorAll(
-        'input[type="tel"], input[name="phone"], input[id="phone"], input[id="reporter_phone"]',
+        'input[type="tel"], input[name="phone"], input[id="phone"], input[id="reporter_phone"], input[name="login"]',
     );
 
     if (phoneInputs.length === 0) return;
@@ -23,6 +23,8 @@ window.initPhoneMasks = function () {
         const maskOptions = {
             mask: "+7 (000) 000-00-00",
             lazy: false,
+            placeholderChar: "_",
+            overwrite: true,
         };
 
         const mask = IMask(input, maskOptions);
@@ -31,6 +33,33 @@ window.initPhoneMasks = function () {
         input.addEventListener("focus", function () {
             if (!this.value) {
                 mask.value = "+7 ";
+            }
+        });
+
+        // Убедимся, что пользователь может нажимать на любую позицию поля
+        input.addEventListener("click", function (e) {
+            // Если курсор находится перед +7, переместим его после +7
+            if (this.selectionStart < 3) {
+                this.setSelectionRange(3, 3);
+            }
+        });
+
+        // Разрешаем удаление всего содержимого и обрабатываем ввод
+        input.addEventListener("keydown", function (e) {
+            // Разрешаем backspace и delete для удаления всех символов
+            if (
+                (e.key === "Backspace" || e.key === "Delete") &&
+                (this.value === "+7 " || this.value === "+7 (")
+            ) {
+                this.value = "";
+                e.preventDefault();
+            }
+
+            // Если пользователь нажимает число, когда курсор находится перед +7,
+            // переместим курсор после +7 перед вводом числа
+            const isDigit = /^\d$/.test(e.key);
+            if (isDigit && this.selectionStart < 3) {
+                this.setSelectionRange(3, 3);
             }
         });
 

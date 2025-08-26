@@ -62,7 +62,7 @@
                                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                             </svg>
                         </div>
-                        <input type="tel"
+                        <input type="text"
                                name="phone"
                                id="phone"
                                value="{{ old('phone') }}"
@@ -201,42 +201,42 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация маски для телефона, если доступен общий модуль
-    if (window.initPhoneMasks) {
-        window.initPhoneMasks();
-    } else {
-        // Резервный вариант, если общий модуль недоступен
-        const phoneInput = document.getElementById('phone');
+    // Прямая инициализация маски телефона
+    const phoneInput = document.getElementById('phone');
 
-        if (phoneInput && typeof IMask !== 'undefined') {
+    if (phoneInput) {
+        const setupPhoneMask = function() {
             const mask = IMask(phoneInput, {
                 mask: '+7 (000) 000-00-00',
-                lazy: false
+                lazy: false,
+                placeholderChar: '_',
+                overwrite: true
             });
 
+            // Автоматически добавляем +7 при фокусе, если поле пустое
             phoneInput.addEventListener('focus', function() {
                 if (!this.value) {
                     mask.value = '+7 ';
                 }
             });
+
+            // Разрешаем удаление содержимого
+            phoneInput.addEventListener('keydown', function(e) {
+                if ((e.key === 'Backspace' || e.key === 'Delete') &&
+                    (this.value === '+7 ' || this.value === '+7 (')) {
+                    this.value = '';
+                    e.preventDefault();
+                }
+            });
+        };
+
+        // Загружаем библиотеку IMask если нужно
+        if (typeof IMask !== 'undefined') {
+            setupPhoneMask();
         } else {
-            // Динамическая загрузка IMask, если не загружен
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/imask@6.4.3/dist/imask.min.js';
-            script.onload = function() {
-                if (phoneInput) {
-                    const mask = IMask(phoneInput, {
-                        mask: '+7 (000) 000-00-00',
-                        lazy: false
-                    });
-
-                    phoneInput.addEventListener('focus', function() {
-                        if (!this.value) {
-                            mask.value = '+7 ';
-                        }
-                    });
-                }
-            };
+            script.onload = setupPhoneMask;
             document.head.appendChild(script);
         }
     }
