@@ -263,7 +263,7 @@
         <!-- Sidebar -->
         <div>
             <!-- Contact Information -->
-            @if($room->responsible_person || $room->phone)
+            @if($room->responsible_person || $room->phone || $room->responsibleUser)
             <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-6">
                 <div class="px-6 py-4 border-b border-slate-200">
                     <h3 class="text-lg font-medium text-slate-900">Контактная информация</h3>
@@ -275,6 +275,37 @@
                         <dd class="mt-1 text-sm text-slate-900">{{ $room->responsible_person }}</dd>
                     </div>
                     @endif
+
+                    <div class="mb-4">
+                        <dt class="text-sm font-medium text-slate-500">Ответственный пользователь</dt>
+                        <dd class="mt-1 text-sm text-slate-900">
+                            <form action="{{ route('room.update', $room) }}" method="POST" class="flex items-start">
+                                @csrf
+                                @method('PUT')
+                                <select id="responsible_user_id" name="responsible_user_id"
+                                    class="mr-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                    <option value="">Не назначен</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}" {{ $room->responsible_user_id == $user->id ? 'selected' : '' }}>
+                                            {{ $user->name }} {{ $user->phone ? "({$user->phone})" : "" }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="submit"
+                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                    Сохранить
+                                </button>
+                            </form>
+                            @if($room->responsibleUser)
+                                <div class="mt-2 text-slate-700">
+                                    Текущий ответственный: <strong>{{ $room->responsibleUser->name }}</strong>
+                                    @if($room->responsibleUser->phone)
+                                        <br>Телефон: {{ $room->responsibleUser->phone }}
+                                    @endif
+                                </div>
+                            @endif
+                        </dd>
+                    </div>
                     @if($room->phone)
                     <div>
                         <dt class="text-sm font-medium text-slate-500">Телефон</dt>

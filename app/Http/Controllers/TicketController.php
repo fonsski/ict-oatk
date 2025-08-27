@@ -97,7 +97,20 @@ class TicketController extends Controller
                 ->orderBy("number")
                 ->get();
         });
-        return view("tickets.create", compact("rooms"));
+
+        // Получаем комнату, за которую ответственен текущий пользователь
+        $userResponsibleRoom = null;
+        $user = Auth::user();
+        if ($user) {
+            $userResponsibleRoom = \App\Models\Room::where(
+                "responsible_user_id",
+                $user->id,
+            )
+                ->select("id", "number", "name")
+                ->first();
+        }
+
+        return view("tickets.create", compact("rooms", "userResponsibleRoom"));
     }
 
     /**

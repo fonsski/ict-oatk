@@ -198,7 +198,7 @@
                         <!-- Responsible Person -->
                         <div>
                             <label for="responsible_person" class="block text-sm font-medium text-slate-700 mb-2">
-                                Ответственный
+                                Ответственный (для справки)
                             </label>
                             <input type="text"
                                    id="responsible_person"
@@ -209,6 +209,27 @@
                             @error('responsible_person')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <!-- Responsible User -->
+                        <div>
+                            <label for="responsible_user_id" class="block text-sm font-medium text-slate-700 mb-2">
+                                Ответственный пользователь
+                            </label>
+                            <select id="responsible_user_id"
+                                   name="responsible_user_id"
+                                   class="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('responsible_user_id') border-red-300 @enderror">
+                                <option value="">Не выбран</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ old('responsible_user_id', $room->responsible_user_id) == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }} {{ $user->phone ? "(" . $user->phone . ")" : "" }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('responsible_user_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-slate-500">Пользователь системы, ответственный за кабинет</p>
                         </div>
 
                         <!-- Phone -->

@@ -134,7 +134,7 @@ class RoomController extends Controller
      */
     public function show(Room $room)
     {
-        $room->load(["equipment", "tickets"]);
+        $room->load(["equipment", "tickets", "responsibleUser"]);
 
         // Статистика кабинета
         $stats = [
@@ -153,7 +153,10 @@ class RoomController extends Controller
                 ->count(),
         ];
 
-        return view("room.show", compact("room", "stats"));
+        // Получаем список пользователей для выбора ответственного
+        $users = \App\Models\User::active()->orderBy("name")->get();
+
+        return view("room.show", compact("room", "stats", "users"));
     }
 
     /**
@@ -164,10 +167,11 @@ class RoomController extends Controller
         $types = Room::TYPES;
         $statuses = Room::STATUSES;
         $buildings = Room::distinct()->pluck("building")->filter()->sort();
+        $users = \App\Models\User::active()->orderBy("name")->get();
 
         return view(
             "room.edit",
-            compact("room", "types", "statuses", "buildings"),
+            compact("room", "types", "statuses", "buildings", "users"),
         );
     }
 
@@ -194,6 +198,7 @@ class RoomController extends Controller
                 "required|string|in:" .
                 implode(",", array_keys(Room::STATUSES)),
             "responsible_person" => "nullable|string|max:255",
+            "responsible_user_id" => "nullable|exists:users,id",
             "phone" => "nullable|string|max:50",
             "notes" => "nullable|string|max:1000",
             "is_active" => "boolean",
@@ -213,6 +218,7 @@ class RoomController extends Controller
             "type" => $request->type,
             "status" => $request->status,
             "responsible_person" => $request->responsible_person,
+            "responsible_user_id" => $request->responsible_user_id,
             "phone" => $request->phone,
             "notes" => $request->notes,
             "is_active" => $request->boolean("is_active"),

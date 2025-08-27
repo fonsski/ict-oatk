@@ -100,6 +100,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Отношение к кабинетам, за которые пользователь ответственен
+     */
+    public function responsibleForRooms()
+    {
+        return $this->hasMany(Room::class, "responsible_user_id");
+    }
+
+    /**
      * Проверка, имеет ли пользователь определенную роль
      */
     public function hasRole($role)

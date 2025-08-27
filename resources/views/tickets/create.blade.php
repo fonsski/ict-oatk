@@ -145,10 +145,18 @@
                             <select id="room_id" name="room_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Не указано</option>
                                 @foreach(\App\Models\Room::active()->orderBy('number')->get() as $room)
-                                <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }} data-number="{{ $room->number }}" data-name="{{ $room->name ?? $room->type_name }}" data-building="{{ $room->building }}" data-floor="{{ $room->floor }}">
+                                <option value="{{ $room->id }}"
+                                    {{ old('room_id') == $room->id || (isset($userResponsibleRoom) && $userResponsibleRoom && $userResponsibleRoom->id == $room->id) ? 'selected' : '' }}
+                                    data-number="{{ $room->number }}"
+                                    data-name="{{ $room->name ?? $room->type_name }}"
+                                    data-building="{{ $room->building }}"
+                                    data-floor="{{ $room->floor }}">
                                     {{ $room->number }} - {{ $room->name ?? $room->type_name }}
                                     @if($room->building || $room->floor)
                                         ({{ $room->full_address }})
+                                    @endif
+                                    @if(isset($userResponsibleRoom) && $userResponsibleRoom && $userResponsibleRoom->id == $room->id)
+                                        <strong>(Вы ответственный)</strong>
                                     @endif
                                 </option>
                                 @endforeach
@@ -156,6 +164,9 @@
                         </div>
                         <p class="mt-1 text-sm text-gray-500">
                             Найдите кабинет по номеру или названию или выберите из списка
+                            @if(isset($userResponsibleRoom) && $userResponsibleRoom)
+                                <br><span class="text-blue-600 font-medium">Автоматически выбран кабинет, за который вы ответственны</span>
+                            @endif
                         </p>
                     </div>
 
