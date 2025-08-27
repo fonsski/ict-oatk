@@ -75,7 +75,7 @@
                     Просмотр
                 </a>
                 @if(user_can_manage_tickets())
-                    <div class="relative z-10" data-dropdown>
+                    <div class="relative z-50" data-dropdown>
                             <button class="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle>
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
@@ -142,12 +142,28 @@ function initTableDropdowns() {
                     }
                 });
 
+                document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
+                    if (otherToggle !== toggle) {
+                        otherToggle.classList.remove('bg-slate-100');
+                    }
+                });
+
                 // Переключить текущее меню
                 menu.classList.toggle('hidden');
                 toggle.classList.toggle('bg-slate-100');
 
                 // Корректное позиционирование меню
                 const rect = toggle.getBoundingClientRect();
+                const rightSpace = window.innerWidth - rect.right;
+                if (rightSpace < 200) {
+                    // Недостаточно места справа, располагаем слева
+                    menu.style.left = 'auto';
+                    menu.style.right = '0';
+                } else {
+                    // Достаточно места справа
+                    menu.style.left = '0';
+                    menu.style.right = 'auto';
+                }
                 const scrollTop = window.scrollY || document.documentElement.scrollTop;
                 const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
 
