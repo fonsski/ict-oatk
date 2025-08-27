@@ -286,20 +286,10 @@ class UserController extends Controller
 
         $status = $user->is_active ? "активирована" : "деактивирована";
 
-        // Если пользователь был активирован, отправляем уведомление с временным паролем
+        // Если пользователь был активирован, отправляем уведомление
         if (!$wasActive && $user->is_active) {
-            // Генерируем временный пароль
-            $temporaryPassword = Str::random(10);
-
-            // Обновляем пароль пользователя
-            $user->update([
-                "password" => Hash::make($temporaryPassword),
-            ]);
-
-            // Отправляем уведомление с данными для входа
-            $user->notify(
-                new AccountActivationNotification($temporaryPassword),
-            );
+            // Отправляем уведомление об активации аккаунта
+            $user->notify(new AccountActivationNotification());
         }
 
         return redirect()
@@ -365,21 +355,13 @@ class UserController extends Controller
                 // Активируем пользователей и отправляем им уведомления
                 $users->get()->each(function ($user) {
                     if (!$user->is_active) {
-                        // Генерируем временный пароль
-                        $temporaryPassword = Str::random(10);
-
-                        // Обновляем пароль и статус пользователя
+                        // Обновляем статус пользователя на активный
                         $user->update([
-                            "password" => Hash::make($temporaryPassword),
                             "is_active" => true,
                         ]);
 
-                        // Отправляем уведомление с данными для входа
-                        $user->notify(
-                            new AccountActivationNotification(
-                                $temporaryPassword,
-                            ),
-                        );
+                        // Отправляем уведомление об активации
+                        $user->notify(new AccountActivationNotification());
                     } else {
                         $user->update(["is_active" => true]);
                     }

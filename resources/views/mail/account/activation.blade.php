@@ -7,14 +7,9 @@
 
 ## Данные для входа в систему:
 
-**Email:** {{ $notifiable->email }}
+**Телефон:** {{ $notifiable->phone }}
 
-**Временный пароль:**
-<div style="padding: 10px; background-color: #f3f4f6; border-radius: 5px; margin: 15px 0; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; font-family: monospace;">
-    {{ $password }}
-</div>
-
-Рекомендуем изменить пароль после первого входа в систему.
+Теперь вы можете войти в систему, используя свой номер телефона и пароль, указанный при регистрации.
 
 @component('mail::button', ['url' => route('login'), 'color' => 'primary'])
 Войти в систему

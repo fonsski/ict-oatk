@@ -134,12 +134,17 @@ class RegisterController extends Controller
                 "email" => $randomEmail,
                 "password" => Hash::make($request->password),
                 "role_id" => $userRole->id,
-                "is_active" => true,
+                "is_active" => false,
             ]);
 
-            Auth::login($user);
+            // Не логиним пользователя автоматически, т.к. аккаунт не активирован
 
-            return redirect()->route("home");
+            return redirect()
+                ->route("login")
+                ->with(
+                    "success",
+                    "Регистрация успешно завершена. Ваш аккаунт ожидает активации администратором системы.",
+                );
         } catch (\Exception $e) {
             Log::error(
                 "Ошибка при регистрации пользователя: " . $e->getMessage(),

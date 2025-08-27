@@ -20,6 +20,12 @@
 
         <!-- Form -->
         <div class="bg-white rounded-xl shadow-xl border border-gray-100 p-8">
+            @if (session('success'))
+                <div class="mb-4 p-4 border border-green-200 rounded-lg bg-green-50 text-green-700">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('login') }}" class="space-y-6">
                 @csrf
 

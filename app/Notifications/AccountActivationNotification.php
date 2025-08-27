@@ -13,19 +13,13 @@ class AccountActivationNotification extends Notification implements ShouldQueue
     use Queueable;
 
     /**
-     * Логин и пароль для доступа к системе
-     */
-    protected $password;
-
-    /**
      * Create a new notification instance.
      *
-     * @param string $password Временный пароль для первого входа
      * @return void
      */
-    public function __construct($password)
+    public function __construct()
     {
-        $this->password = $password;
+        // Конструктор без параметров
     }
 
     /**
@@ -60,7 +54,7 @@ class AccountActivationNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         // Логируем отправку для отладки
-        Log::info("Отправка письма активации учетной записи", [
+        Log::info("Отправка сообщения об активации учетной записи", [
             "phone" => $notifiable->phone,
             "user_id" => $notifiable->id,
         ]);
@@ -69,10 +63,10 @@ class AccountActivationNotification extends Notification implements ShouldQueue
             ->subject("Ваша учетная запись в системе ИКТ активирована")
             ->greeting("Здравствуйте, " . $notifiable->name . "!")
             ->line("Ваша учетная запись была активирована администратором.")
-            ->line("Ниже приведены данные для входа в систему:")
+            ->line(
+                "Теперь вы можете войти в систему, используя свой номер телефона и пароль, указанный при регистрации.",
+            )
             ->line("Телефон: <strong>" . $notifiable->phone . "</strong>")
-            ->line("Временный пароль: <strong>" . $this->password . "</strong>")
-            ->line("Рекомендуем изменить пароль после первого входа в систему.")
             ->action("Войти в систему", url(route("login")))
             ->line(
                 "Если у вас возникли вопросы, пожалуйста, свяжитесь с администратором.",
@@ -93,7 +87,6 @@ class AccountActivationNotification extends Notification implements ShouldQueue
     {
         return [
             "message" => "Ваша учетная запись была активирована.",
-            "password" => $this->password,
         ];
     }
 }

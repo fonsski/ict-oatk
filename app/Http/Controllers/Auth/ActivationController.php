@@ -38,20 +38,14 @@ class ActivationController extends Controller
                 ->with("info", "Учетная запись уже активирована.");
         }
 
-        // Генерируем временный пароль
-        $temporaryPassword = Str::random(10);
-
-        // Активируем пользователя и обновляем пароль
+        // Активируем пользователя
         $user->update([
             "is_active" => true,
-            "password" => Hash::make($temporaryPassword),
         ]);
 
-        // Отправляем уведомление с данными для входа
+        // Отправляем уведомление об активации
         try {
-            $user->notify(
-                new AccountActivationNotification($temporaryPassword),
-            );
+            $user->notify(new AccountActivationNotification());
             Log::info("Отправлено уведомление об активации учетной записи", [
                 "user_id" => $user->id,
                 "email" => $user->email,
@@ -68,7 +62,6 @@ class ActivationController extends Controller
             // Сохраняем данные для возможного повторного отправления
             session()->flash("activation_data", [
                 "user_id" => $user->id,
-                "temp_password" => $temporaryPassword,
                 "timestamp" => now()->timestamp,
             ]);
 
@@ -84,7 +77,7 @@ class ActivationController extends Controller
             ->back()
             ->with(
                 "success",
-                "Учетная запись успешно активирована. Данные для входа отправлены на email пользователя.",
+                "Учетная запись успешно активирована. Уведомление отправлено пользователю.",
             );
     }
 
@@ -169,19 +162,9 @@ class ActivationController extends Controller
                 );
         }
 
-        // Генерируем новый временный пароль
-        $temporaryPassword = Str::random(10);
-
-        // Обновляем пароль пользователя
-        $user->update([
-            "password" => Hash::make($temporaryPassword),
-        ]);
-
         try {
-            // Отправляем уведомление с данными для входа
-            $user->notify(
-                new AccountActivationNotification($temporaryPassword),
-            );
+            // Отправляем уведомление об активации
+            $user->notify(new AccountActivationNotification());
 
             Log::info("Повторная отправка данных для входа", [
                 "user_id" => $user->id,
@@ -193,7 +176,7 @@ class ActivationController extends Controller
                 ->back()
                 ->with(
                     "success",
-                    "Новые данные для входа успешно отправлены на email пользователя.",
+                    "Уведомление об активации аккаунта успешно отправлено пользователю.",
                 );
         } catch (\Exception $e) {
             Log::error("Ошибка при повторной отправке данных для входа", [
@@ -207,7 +190,7 @@ class ActivationController extends Controller
                 ->back()
                 ->with(
                     "error",
-                    "Не удалось отправить данные для входа. Проверьте настройки SMTP или попробуйте позже.",
+                    "Не удалось отправить уведомление. Проверьте настройки SMTP или попробуйте позже.",
                 );
         }
     }

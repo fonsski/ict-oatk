@@ -161,7 +161,7 @@
                             @csrf
                             <button type="submit"
                                     class="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-green-50 transition-colors duration-200"
-                                    onclick="return confirm('Активировать учетную запись? Пользователю будет отправлено письмо с данными для входа.')">
+                                    onclick="return confirm('Активировать учетную запись? Пользователю будет отправлено уведомление об активации.')">
                                 <div class="flex items-center space-x-2">
                                     <svg class="w-4 h-4 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -196,7 +196,7 @@
                             </button>
                         </form>
 
-                        <!-- Повторная отправка данных для входа -->
+                        <!-- Повторная отправка уведомления об активации -->
                         <form action="{{ route('user.resend-activation', $user) }}" method="POST" class="mt-2">
                             @csrf
                             <button type="submit"
