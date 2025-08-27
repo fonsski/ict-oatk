@@ -230,9 +230,10 @@
         @else
             <div class="text-center py-16">
                 <div class="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                    <div class="flex-shrink-0 flex items-center justify-center">
-                        <!-- User icon removed -->
-                    </div>
+                    <svg class="w-8 h-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
                 </div>
                 <h3 class="text-lg font-medium text-slate-900 mb-2">Пользователи не найдены</h3>
                 <p class="text-slate-600 mb-6">Попробуйте изменить параметры поиска</p>

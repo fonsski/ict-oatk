@@ -157,7 +157,9 @@
                                     <div class="flex space-x-4">
                                         <div class="flex-shrink-0">
                                             <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                                <!-- User icon removed -->
+                                                <svg class="w-6 h-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                                                </svg>
                                             </div>
                                         </div>
                                         <div class="flex-1">
@@ -289,7 +291,9 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Автор</dt>
                             <dd class="mt-1 flex items-center">
-                                <!-- User icon removed -->
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                                </svg>
                                 <span class="text-sm text-gray-900">{{ $ticket->reporter_name }}</span>
                             </dd>
                         </div>
@@ -343,7 +347,12 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Исполнитель</dt>
                             <dd class="mt-1 flex items-center">
-                                <!-- User icon removed -->
+                                <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
                                 @if($ticket->assigned_to)
                                 <span class="text-sm text-gray-900 text-wrap">{{ $ticket->assigned_to->name }}
                                     @if($ticket->assigned_to->role)
