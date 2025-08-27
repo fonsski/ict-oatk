@@ -7,14 +7,14 @@
                     <span class="line-clamp-2">{{ $ticket->title }}</span>
                 </a>
                 <p class="text-sm text-slate-600 mt-1 break-words whitespace-pre-line line-clamp-2">
-                    {{ Str::limit($ticket->description, 120) }}
+                    {{ Str::limit($ticket->description, 100) }}
                 </p>
                 @if($ticket->room)
-                    <div class="text-xs text-slate-500 mt-1">
-                        🏢 {{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}
+                    <div class="text-xs text-slate-500 mt-1 truncate">
+                        🏢 {{ $ticket->room->number }}
                     </div>
                 @elseif($ticket->location)
-                    <div class="text-xs text-slate-500 mt-1">
+                    <div class="text-xs text-slate-500 mt-1 truncate">
                         📍 {{ $ticket->location->name }}
                     </div>
                 @endif
@@ -41,19 +41,19 @@
                     'closed' => 'Закрыта'
                 ];
             @endphp
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; text-align: center;">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" style="white-space: nowrap; text-align: center; max-width: 100%;">
                 {{ $statusLabels[$ticket->status] ?? $ticket->status }}
             </span>
         </td>
         <td class="px-6 py-4">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" style="white-space: nowrap; text-align: center;">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" style="white-space: nowrap; text-align: center; max-width: 100%;">
                 {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
             </span>
         </td>
         <td class="px-6 py-4">
             @if($ticket->assignedTo)
                 <div class="flex items-center">
-                    <span class="text-sm text-slate-900">{{ $ticket->assignedTo->name }}</span>
+                    <span class="text-sm text-slate-900 truncate max-w-full">{{ $ticket->assignedTo->name }}</span>
                 </div>
             @else
                 <span class="text-sm text-slate-500 italic">Не назначено</span>
@@ -69,7 +69,7 @@
             </div>
         </td>
         <td class="px-6 py-4">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
                 <a href="{{ route('tickets.show', $ticket) }}"
                    class="text-blue-600 hover:text-blue-700 font-medium text-sm transition-all duration-300 hover:underline whitespace-nowrap">
                     Просмотр
@@ -81,7 +81,7 @@
                                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                 </svg>
                             </button>
-                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 12rem; max-width: 16rem;">
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
                             <div class="py-1">
                                 @if($ticket->status !== 'in_progress' && $ticket->status !== 'closed')
                                     <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
@@ -169,6 +169,7 @@ function initTableDropdowns() {
                 menu.style.maxHeight = '80vh';
                 menu.style.overflowY = 'auto';
 
+                // Проверяем, достаточно ли места справа и слева
                 if (rightSpace < 200) {
                     // Недостаточно места справа, располагаем слева
                     menu.style.left = 'auto';
@@ -177,6 +178,13 @@ function initTableDropdowns() {
                     // Достаточно места справа
                     menu.style.left = '0';
                     menu.style.right = 'auto';
+                }
+
+                // Обеспечиваем, чтобы меню не выходило за границы экрана
+                const menuRect = menu.getBoundingClientRect();
+                if (menuRect.right > window.innerWidth) {
+                    menu.style.right = '0';
+                    menu.style.left = 'auto';
                 }
 
                 // Устанавливаем позицию по вертикали

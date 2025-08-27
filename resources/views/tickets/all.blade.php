@@ -170,23 +170,27 @@
             /* Стили для предотвращения горизонтального скролла */
             #tickets-container,
             #tickets-container > div,
-            #tickets-container table,
+            #tickets-container table {
+                width: 100%;
+            }
             #tickets-container .overflow-x-auto,
             #tickets-container .overflow-auto {
-                overflow-x: visible !important;
-                overflow: visible !important;
+                overflow-x: auto !important;
             }
             #tickets-container table {
                 width: 100% !important;
                 table-layout: fixed !important;
+                border-collapse: separate;
+                border-spacing: 0;
             }
             #tickets-container td {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
-                padding: 24px !important;
+                padding: 16px !important;
                 vertical-align: top;
                 line-height: 1.5;
                 max-width: 100%;
+                position: relative;
             }
             #tickets-container tr {
                 transition: all 0.2s ease;
@@ -232,8 +236,9 @@
                 overflow: hidden;
                 display: -webkit-box;
                 -webkit-box-orient: vertical;
-                -webkit-line-clamp: 3;
-                min-height: 3em;
+                -webkit-line-clamp: 2;
+                min-height: 2em;
+                word-break: break-word;
             }
             #tickets-container .ticket-meta {
                 display: flex;
@@ -292,7 +297,7 @@
             }
         </style>
 
-        <div class="flex justify-between items-center mt-6 mb-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 mb-4 gap-4">
             <h2 class="text-xl font-semibold text-slate-900">Заявки в системе <span class="text-slate-500 text-sm font-normal ml-2">{{ $tickets->total() }} записей</span></h2>
             <div class="flex items-center gap-3">
                 <div id="last-updated-info" class="text-sm text-slate-500">
@@ -306,19 +311,19 @@
                 </button>
             </div>
         </div>
-        <div id="tickets-container" style="overflow-x: visible !important;">
+        <div id="tickets-container" style="overflow-x: auto !important;">
             @if($tickets->count() > 0)
-                <div class="bg-white rounded-lg border border-slate-200 shadow-sm" style="overflow: visible !important;">
-                    <table class="w-full border-collapse" style="table-layout: fixed !important; overflow: visible !important; border-spacing: 0;">
+                <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full border-collapse" style="table-layout: fixed !important; border-spacing: 0;">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 50%;">Заявка</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
                                 <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Заявитель</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Статус</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Приоритет</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Исполнитель</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 7%;">Дата</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 5%;">Действия</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Статус</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Приоритет</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Исполнитель</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Дата</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -501,7 +506,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'urgent': 'Срочный'
         };
 
-        const roomInfo = ticket.room ? `<div class="text-xs text-slate-500 mt-1">🏢 ${ticket.room.number} - ${ticket.room.name}</div>` :
+        // Упрощенное отображение информации о помещении для экономии места
+        const roomInfo = ticket.room ? `<div class="text-xs text-slate-500 mt-1">🏢 ${ticket.room.number}</div>` :
                         (ticket.location_name ? `<div class="text-xs text-slate-500 mt-1">📍 ${ticket.location_name}</div>` : '');
 
         // Escape HTML in title and description for safety
@@ -559,17 +565,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                 </td>
                 <td class="px-6 py-5">
-                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 90px; text-align: center;">
-                        ${getStatusLabel(ticket.status)}
+                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}" style="min-width: 90px; text-align: center;">
+                        ${priorityLabels[ticket.priority]}
                     </span>
                 </td>
                 <td class="px-6 py-5">
-                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' : ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' : ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}" style="min-width: 100px; text-align: center; white-space: nowrap;">
+                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' : ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' : ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}" style="min-width: 90px; text-align: center; white-space: nowrap;">
                         ${ticket.priority === 'urgent' ? 'Срочный' : ticket.priority === 'high' ? 'Высокий' : ticket.priority === 'medium' ? 'Средний' : ticket.priority === 'low' ? 'Низкий' : ticket.priority}
                     </span>
                 </td>
                 <td class="px-6 py-5">
-                    <div class="text-sm flex items-start gap-1.5 max-w-[150px]" title="${ticket.assigned_to || 'Не назначено'}">
+                    <div class="text-sm flex items-start gap-1.5 max-w-full" title="${ticket.assigned_to || 'Не назначено'}">
                         ${ticket.assigned_to ?
                             `<svg class="w-4 h-4 mt-0.5 text-slate-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
