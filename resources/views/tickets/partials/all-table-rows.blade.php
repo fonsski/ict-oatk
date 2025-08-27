@@ -81,7 +81,7 @@
                                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                 </svg>
                             </button>
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10 hidden animate-fade-in" data-dropdown-menu>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu>
                             <div class="py-1">
                                 @if($ticket->status !== 'in_progress' && $ticket->status !== 'closed')
                                     <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
@@ -136,8 +136,32 @@ function initTableDropdowns() {
                     }
                 });
 
+                document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
+                    if (otherToggle !== toggle) {
+                        otherToggle.classList.remove('bg-slate-100');
+                    }
+                });
+
                 // Переключить текущее меню
                 menu.classList.toggle('hidden');
+                toggle.classList.toggle('bg-slate-100');
+
+                // Корректное позиционирование меню
+                const rect = toggle.getBoundingClientRect();
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+                // Проверяем, достаточно ли места справа
+                const rightSpace = window.innerWidth - rect.right;
+                if (rightSpace < 200) {
+                    // Недостаточно места справа, располагаем слева
+                    menu.style.left = 'auto';
+                    menu.style.right = '0';
+                } else {
+                    // Достаточно места справа
+                    menu.style.left = '0';
+                    menu.style.right = 'auto';
+                }
             });
         }
     });
@@ -153,10 +177,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('[data-dropdown-menu]').forEach(function(menu) {
                 menu.classList.add('hidden');
             });
+            document.querySelectorAll('[data-dropdown-toggle]').forEach(function(toggle) {
+                toggle.classList.remove('bg-slate-100');
+            });
         }
     });
 
-    // Перезапускаем инициализацию меню каждые 10 секунд для новых элементов
-    setInterval(initTableDropdowns, 10000);
+    // Перезапускаем инициализацию меню каждые 5 секунд для новых элементов
+    setInterval(initTableDropdowns, 5000);
 });
 </script>

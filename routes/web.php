@@ -182,6 +182,17 @@ Route::middleware("auth")->group(function () {
             AllTicketsController::class,
             "quickStatus",
         ])->name("all-tickets.quick-status");
+
+        // API для назначения заявок и получения списка технических специалистов
+        Route::post("/api/tickets/{ticket}/assign", [
+            AllTicketsController::class,
+            "quickAssign",
+        ])->name("api.tickets.assign");
+
+        Route::get("/api/users/technicians", [
+            \App\Http\Controllers\Api\UserController::class,
+            "technicians",
+        ])->name("api.users.technicians");
     });
 
     // Ресурс equipment полностью доступен только для ролей admin, master и technician

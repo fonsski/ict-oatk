@@ -239,7 +239,23 @@ class AllTicketsController extends Controller
             "assigned_to_id" => "nullable|exists:users,id",
         ]);
 
+        $oldAssignedToId = $ticket->assigned_to_id;
         $ticket->update(["assigned_to_id" => $data["assigned_to_id"] ?? null]);
+
+        // Добавление системного комментария о назначении
+        if ($oldAssignedToId != $ticket->assigned_to_id) {
+            $user = Auth::user();
+            $assignedName = $ticket->assignedTo
+                ? $ticket->assignedTo->name
+                : "Никто";
+
+            \App\Models\TicketComment::create([
+                "ticket_id" => $ticket->id,
+                "user_id" => $user->id,
+                "content" => "Исполнитель изменен на «{$assignedName}»",
+                "is_system" => true,
+            ]);
+        }
 
         return response()->json([
             "success" => true,
@@ -247,6 +263,7 @@ class AllTicketsController extends Controller
             "assigned_to" => $ticket->assignedTo
                 ? $ticket->assignedTo->name
                 : null,
+            "assigned_to_id" => $ticket->assigned_to_id,
         ]);
     }
 

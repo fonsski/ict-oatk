@@ -176,14 +176,14 @@
                 <span class="font-medium text-blue-800">Выбрано заявок: <span id="selected-count">0</span></span>
             </div>
             <div class="flex items-center gap-2">
-                <div class="relative">
+                <div class="relative inline-block text-left">
                     <button id="bulk-actions-button" type="button" class="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                         Действия
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
-                    <div id="bulk-actions-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                    <div id="bulk-actions-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-50">
                         <div class="py-1">
                             <button type="button" class="bulk-action-item block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-status="in_progress">Взять в работу</button>
                             <button type="button" class="bulk-action-item block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-status="resolved">Отметить как решенные</button>
@@ -204,8 +204,8 @@
                     <table class="w-full table-auto">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-3 py-4 text-left">
-                                    <div class="flex items-center">
+                                <th class="w-10 px-3 py-4">
+                                    <div class="flex justify-center">
                                         <input type="checkbox" id="select-all-checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     </div>
                                 </th>
@@ -407,8 +407,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return `
             <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="${ticket.id}">
-                <td class="px-3 py-4 w-10">
-                    <div class="flex items-center">
+                <td class="w-10 px-3 py-4">
+                    <div class="flex justify-center">
                         <input type="checkbox" class="ticket-checkbox rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" data-id="${ticket.id}">
                     </div>
                 </td>
@@ -456,19 +456,19 @@ document.addEventListener('DOMContentLoaded', function() {
                            class="text-blue-600 hover:text-blue-700 font-medium text-sm">
                             Просмотр
                         </a>
-                        <div class="relative ml-2" data-dropdown-id="${ticket.id}">
+                        <div class="relative inline-block text-left ml-2" data-dropdown-id="${ticket.id}">
                             <button type="button" class="actions-menu-button p-1 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
                                 <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                 </svg>
                             </button>
-                            <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                <div class="py-1">
-                                    <a href="${ticket.url}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Просмотр заявки</a>
-                                    ${ticket.status !== 'in_progress' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
-                                    ${ticket.status !== 'resolved' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить как решенную</button>` : ''}
-                                    ${ticket.status !== 'closed' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
-                                    <button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="assign-to" data-id="${ticket.id}">Назначить исполнителя</button>
+                            <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-200 z-50" style="min-width: 8rem;" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                                <div class="py-1" role="none">
+                                    <a href="${ticket.url}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Просмотр заявки</a>
+                                    ${ticket.status !== 'in_progress' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="in_progress" role="menuitem">Взять в работу</button>` : ''}
+                                    ${ticket.status !== 'resolved' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="resolved" role="menuitem">Отметить как решенную</button>` : ''}
+                                    ${ticket.status !== 'closed' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="closed" role="menuitem">Закрыть заявку</button>` : ''}
+                                    <button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="assign-to" data-id="${ticket.id}" role="menuitem">Назначить исполнителя</button>
                                 </div>
                             </div>
                         </div>
@@ -479,14 +479,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // События
-    refreshBtn.addEventListener('click', refreshTickets);
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshTickets);
+    }
 
     // Обработка клика на кнопке действий
+    // Глобальный обработчик кликов для закрытия всех меню
     document.addEventListener('click', function(e) {
         // Закрытие всех открытых меню при клике вне них
         if (!e.target.closest('.actions-menu-button') && !e.target.closest('.actions-menu')) {
             document.querySelectorAll('.actions-menu').forEach(menu => {
                 menu.classList.add('hidden');
+            });
+            document.querySelectorAll('.actions-menu-button').forEach(button => {
+                button.classList.remove('bg-slate-200');
             });
         }
 
@@ -494,7 +500,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.closest('.actions-menu-button')) {
             const button = e.target.closest('.actions-menu-button');
             const ticketId = button.getAttribute('data-id');
-            const dropdown = button.parentElement.querySelector('.actions-menu');
+            const dropdownContainer = button.closest('[data-dropdown-id]');
+            const dropdown = dropdownContainer.querySelector('.actions-menu');
 
             // Закрыть все другие открытые меню
             document.querySelectorAll('.actions-menu').forEach(menu => {
@@ -503,17 +510,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
+            document.querySelectorAll('.actions-menu-button').forEach(btn => {
+                if (btn !== button) {
+                    btn.classList.remove('bg-slate-200');
+                }
+            });
+
             // Переключить текущее меню
             dropdown.classList.toggle('hidden');
+            button.classList.toggle('bg-slate-200');
+
+            // Корректное позиционирование меню
+            const rect = button.getBoundingClientRect();
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+            // Устанавливаем позицию с учетом скролла
+            dropdown.style.top = (rect.bottom + scrollTop) + 'px';
+            dropdown.style.left = (rect.left + scrollLeft - dropdown.offsetWidth + rect.width) + 'px';
+
+            e.preventDefault();
             e.stopPropagation();
         }
 
         // Обработка одиночных действий
         if (e.target.closest('.single-action')) {
+            e.preventDefault();
+            e.stopPropagation();
             const button = e.target.closest('.single-action');
             const action = button.getAttribute('data-action');
             const ticketId = button.getAttribute('data-id');
             const status = button.getAttribute('data-status');
+
+            console.log('Action clicked:', action, 'ticket:', ticketId, 'status:', status);
 
             if (action === 'change-status' && status) {
                 changeTicketStatus(ticketId, status);
@@ -570,25 +599,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Открытие/закрытие выпадающего меню массовых действий
-    bulkActionsButton.addEventListener('click', function() {
-        bulkActionsMenu.classList.toggle('hidden');
-    });
+    if (bulkActionsButton) {
+        bulkActionsButton.addEventListener('click', function(e) {
+            bulkActionsMenu.classList.toggle('hidden');
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    }
 
     // Закрытие выпадающего меню при клике вне его
     document.addEventListener('click', function(e) {
-        if (!bulkActionsButton.contains(e.target) && !bulkActionsMenu.contains(e.target)) {
+        if (bulkActionsButton && bulkActionsMenu && !bulkActionsButton.contains(e.target) && !bulkActionsMenu.contains(e.target)) {
             bulkActionsMenu.classList.add('hidden');
         }
     });
 
     // Отмена выбора
-    bulkCancelButton.addEventListener('click', function() {
-        document.querySelectorAll('.ticket-checkbox').forEach(checkbox => {
-            checkbox.checked = false;
+    if (bulkCancelButton) {
+        bulkCancelButton.addEventListener('click', function() {
+            document.querySelectorAll('.ticket-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
+            updateBulkActionsBar();
         });
-        selectAllCheckbox.checked = false;
-        updateBulkActionsBar();
-    });
+    }
 
     // Обработка массовых действий
     document.querySelectorAll('.bulk-action-item').forEach(button => {
@@ -612,17 +649,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Назначение исполнителя для всех выбранных заявок
                 assignMultipleTickets(selectedTickets);
                 bulkActionsMenu.classList.add('hidden');
+                updateBulkActionsBar();
             }
         });
     });
 
     // Функция изменения статуса заявки
     function changeTicketStatus(ticketId, status) {
-        return fetch(`/api/tickets/${ticketId}/status`, {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Закрываем все открытые меню перед отправкой запроса
+        document.querySelectorAll('.actions-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+
+        document.querySelectorAll('.actions-menu-button').forEach(button => {
+            button.classList.remove('bg-slate-200');
+        });
+
+        return fetch(`{{ route('api.tickets.status', ['ticket' => 0]) }}`.replace('0', ticketId), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ status: status })
         })
@@ -642,16 +693,198 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Функция назначения исполнителя для заявки
     function assignTicket(ticketId) {
-        // Здесь можно реализовать модальное окно для выбора исполнителя
-        // Пока просто заглушка
-        showNotification('Функция назначения исполнителя находится в разработке', 'info');
+        // Создаем модальное окно для выбора исполнителя
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.id = 'assign-modal';
+
+        // Получаем список доступных исполнителей
+        fetch('{{ route('api.users.technicians') }}')
+            .then(response => response.json())
+            .then(data => {
+                const technicians = data.technicians || [];
+
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Назначение исполнителя</h3>
+                            <button type="button" class="text-gray-400 hover:text-gray-500" id="close-modal">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mb-6">
+                            <label for="technician-select" class="block text-sm font-medium text-gray-700 mb-2">Выберите исполнителя</label>
+                            <select id="technician-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Не назначен</option>
+                                ${technicians.map(tech => `<option value="${tech.id}">${tech.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" id="cancel-assign">
+                                Отмена
+                            </button>
+                            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" id="confirm-assign">
+                                Назначить
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Обработчики событий для модального окна
+                document.getElementById('close-modal').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+
+                document.getElementById('cancel-assign').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+
+                document.getElementById('confirm-assign').addEventListener('click', () => {
+                    const technicianId = document.getElementById('technician-select').value;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    fetch(`{{ route('api.tickets.assign', ['ticket' => 0]) }}`.replace('0', ticketId), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            assigned_to_id: technicianId || null
+                        })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Ошибка при назначении исполнителя');
+                    })
+                    .then(data => {
+                        const assignedName = data.assigned_to || 'Не назначен';
+                        showNotification(`Исполнитель заявки #${ticketId} изменен на "${assignedName}"`, 'success');
+                        refreshTickets();
+                        document.body.removeChild(modal);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Произошла ошибка при назначении исполнителя', 'error');
+                        document.body.removeChild(modal);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading technicians:', error);
+                showNotification('Не удалось загрузить список исполнителей', 'error');
+            });
     }
 
     // Функция назначения исполнителя для нескольких заявок
     function assignMultipleTickets(ticketIds) {
-        // Здесь можно реализовать модальное окно для выбора исполнителя
-        // Пока просто заглушка
-        showNotification('Функция назначения исполнителя находится в разработке', 'info');
+        // Создаем модальное окно для выбора исполнителя
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.id = 'assign-multi-modal';
+
+        // Получаем список доступных исполнителей
+        fetch('{{ route('api.users.technicians') }}')
+            .then(response => response.json())
+            .then(data => {
+                const technicians = data.technicians || [];
+
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Назначение исполнителя для ${ticketIds.length} заявок</h3>
+                            <button type="button" class="text-gray-400 hover:text-gray-500" id="close-multi-modal">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mb-6">
+                            <label for="multi-technician-select" class="block text-sm font-medium text-gray-700 mb-2">Выберите исполнителя</label>
+                            <select id="multi-technician-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Не назначен</option>
+                                ${technicians.map(tech => `<option value="${tech.id}">${tech.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" id="cancel-multi-assign">
+                                Отмена
+                            </button>
+                            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" id="confirm-multi-assign">
+                                Назначить
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Обработчики событий для модального окна
+                document.getElementById('close-multi-modal').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+
+                document.getElementById('cancel-multi-assign').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+
+                document.getElementById('confirm-multi-assign').addEventListener('click', () => {
+                    const technicianId = document.getElementById('multi-technician-select').value;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    // Отображаем индикатор прогресса
+                    showNotification(`Назначение исполнителя для ${ticketIds.length} заявок...`, 'info');
+
+                    // Создаем массив промисов для каждой заявки
+                    const promises = ticketIds.map(ticketId =>
+                        fetch(`{{ route('api.tickets.assign', ['ticket' => 0]) }}`.replace('0', ticketId), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                assigned_to_id: technicianId || null
+                            })
+                        })
+                    );
+
+                    // Обрабатываем все запросы
+                    Promise.all(promises)
+                        .then(responses => {
+                            // Проверяем, что все запросы успешны
+                            const allSuccessful = responses.every(response => response.ok);
+                            if (allSuccessful) {
+                                const techName = technicians.find(t => t.id.toString() === technicianId)?.name || 'Не назначен';
+                                showNotification(`Исполнитель для ${ticketIds.length} заявок изменен на "${techName}"`, 'success');
+                                refreshTickets();
+                            } else {
+                                showNotification('Произошли ошибки при назначении некоторых заявок', 'warning');
+                            }
+                            document.body.removeChild(modal);
+                            updateBulkActionsBar(); // Сбрасываем выделение заявок
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showNotification('Произошла ошибка при назначении исполнителей', 'error');
+                            document.body.removeChild(modal);
+                        });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading technicians:', error);
+                showNotification('Не удалось загрузить список исполнителей', 'error');
+            });
     }
 
     // Функция получения текстового представления статуса
