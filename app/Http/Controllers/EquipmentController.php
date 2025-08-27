@@ -121,9 +121,9 @@ class EquipmentController extends Controller
             "warranty_end_date.required_if" =>
                 "Укажите дату окончания гарантии",
             "service_comment.max" =>
-                "Комментарии о проведенном обслуживании не должны превышать 2000 символов",
+                "Комментарии о проведенном обслуживании не должны превышать 500 символов",
             "known_issues.max" =>
-                "Известные проблемы не должны превышать 2000 символов",
+                "Известные проблемы не должны превышать 500 символов",
         ];
 
         $data = $request->validate(
@@ -138,8 +138,8 @@ class EquipmentController extends Controller
                 "warranty_end_date" =>
                     "nullable|date|required_if:has_warranty,1",
                 "last_service_date" => "nullable|date",
-                "service_comment" => "nullable|string|max:2000",
-                "known_issues" => "nullable|string|max:2000",
+                "service_comment" => "nullable|string|max:500",
+                "known_issues" => "nullable|string|max:500",
                 "initial_room_id" => "nullable|exists:rooms,id",
             ],
             $messages,
@@ -229,9 +229,9 @@ class EquipmentController extends Controller
             "warranty_end_date.required_if" =>
                 "Укажите дату окончания гарантии",
             "service_comment.max" =>
-                "Комментарии о проведенном обслуживании не должны превышать 2000 символов",
+                "Комментарии о проведенном обслуживании не должны превышать 500 символов",
             "known_issues.max" =>
-                "Известные проблемы не должны превышать 2000 символов",
+                "Известные проблемы не должны превышать 500 символов",
         ];
 
         $data = $request->validate(
@@ -247,8 +247,8 @@ class EquipmentController extends Controller
                 "warranty_end_date" =>
                     "nullable|date|required_if:has_warranty,1",
                 "last_service_date" => "nullable|date",
-                "service_comment" => "nullable|string|max:2000",
-                "known_issues" => "nullable|string|max:2000",
+                "service_comment" => "nullable|string|max:500",
+                "known_issues" => "nullable|string|max:500",
                 "initial_room_id" => "nullable|exists:rooms,id",
             ],
             $messages,

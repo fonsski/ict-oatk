@@ -86,7 +86,7 @@ class KnowledgeBaseController extends Controller
             "description.max" => "Описание не должно превышать 1000 символов",
             "content.required" => "Пожалуйста, добавьте содержимое статьи",
             "content.max" =>
-                "Содержимое статьи не должно превышать 50000 символов",
+                "Содержимое статьи не должно превышать 10000 символов",
             "tags.max" => "Теги не должны превышать 255 символов",
         ];
 
@@ -95,7 +95,7 @@ class KnowledgeBaseController extends Controller
                 "title" => "required|string|max:255",
                 "category_id" => "required|exists:knowledge_categories,id",
                 "description" => "nullable|string|max:1000",
-                "content" => "required|string|max:50000",
+                "content" => "required|string|max:10000",
                 "tags" => "nullable|string|max:255",
             ],
             $messages,
@@ -224,7 +224,7 @@ class KnowledgeBaseController extends Controller
             "description.max" => "Описание не должно превышать 1000 символов",
             "content.required" => "Пожалуйста, добавьте содержимое статьи",
             "content.max" =>
-                "Содержимое статьи не должно превышать 50000 символов",
+                "Содержимое статьи не должно превышать 10000 символов",
             "tags.max" => "Теги не должны превышать 255 символов",
         ];
 
@@ -233,7 +233,7 @@ class KnowledgeBaseController extends Controller
                 "title" => "required|string|max:255",
                 "category_id" => "required|exists:knowledge_categories,id",
                 "description" => "nullable|string|max:1000",
-                "content" => "required|string|max:50000",
+                "content" => "required|string|max:10000",
                 "tags" => "nullable|string|max:255",
             ],
             $messages,

@@ -6,6 +6,30 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'ICT')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .text-wrap {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .text-block {
+            display: block;
+            padding: 0.5rem;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            overflow: auto;
+            max-height: 200px;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gray-50">
     <!-- Header -->

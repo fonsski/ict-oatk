@@ -121,7 +121,7 @@
                 <!-- Description -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Описание проблемы</h2>
-                    <div class="prose max-w-none ticket-description break-words">
+                    <div class="prose max-w-none ticket-description text-wrap text-block">
                         {{ $ticket->description }}
                     </div>
                 </div>
@@ -147,7 +147,7 @@
                                                     <h3 class="text-sm font-medium text-blue-600">Система</h3>
                                                     <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                                 </div>
-                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content break-words">
+                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content text-wrap text-block">
                                                     {{ $comment->content }}
                                                 </div>
                                             </div>
@@ -167,7 +167,7 @@
                                                 <h3 class="text-sm font-medium text-gray-900">{{ $comment->user->name }}</h3>
                                                 <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                             </div>
-                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content break-words">
+                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content text-wrap text-block">
                                                 {{ $comment->content }}
                                             </div>
                                         </div>
@@ -304,7 +304,7 @@
                                 <svg class="w-4 h-4 text-gray-400 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                                 </svg>
-                                <span class="text-sm text-gray-900">{{ format_phone($ticket->reporter_phone) ?? 'Не указан' }}</span>
+                                <span class="text-sm text-gray-900 text-wrap">{{ !empty($ticket->reporter_phone) ? format_phone($ticket->reporter_phone) : 'Не указан' }}</span>
                             </dd>
                         </div>
                         <div>
@@ -317,10 +317,9 @@
                                 </svg>
                                 @if($ticket->room)
                                 <div>
-                                    <span class="text-sm text-gray-900">{{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</span>
+                                    <div class="text-sm text-gray-900 text-wrap">{{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</div>
                                     @if($ticket->room->building || $ticket->room->floor)
-                                        <br>
-                                        <span class="text-xs text-gray-500">{{ $ticket->room->full_address }}</span>
+                                        <div class="text-xs text-gray-500 text-wrap">{{ $ticket->room->full_address }}</div>
                                     @endif
                                 </div>
                                 @else
@@ -337,7 +336,7 @@
                                     <path d="M6 12h12"></path>
                                 </svg>
                                 @if($ticket->equipment)
-                                <a href="{{ route('equipment.show', $ticket->equipment) }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                                <a href="{{ route('equipment.show', $ticket->equipment) }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline text-wrap">
                                     {{ $ticket->equipment->name ?: 'Оборудование' }} ({{ $ticket->equipment->inventory_number }})
                                 </a>
                                 @else
@@ -355,13 +354,13 @@
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
                                 @if($ticket->assigned_to)
-                                <span class="text-sm text-gray-900">{{ $ticket->assigned_to->name }}
+                                <span class="text-sm text-gray-900 text-wrap">{{ $ticket->assigned_to->name }}
                                     @if($ticket->assigned_to->role)
-                                    <span class="text-xs text-gray-500">({{ $ticket->assigned_to->role->name }})</span>
+                                    <span class="text-xs text-gray-500 text-wrap">({{ $ticket->assigned_to->role->name }})</span>
                                     @endif
                                 </span>
                                 @else
-                                <span class="text-sm text-gray-500">Не назначен</span>
+                                <span class="text-sm text-gray-500 text-wrap">Не назначен</span>
                                 @endif
                             </dd>
                         </div>
@@ -374,7 +373,7 @@
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
                                 @if($ticket->location)
-                                <span class="text-sm text-gray-900">{{ $ticket->location->name }}</span>
+                                <span class="text-sm text-gray-900 text-wrap">{{ $ticket->location->name }}</span>
                                 @else
                                 <span class="text-sm text-gray-500">Не указана</span>
                                 @endif

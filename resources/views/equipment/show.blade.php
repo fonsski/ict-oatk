@@ -65,11 +65,11 @@
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">Комментарий</dt>
-                <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap break-words max-w-full overflow-auto p-2 border border-gray-100 rounded bg-gray-50">{{ $equipment->service_comment }}</dd>
+                <dd class="mt-1 text-sm text-gray-900 text-wrap text-block">{{ $equipment->service_comment }}</dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">Известные проблемы</dt>
-                <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap break-words max-w-full overflow-auto p-2 border border-gray-100 rounded bg-gray-50">{{ $equipment->known_issues }}</dd>
+                <dd class="mt-1 text-sm text-gray-900 text-wrap text-block">{{ $equipment->known_issues }}</dd>
             </div>
         </dl>
 

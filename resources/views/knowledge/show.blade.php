@@ -73,16 +73,21 @@
                     </div>
                 </div>
 
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ $article->title }}</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-6 text-wrap">{{ $article->title }}</h1>
 
                 @if($article->excerpt)
-                <p class="text-lg text-gray-600 mb-6">{{ $article->excerpt }}</p>
+                <p class="text-lg text-gray-600 mb-6 text-wrap">{{ $article->excerpt }}</p>
                 @endif
             </div>
 
             <!-- Article Body -->
             <div class="p-8">
                 <style>
+                    .prose {
+                        overflow-wrap: break-word;
+                        word-wrap: break-word;
+                        word-break: break-word;
+                    }
                     .prose img {
                         max-width: 100%;
                         height: auto;
@@ -95,7 +100,7 @@
                         }
                     }
                 </style>
-                <div class="prose max-w-none">
+                <div class="prose max-w-none text-wrap">
                     {!! $article->content !!}
                 </div>
 
@@ -108,7 +113,7 @@
                         @foreach(explode(',', $article->tags) as $tag)
                         @php $tag = trim($tag); @endphp
                         @if(!empty($tag))
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 text-wrap">
                             #{{ $tag }}
                         </span>
                         @endif
