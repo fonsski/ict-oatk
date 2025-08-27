@@ -110,9 +110,6 @@
                 <h3 class="text-lg font-semibold text-slate-900 mb-4">Информация о пользователе</h3>
                 <div class="space-y-3">
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                            {{ substr($user->name, 0, 1) }}
-                        </div>
                         <div>
                             <div class="font-medium text-slate-900">{{ $user->name }}</div>
                             <div class="text-sm text-slate-600">{{ $user->formatted_phone }}</div>

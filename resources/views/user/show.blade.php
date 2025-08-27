@@ -26,9 +26,6 @@
             <!-- User Profile Card -->
             <div class="card p-8">
                 <div class="flex items-start space-x-6">
-                    <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                        {{ substr($user->name, 0, 1) }}
-                    </div>
                     <div class="flex-1">
                         <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ $user->name }}</h2>
                         <p class="text-slate-600 mb-4">{{ $user->formatted_phone }}</p>
@@ -88,9 +85,7 @@
                         @foreach($user->tickets->take(5) as $ticket)
                             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                                 <div class="flex items-center space-x-4">
-                                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                        #{{ $ticket->id }}
-                                    </div>
+                                    <span class="font-semibold">#{{ $ticket->id }}</span>
                                     <div>
                                         <div class="font-medium text-slate-900 break-words line-clamp-2">{{ $ticket->title }}</div>
                                         <div class="text-sm text-slate-600">{{ Str::limit($ticket->description, 100) }}</div>

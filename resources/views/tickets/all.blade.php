@@ -205,8 +205,10 @@
 
     <!-- Pagination -->
     @if($tickets->hasPages())
-        <div class="mt-8" id="pagination-container">
-            {{ $tickets->links() }}
+        <div class="mt-8 flex justify-center" id="pagination-container">
+            <div class="pagination-wrapper">
+                {{ $tickets->links() }}
+            </div>
         </div>
     @endif
 </div>

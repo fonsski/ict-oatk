@@ -284,9 +284,6 @@
                     <!-- Mobile User Menu -->
                     <div class="border-t border-gray-200 pt-4 mt-4">
                         <div class="flex items-center space-x-3 px-3 py-2">
-                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                {{ substr(auth()->user()->name, 0, 1) }}
-                            </div>
                             <span class="text-base font-medium text-gray-900">{{ auth()->user()->name }}</span>
                         </div>
 

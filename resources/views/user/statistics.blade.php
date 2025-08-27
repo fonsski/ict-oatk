@@ -82,7 +82,7 @@
                         </span>
                     </div>
                 </div>
-                
+
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-slate-600">Пользователи без заявок</span>
                     <div class="flex items-center space-x-2">
@@ -135,9 +135,6 @@
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                        {{ substr($user->name, 0, 1) }}
-                                    </div>
                                     <div class="ml-3">
                                         <div class="text-sm font-medium text-slate-900">{{ $user->name }}</div>
                                         <div class="text-sm text-slate-500">{{ $user->email }}</div>

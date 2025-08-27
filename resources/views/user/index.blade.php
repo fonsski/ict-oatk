@@ -150,9 +150,6 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                            {{ substr($user->name, 0, 1) }}
-                                        </div>
                                         <div>
                                             <div class="font-medium text-slate-900">{{ $user->name }}</div>
                                             <div class="text-sm text-slate-600">{{ $user->formatted_phone }}</div>
