@@ -183,22 +183,142 @@
             #tickets-container td {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
+                padding: 24px !important;
+                vertical-align: top;
+                line-height: 1.5;
+                max-width: 100%;
+            }
+            #tickets-container tr {
+                transition: all 0.2s ease;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            #tickets-container tr:hover {
+                background-color: #f8fafc;
+            }
+            #tickets-container tbody tr:last-child {
+                border-bottom: none;
+            }
+            #tickets-container .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            #tickets-container .line-clamp-3 {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            #tickets-container .ticket-title {
+                font-size: 17px;
+                font-weight: 600;
+                color: #1e293b;
+                line-height: 1.5;
+                margin-bottom: 8px;
+                display: block;
+                text-decoration: none;
+            }
+            #tickets-container .ticket-title:hover {
+                color: #2563eb;
+                text-decoration: underline;
+            }
+            #tickets-container .ticket-description {
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 12px;
+                max-width: 100%;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3;
+                min-height: 3em;
+            }
+            #tickets-container .ticket-meta {
+                display: flex;
+                gap: 8px;
+                margin-top: 12px;
+                flex-wrap: wrap;
+            }
+            #tickets-container .ticket-meta-item {
+                display: inline-flex;
+                align-items: center;
+                font-size: 12px;
+                color: #64748b;
+                background-color: #f1f5f9;
+                padding: 4px 8px;
+                border-radius: 4px;
+                white-space: nowrap;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            #tickets-container .ticket-meta-item svg {
+                flex-shrink: 0;
+                margin-right: 4px;
+            }
+            .refresh-button {
+                background-color: #f8fafc;
+                color: #475569;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.375rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+                font-weight: 500;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .refresh-button:hover {
+                background-color: #f1f5f9;
+                border-color: #cbd5e1;
+            }
+            .refresh-button:active {
+                background-color: #e2e8f0;
+            }
+            .refresh-button svg {
+                width: 1rem;
+                height: 1rem;
+            }
+            .refresh-button.refreshing svg {
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
             }
         </style>
 
-        <div id="tickets-container" class="mt-4" style="overflow-x: visible !important;">
+        <div class="flex justify-between items-center mt-6 mb-4">
+            <h2 class="text-xl font-semibold text-slate-900">Заявки в системе <span class="text-slate-500 text-sm font-normal ml-2">{{ $tickets->total() }} записей</span></h2>
+            <div class="flex items-center gap-3">
+                <div id="last-updated-info" class="text-sm text-slate-500">
+                    Обновлено: {{ now()->format('d.m.Y H:i') }}
+                </div>
+                <button type="button" id="refresh-button" class="refresh-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    Обновить данные
+                </button>
+            </div>
+        </div>
+        <div id="tickets-container" style="overflow-x: visible !important;">
             @if($tickets->count() > 0)
                 <div class="bg-white rounded-lg border border-slate-200 shadow-sm" style="overflow: visible !important;">
-                    <table class="w-full border-collapse" style="table-layout: fixed !important; overflow: visible !important;">
+                    <table class="w-full border-collapse" style="table-layout: fixed !important; overflow: visible !important; border-spacing: 0;">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 13%;">Заявитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Статус</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Приоритет</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Исполнитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 9%;">Дата</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 6%;">Действия</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 50%;">Заявка</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Заявитель</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Статус</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Приоритет</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Исполнитель</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 7%;">Дата</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 5%;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -393,51 +513,97 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-6 py-4">
                     <div>
                         <a href="${ticket.url}"
-                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words inline-block w-full">
-                            <span class="line-clamp-2 ticket-title">${safeTitle}</span>
+                           class="ticket-title line-clamp-2 break-words inline-block transition-all duration-300">
+                            ${ticket.id ? `#${ticket.id}: ` : ''}${safeTitle}
                         </a>
-                        <p class="text-sm text-slate-600 mt-1 line-clamp-2 break-words">
-                            ${safeDescription.substring(0, 80)}${safeDescription.length > 80 ? '...' : ''}
+                        <p class="ticket-description line-clamp-3 break-words">
+                            ${safeDescription || 'Описание отсутствует'}
                         </p>
-                        ${roomInfo}
+                        <div class="ticket-meta">
+                            ${ticket.category ? `
+                            <span class="ticket-meta-item">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                </svg>
+                                ${ticket.category}
+                            </span>` : ''}
+                            ${roomInfo ? `
+                            <span class="ticket-meta-item">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+                                </svg>
+                                ${roomInfo.replace(/🏢 |📍 /g, '')}
+                            </span>` : ''}
+                        </div>
                     </div>
                 </td>
-                <td class="px-6 py-4">
+                <td class="px-6 py-5">
                     <div class="text-sm min-w-0">
-                        <div class="font-medium text-slate-900 truncate" title="${ticket.reporter_name || '—'}">${ticket.reporter_name || '—'}</div>
-                        <div class="text-slate-600 truncate" title="${ticket.reporter_phone || '—'}">${ticket.reporter_phone ? formatPhone(ticket.reporter_phone) : '—'}</div>
+                        <div class="font-medium text-slate-900 truncate mb-1 flex items-center" title="${ticket.reporter_name || '—'}">
+                            <svg class="w-4 h-4 mr-1.5 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="truncate">${ticket.reporter_name || '—'}</span>
+                        </div>
+                        <div class="text-slate-600 truncate flex items-center" title="${ticket.reporter_phone || '—'}">
+                            <svg class="w-4 h-4 mr-1.5 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
+                            <span class="truncate">${ticket.reporter_phone ? formatPhone(ticket.reporter_phone) : '—'}</span>
+                        </div>
                     </div>
                 </td>
-                <td class="px-6 py-4">
-                    <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}" style="white-space: nowrap; min-width: 80px;">
-                        ${statusLabels[ticket.status] || ticket.status}
-                    </span>
-                </td>
-                <td class="px-6 py-4">
-                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 80px; text-align: center;">
+                <td class="px-6 py-5">
+                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 100px; text-align: center; white-space: nowrap;">
                         ${getStatusLabel(ticket.status)}
                     </span>
                 </td>
-                <td class="px-6 py-4">
-                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' : ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' : ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}" style="min-width: 80px; text-align: center;">
+                <td class="px-6 py-5">
+                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 90px; text-align: center;">
+                        ${getStatusLabel(ticket.status)}
+                    </span>
+                </td>
+                <td class="px-6 py-5">
+                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' : ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' : ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}" style="min-width: 100px; text-align: center; white-space: nowrap;">
                         ${ticket.priority === 'urgent' ? 'Срочный' : ticket.priority === 'high' ? 'Высокий' : ticket.priority === 'medium' ? 'Средний' : ticket.priority === 'low' ? 'Низкий' : ticket.priority}
                     </span>
                 </td>
-                <td class="px-6 py-4">
-                    <span class="text-sm truncate block max-w-[150px]" title="${ticket.assigned_to || 'Не назначено'}">
-                        ${ticket.assigned_to || '<span class="italic text-slate-400">Не назначено</span>'}
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-slate-600">
-                        <div class="whitespace-nowrap" title="${ticket.created_at}">${formatDate(ticket.created_at)}</div>
-                        ${ticket.updated_at && ticket.updated_at !== ticket.created_at ? `<div class="text-xs text-slate-400">обн. ${formatDate(ticket.updated_at).split(' ')[0]}</div>` : ''}
+                <td class="px-6 py-5">
+                    <div class="text-sm flex items-start gap-1.5 max-w-[150px]" title="${ticket.assigned_to || 'Не назначено'}">
+                        ${ticket.assigned_to ?
+                            `<svg class="w-4 h-4 mt-0.5 text-slate-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="truncate font-medium text-slate-700">${ticket.assigned_to}</span>`
+                            :
+                            `<svg class="w-4 h-4 mt-0.5 text-slate-300 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="italic text-slate-400 truncate">Не назначено</span>`
+                        }
                     </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-5 whitespace-nowrap">
+                    <div class="text-sm">
+                        <div class="whitespace-nowrap flex items-center text-slate-700 font-medium" title="${ticket.created_at}">
+                            <svg class="w-4 h-4 mr-1.5 text-slate-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                            </svg>
+                            ${formatDate(ticket.created_at)}
+                        </div>
+                        ${ticket.updated_at && ticket.updated_at !== ticket.created_at ?
+                            `<div class="text-xs text-slate-500 mt-1.5 flex items-center">
+                                <svg class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                                </svg>
+                                Обн. ${formatDate(ticket.updated_at).split(' ')[0]}
+                            </div>` : ''}
+                    </div>
+                </td>
+                <td class="px-6 py-5 whitespace-nowrap">
                     <div class="flex items-center gap-1">
                         <a href="${ticket.url}"
-                           class="inline-flex items-center justify-center px-2.5 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition text-xs font-medium">
+                           class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition text-xs font-medium shadow-sm">
                             <svg class="w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                                 <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
@@ -445,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             Просмотр
                         </a>
                         <div class="relative inline-block text-left ml-1" data-dropdown-id="${ticket.id}">
-                            <button type="button" class="actions-menu-button p-1.5 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
+                            <button type="button" class="actions-menu-button p-1.5 rounded hover:bg-slate-200 focus:outline-none border border-transparent hover:border-slate-300" aria-label="Действия" data-id="${ticket.id}">
                                 <svg class="w-4 h-4 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                 </svg>
@@ -467,6 +633,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // События
+    const refreshButton = document.getElementById('refresh-button');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+            // Добавляем класс для анимации
+            this.classList.add('refreshing');
+            // Изменяем текст кнопки
+            this.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+                Обновление...
+            `;
+            // Запускаем обновление
+            refreshTickets().then(() => {
+                // После завершения возвращаем исходный вид
+                setTimeout(() => {
+                    this.classList.remove('refreshing');
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                        </svg>
+                        Обновить данные
+                    `;
+                    // Показываем уведомление об успешном обновлении
+                    showNotification('Данные успешно обновлены', 'success', 2000);
+                }, 500);
+            });
+        });
+    }
+
     if (refreshBtn) {
         refreshBtn.addEventListener('click', refreshTickets);
     }
@@ -808,13 +1004,42 @@ if (action === 'change-status' && status) {
     function formatDate(dateString) {
         if (!dateString) return '—';
         const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
+
+        // Получаем текущую дату
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // Проверяем, сегодня ли создана заявка
+        if (date.toDateString() === today.toDateString()) {
+            return 'Сегодня, ' + date.toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Проверяем, вчера ли создана заявка
+        if (date.toDateString() === yesterday.toDateString()) {
+            return 'Вчера, ' + date.toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Иначе возвращаем полную дату
+        const options = {
             day: '2-digit',
             month: '2-digit',
-            year: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
-        }).replace(',', '');
+        };
+
+        // Если год не текущий, добавляем его в формат
+        if (date.getFullYear() !== new Date().getFullYear()) {
+            options.year = '2-digit';
+        }
+
+        return date.toLocaleDateString('ru-RU', options).replace(',', '');
     }
 
     // Функция форматирования телефона
