@@ -166,19 +166,19 @@
             </div>
         </div>
 
-        <div id="tickets-container" class="overflow-x-auto rounded-lg border border-slate-200 mt-4">
+        <div id="tickets-container" class="rounded-lg border border-slate-200 mt-4">
             @if($tickets->count() > 0)
-                <div class="w-full overflow-auto">
+                <div class="w-full">
                     <table class="w-full table-auto">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/3">Заявка</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-2/5">Заявка</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Заявитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Статус</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Приоритет</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Статус</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Приоритет</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Исполнитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Дата</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Действия</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Дата</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -415,18 +415,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             Просмотр
                         </a>
                         <div class="relative inline-block text-left ml-2" data-dropdown-id="${ticket.id}">
-                            <button type="button" class="actions-menu-button p-1 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
-                                <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <button type="button" class="actions-menu-button p-2 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
+                                <svg class="w-5 h-5 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                 </svg>
                             </button>
-                            <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-200 z-50" style="min-width: 8rem;" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                            <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-200 z-50" style="min-width: 12rem; max-width: 16rem; transform: translateY(0);" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
                                 <div class="py-1" role="none">
-                                    <a href="${ticket.url}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Просмотр заявки</a>
-                                    ${ticket.status !== 'in_progress' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="in_progress" role="menuitem">Взять в работу</button>` : ''}
-                                    ${ticket.status !== 'resolved' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="resolved" role="menuitem">Отметить как решенную</button>` : ''}
-                                    ${ticket.status !== 'closed' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="closed" role="menuitem">Закрыть заявку</button>` : ''}
-                                    <button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="assign-to" data-id="${ticket.id}" role="menuitem">Назначить исполнителя</button>
+                                    <a href="${ticket.url}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-b border-gray-100" role="menuitem">Просмотр заявки</a>
+                                    ${ticket.status !== 'in_progress' ? `<button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="in_progress" role="menuitem">Взять в работу</button>` : ''}
+                                    ${ticket.status !== 'resolved' ? `<button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="resolved" role="menuitem">Отметить как решенную</button>` : ''}
+                                    ${ticket.status !== 'closed' ? `<button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="closed" role="menuitem">Закрыть заявку</button>` : ''}
+                                    <button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="assign-to" data-id="${ticket.id}" role="menuitem">Назначить исполнителя</button>
                                 </div>
                             </div>
                         </div>
@@ -478,14 +478,35 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown.classList.toggle('hidden');
             button.classList.toggle('bg-slate-200');
 
+            // Сбрасываем стили позиционирования перед установкой новых
+            dropdown.style.left = '';
+            dropdown.style.right = '';
+            dropdown.style.top = '';
+            dropdown.style.position = 'absolute';
+            dropdown.style.zIndex = '100';
+
             // Корректное позиционирование меню
             const rect = button.getBoundingClientRect();
-            const scrollTop = window.scrollY || document.documentElement.scrollTop;
-            const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
 
-            // Устанавливаем позицию с учетом скролла
-            dropdown.style.top = (rect.bottom + scrollTop) + 'px';
-            dropdown.style.left = (rect.left + scrollLeft - dropdown.offsetWidth + rect.width) + 'px';
+            // Проверяем, достаточно ли места справа от кнопки
+            const rightSpace = window.innerWidth - rect.right;
+
+            if (rightSpace < dropdown.offsetWidth) {
+                // Недостаточно места справа, позиционируем слева от кнопки
+                dropdown.style.left = 'auto';
+                dropdown.style.right = '0';
+            } else {
+                // Достаточно места справа, позиционируем как обычно
+                dropdown.style.left = '0';
+                dropdown.style.right = 'auto';
+            }
+
+            // Устанавливаем позицию по вертикали
+            dropdown.style.top = 'calc(100% + 0.5rem)';
+
+            // Максимальная высота и прокрутка для больших меню
+            dropdown.style.maxHeight = '80vh';
+            dropdown.style.overflowY = 'auto';
 
             e.preventDefault();
             e.stopPropagation();
@@ -500,18 +521,41 @@ document.addEventListener('DOMContentLoaded', function() {
             const ticketId = button.getAttribute('data-id');
             const status = button.getAttribute('data-status');
 
-            console.log('Action clicked:', action, 'ticket:', ticketId, 'status:', status);
+            // Визуальный эффект нажатия и текст кнопки
+            button.classList.add('bg-gray-100');
+            const buttonText = button.textContent.trim();
+
+            // Показываем мини-уведомление внутри кнопки
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Выполняется...</span>';
+
+            // Закрыть меню немедленно, чтобы пользователь видел, что клик обработан
+            const dropdown = button.closest('.actions-menu');
+            if (dropdown) {
+                dropdown.classList.add('hidden');
+            }
+
+            // Находим и убираем подсветку с кнопки меню
+            const dropdownContainer = button.closest('[data-dropdown-id]');
+            if (dropdownContainer) {
+                const menuButton = dropdownContainer.querySelector('.actions-menu-button');
+                if (menuButton) {
+                    menuButton.classList.remove('bg-slate-200');
+                }
+            }
+
+            // Восстанавливаем текст кнопки через небольшую задержку
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 500);
+
+            // Сразу выполняем действие без задержки для лучшего отклика
+            button.classList.remove('bg-gray-100');
 
             if (action === 'change-status' && status) {
                 changeTicketStatus(ticketId, status);
             } else if (action === 'assign-to') {
                 assignTicket(ticketId);
-            }
-
-            // Закрыть меню
-            const dropdown = button.closest('.actions-menu');
-            if (dropdown) {
-                dropdown.classList.add('hidden');
             }
         }
     });
@@ -565,6 +609,10 @@ if (action === 'change-status' && status) {
 
     // Функция изменения статуса заявки
     function changeTicketStatus(ticketId, status) {
+        // Показываем индикатор загрузки с запоминанием заявки, на которой выполняется действие
+        window.currentActionTicketId = ticketId;
+        showNotification(`<span class="font-medium">Заявка #${ticketId}:</span> изменение статуса...`, 'info', 2000);
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         // Закрываем все открытые меню перед отправкой запроса
@@ -587,24 +635,34 @@ if (action === 'change-status' && status) {
             body: JSON.stringify({ status: status })
         })
         .then(response => {
-            if (response.ok) {
-                showNotification(`Статус заявки #${ticketId} изменен на "${getStatusLabel(status)}"`, 'success');
-                refreshTickets();
-                return response.json();
+            if (!response.ok) {
+                throw new Error('Ошибка сервера: ' + response.status);
             }
-            throw new Error('Ошибка при изменении статуса');
+            return response.json();
+        })
+        .then(data => {
+            // Уведомляем только если не было другого действия
+            if (window.currentActionTicketId === ticketId) {
+                showNotification(`<span class="font-medium">Заявка #${ticketId}:</span> статус изменен на <span class="font-medium">"${getStatusLabel(status)}"</span>`, 'success');
+            }
+            refreshTickets();
+            return data;
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('Произошла ошибка при изменении статуса заявки', 'error');
+            showNotification(`<span class="font-medium">Ошибка:</span> не удалось изменить статус заявки #${ticketId}`, 'error', 5000);
         });
     }
 
     // Функция назначения исполнителя для заявки
     function assignTicket(ticketId) {
+        // Показываем индикатор загрузки
+        window.currentActionTicketId = ticketId;
+        showNotification(`<span class="font-medium">Заявка #${ticketId}:</span> загрузка списка исполнителей...`, 'info', 2000);
+
         // Создаем модальное окно для выбора исполнителя
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]';
         modal.id = 'assign-modal';
 
         // Получаем список доступных исполнителей
@@ -631,10 +689,10 @@ if (action === 'change-status' && status) {
                             </select>
                         </div>
                         <div class="flex justify-end gap-3">
-                            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" id="cancel-assign">
+                            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition" id="cancel-assign">
                                 Отмена
                             </button>
-                            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" id="confirm-assign">
+                            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition" id="confirm-assign">
                                 Назначить
                             </button>
                         </div>
@@ -644,15 +702,18 @@ if (action === 'change-status' && status) {
                 document.body.appendChild(modal);
 
                 // Обработчики событий для модального окна
-                document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('close-modal').addEventListener('click', (e) => {
+                    e.preventDefault();
                     document.body.removeChild(modal);
                 });
 
-                document.getElementById('cancel-assign').addEventListener('click', () => {
+                document.getElementById('cancel-assign').addEventListener('click', (e) => {
+                    e.preventDefault();
                     document.body.removeChild(modal);
                 });
 
-                document.getElementById('confirm-assign').addEventListener('click', () => {
+                document.getElementById('confirm-assign').addEventListener('click', (e) => {
+                    e.preventDefault();
                     const technicianId = document.getElementById('technician-select').value;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -676,20 +737,23 @@ if (action === 'change-status' && status) {
                     })
                     .then(data => {
                         const assignedName = data.assigned_to || 'Не назначен';
-                        showNotification(`Исполнитель заявки #${ticketId} изменен на "${assignedName}"`, 'success');
+                        // Уведомляем только если не было другого действия
+                        if (window.currentActionTicketId === ticketId) {
+                            showNotification(`<span class="font-medium">Заявка #${ticketId}:</span> исполнитель изменен на <span class="font-medium">"${assignedName}"</span>`, 'success');
+                        }
                         refreshTickets();
                         document.body.removeChild(modal);
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showNotification('Произошла ошибка при назначении исполнителя', 'error');
+                        showNotification(`<span class="font-medium">Ошибка:</span> не удалось назначить исполнителя для заявки #${ticketId}`, 'error', 5000);
                         document.body.removeChild(modal);
                     });
                 });
             })
             .catch(error => {
                 console.error('Error loading technicians:', error);
-                showNotification('Не удалось загрузить список исполнителей', 'error');
+                showNotification(`<span class="font-medium">Ошибка:</span> не удалось загрузить список исполнителей для заявки #${ticketId}`, 'error', 5000);
             });
     }
 
@@ -711,36 +775,87 @@ if (action === 'change-status' && status) {
     }
 
     // Функция для отображения уведомлений
-    function showNotification(message, type = 'info') {
+    function showNotification(message, type = 'info', duration = 3000) {
+        // Создаем элемент уведомления с иконкой
         const notificationElement = document.createElement('div');
-        notificationElement.classList.add('fixed', 'bottom-4', 'right-4', 'px-6', 'py-3', 'rounded-lg', 'shadow-lg', 'z-50', 'transform', 'transition-all', 'duration-500', 'translate-y-20', 'opacity-0');
+        notificationElement.classList.add(
+            'fixed', 'bottom-4', 'right-4', 'px-6', 'py-4', 'rounded-lg',
+            'shadow-xl', 'z-[1000]', 'transform', 'transition-all',
+            'duration-500', 'translate-y-20', 'opacity-0', 'flex',
+            'items-center', 'gap-3', 'max-w-md'
+        );
 
-        // Добавляем цвета в зависимости от типа уведомления
+        // Выбираем иконку и цвета в зависимости от типа уведомления
+        let iconSvg = '';
         if (type === 'success') {
             notificationElement.classList.add('bg-green-600', 'text-white');
+            iconSvg = '<svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
         } else if (type === 'error') {
             notificationElement.classList.add('bg-red-600', 'text-white');
+            iconSvg = '<svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
         } else if (type === 'info') {
             notificationElement.classList.add('bg-blue-600', 'text-white');
+            iconSvg = '<svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>';
         } else if (type === 'warning') {
             notificationElement.classList.add('bg-yellow-500', 'text-white');
+            iconSvg = '<svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
         }
 
-        notificationElement.innerHTML = message;
+        notificationElement.innerHTML = `
+            <div class="flex-shrink-0">
+                ${iconSvg}
+            </div>
+            <div class="flex-grow">${message}</div>
+            <div class="flex-shrink-0 ml-2">
+                <button class="text-white opacity-70 hover:opacity-100 transition-opacity" onclick="this.parentNode.parentNode.remove()">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        // Убеждаемся, что на странице не более 3 уведомлений одновременно
+        const existingNotifications = document.querySelectorAll('.notification-element');
+        if (existingNotifications.length >= 3) {
+            existingNotifications[0].remove();
+        }
+
+        // Добавляем класс для отслеживания и вставляем в DOM
+        notificationElement.classList.add('notification-element');
         document.body.appendChild(notificationElement);
 
         // Анимируем появление
         setTimeout(() => {
             notificationElement.classList.remove('translate-y-20', 'opacity-0');
-        }, 100);
+        }, 10);
 
-        // Удаляем через 3 секунды
-        setTimeout(() => {
+        // Удаляем через указанное время
+        const timeoutId = setTimeout(() => {
             notificationElement.classList.add('translate-y-20', 'opacity-0');
             setTimeout(() => {
-                document.body.removeChild(notificationElement);
+                if (document.body.contains(notificationElement)) {
+                    document.body.removeChild(notificationElement);
+                }
             }, 500);
-        }, 3000);
+        }, duration);
+
+        // Остановка таймера при наведении мыши
+        notificationElement.addEventListener('mouseenter', () => {
+            clearTimeout(timeoutId);
+        });
+
+        // Возобновление таймера при уходе мыши
+        notificationElement.addEventListener('mouseleave', () => {
+            setTimeout(() => {
+                notificationElement.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    if (document.body.contains(notificationElement)) {
+                        document.body.removeChild(notificationElement);
+                    }
+                }, 500);
+            }, 1000);
+        });
     }
 
     // Автоматическое применение фильтров
