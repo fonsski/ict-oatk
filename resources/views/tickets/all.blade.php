@@ -166,19 +166,39 @@
             </div>
         </div>
 
-        <div id="tickets-container" class="rounded-lg border border-slate-200 mt-4">
+        <style>
+            /* Стили для предотвращения горизонтального скролла */
+            #tickets-container,
+            #tickets-container > div,
+            #tickets-container table,
+            #tickets-container .overflow-x-auto,
+            #tickets-container .overflow-auto {
+                overflow-x: visible !important;
+                overflow: visible !important;
+            }
+            #tickets-container table {
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            #tickets-container td {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+        </style>
+
+        <div id="tickets-container" class="mt-4" style="overflow-x: visible !important;">
             @if($tickets->count() > 0)
-                <div class="w-full">
-                    <table class="w-full table-auto">
+                <div class="bg-white rounded-lg border border-slate-200 shadow-sm" style="overflow: visible !important;">
+                    <table class="w-full border-collapse" style="table-layout: fixed !important; overflow: visible !important;">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-2/5">Заявка</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Заявитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Статус</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Приоритет</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Исполнитель</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Дата</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-auto">Действия</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 13%;">Заявитель</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Статус</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Приоритет</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Исполнитель</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 9%;">Дата</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900" style="width: 6%;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -187,14 +207,14 @@
                     </table>
                 </div>
             @else
-                <div class="text-center py-16" id="empty-state">
-                    <div class="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="text-center py-20 bg-white rounded-lg border border-slate-200 shadow-sm" id="empty-state">
+                    <div class="mx-auto w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-medium text-slate-900 mb-2">Заявок не найдено</h3>
-                    <p class="text-slate-600 mb-6">Попробуйте изменить параметры фильтра или создайте новую заявку</p>
+                    <h3 class="text-xl font-medium text-slate-900 mb-2">Заявок не найдено</h3>
+                    <p class="text-slate-600 mb-8 max-w-md mx-auto">Попробуйте изменить параметры фильтра или создайте новую заявку</p>
                     <a href="{{ route('tickets.create') }}" class="btn-primary btn-lg">
                         Создать заявку
                     </a>
@@ -383,9 +403,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </td>
                 <td class="px-6 py-4">
-                    <div class="text-sm">
-                        <div class="font-medium text-slate-900">${ticket.reporter_name || '—'}</div>
-                        <div class="text-slate-600">${ticket.reporter_phone || '—'}</div>
+                    <div class="text-sm min-w-0">
+                        <div class="font-medium text-slate-900 truncate" title="${ticket.reporter_name || '—'}">${ticket.reporter_name || '—'}</div>
+                        <div class="text-slate-600 truncate" title="${ticket.reporter_phone || '—'}">${ticket.reporter_phone ? formatPhone(ticket.reporter_phone) : '—'}</div>
                     </div>
                 </td>
                 <td class="px-6 py-4">
@@ -394,29 +414,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-200 text-red-900' : (priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800')}" style="white-space: nowrap; min-width: 80px;">
-                        ${ticket.priority === 'urgent' ? 'Срочный' : (priorityLabels[ticket.priority] || ticket.priority)}
+                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 80px; text-align: center;">
+                        ${getStatusLabel(ticket.status)}
                     </span>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="text-sm text-slate-600">
-                        ${ticket.assigned_to || 'Не назначено'}
+                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' : ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' : ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}" style="min-width: 80px; text-align: center;">
+                        ${ticket.priority === 'urgent' ? 'Срочный' : ticket.priority === 'high' ? 'Высокий' : ticket.priority === 'medium' ? 'Средний' : ticket.priority === 'low' ? 'Низкий' : ticket.priority}
                     </span>
                 </td>
                 <td class="px-6 py-4">
+                    <span class="text-sm truncate block max-w-[150px]" title="${ticket.assigned_to || 'Не назначено'}">
+                        ${ticket.assigned_to || '<span class="italic text-slate-400">Не назначено</span>'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-slate-600">
-                        <div>${ticket.created_at}</div>
+                        <div class="whitespace-nowrap" title="${ticket.created_at}">${formatDate(ticket.created_at)}</div>
+                        ${ticket.updated_at && ticket.updated_at !== ticket.created_at ? `<div class="text-xs text-slate-400">обн. ${formatDate(ticket.updated_at).split(' ')[0]}</div>` : ''}
                     </div>
                 </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-2">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-1">
                         <a href="${ticket.url}"
-                           class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                           class="inline-flex items-center justify-center px-2.5 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition text-xs font-medium">
+                            <svg class="w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
                             Просмотр
                         </a>
-                        <div class="relative inline-block text-left ml-2" data-dropdown-id="${ticket.id}">
-                            <button type="button" class="actions-menu-button p-2 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
-                                <svg class="w-5 h-5 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="relative inline-block text-left ml-1" data-dropdown-id="${ticket.id}">
+                            <button type="button" class="actions-menu-button p-1.5 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
+                                <svg class="w-4 h-4 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                 </svg>
                             </button>
@@ -772,6 +802,43 @@ if (action === 'change-status' && status) {
             'closed': 'Закрыта'
         };
         return statusLabels[status] || status;
+    }
+
+    // Функция форматирования даты
+    function formatDate(dateString) {
+        if (!dateString) return '—';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).replace(',', '');
+    }
+
+    // Функция форматирования телефона
+    function formatPhone(phone) {
+        if (!phone) return '—';
+        // Удаляем все нецифровые символы
+        const cleaned = ('' + phone).replace(/\D/g, '');
+
+        // Проверяем длину и форматируем
+        if (cleaned.length === 11) {
+            return `+${cleaned[0]} (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9, 11)}`;
+        }
+        return phone;
+    }
+
+    // Функция получения класса для статуса
+    function getStatusClass(status) {
+        const statusClasses = {
+            'open': 'bg-blue-100 text-blue-800',
+            'in_progress': 'bg-yellow-100 text-yellow-800',
+            'resolved': 'bg-green-100 text-green-800',
+            'closed': 'bg-slate-100 text-slate-800'
+        };
+        return statusClasses[status] || 'bg-slate-100 text-slate-800';
     }
 
     // Функция для отображения уведомлений
