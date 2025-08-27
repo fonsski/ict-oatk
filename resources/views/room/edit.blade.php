@@ -195,37 +195,27 @@
                 <div>
                     <h3 class="text-lg font-medium text-slate-900 mb-4">Контактная информация</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Responsible Person -->
-                        <div>
-                            <label for="responsible_person" class="block text-sm font-medium text-slate-700 mb-2">
-                                Ответственный (для справки)
-                            </label>
-                            <input type="text"
-                                   id="responsible_person"
-                                   name="responsible_person"
-                                   value="{{ old('responsible_person', $room->responsible_person) }}"
-                                   class="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('responsible_person') border-red-300 @enderror"
-                                   placeholder="ФИО ответственного лица">
-                            @error('responsible_person')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         <!-- Responsible User -->
                         <div>
                             <label for="responsible_user_id" class="block text-sm font-medium text-slate-700 mb-2">
                                 Ответственный пользователь
                             </label>
-                            <select id="responsible_user_id"
-                                   name="responsible_user_id"
-                                   class="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('responsible_user_id') border-red-300 @enderror">
-                                <option value="">Не выбран</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}" {{ old('responsible_user_id', $room->responsible_user_id) == $user->id ? 'selected' : '' }}>
-                                        {{ $user->name }} {{ $user->phone ? "(" . $user->phone . ")" : "" }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="relative">
+                                <input type="text"
+                                       id="user_search"
+                                       placeholder="Поиск пользователя..."
+                                       class="block w-full px-3 py-2 mb-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <select id="responsible_user_id"
+                                       name="responsible_user_id"
+                                       class="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('responsible_user_id') border-red-300 @enderror">
+                                    <option value="">Не выбран</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}" data-name="{{ strtolower($user->name) }}" {{ old('responsible_user_id', $room->responsible_user_id) == $user->id ? 'selected' : '' }}>
+                                            {{ $user->name }} {{ $user->phone ? "(" . $user->phone . ")" : "" }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                             @error('responsible_user_id')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -302,3 +292,26 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userSearch = document.getElementById('user_search');
+        const userSelect = document.getElementById('responsible_user_id');
+        const userOptions = userSelect.querySelectorAll('option');
+
+        userSearch.addEventListener('input', function() {
+            const searchTerm = userSearch.value.toLowerCase().trim();
+
+            userOptions.forEach(option => {
+                if (option.value === '') return; // Пропускаем опцию "Не выбран"
+
+                const userName = option.getAttribute('data-name');
+                const shouldShow = userName.includes(searchTerm);
+
+                option.style.display = shouldShow ? '' : 'none';
+            });
+        });
+    });
+</script>
+@endpush

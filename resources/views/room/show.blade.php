@@ -269,7 +269,7 @@
                     <h3 class="text-lg font-medium text-slate-900">Контактная информация</h3>
                 </div>
                 <div class="p-6">
-                    @if($room->responsible_person)
+                    @if($room->responsible_person && !$room->responsibleUser)
                     <div class="mb-4">
                         <dt class="text-sm font-medium text-slate-500">Ответственный</dt>
                         <dd class="mt-1 text-sm text-slate-900">{{ $room->responsible_person }}</dd>
@@ -279,31 +279,39 @@
                     <div class="mb-4">
                         <dt class="text-sm font-medium text-slate-500">Ответственный пользователь</dt>
                         <dd class="mt-1 text-sm text-slate-900">
-                            <form action="{{ route('room.update', $room) }}" method="POST" class="flex items-start">
-                                @csrf
-                                @method('PUT')
-                                <select id="responsible_user_id" name="responsible_user_id"
-                                    class="mr-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                    <option value="">Не назначен</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}" {{ $room->responsible_user_id == $user->id ? 'selected' : '' }}>
-                                            {{ $user->name }} {{ $user->phone ? "({$user->phone})" : "" }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <button type="submit"
-                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors duration-200">
-                                    Сохранить
-                                </button>
-                            </form>
                             @if($room->responsibleUser)
-                                <div class="mt-2 text-slate-700">
+                                <div class="mb-3 text-slate-700">
                                     Текущий ответственный: <strong>{{ $room->responsibleUser->name }}</strong>
                                     @if($room->responsibleUser->phone)
                                         <br>Телефон: {{ $room->responsibleUser->phone }}
                                     @endif
                                 </div>
                             @endif
+                            <form action="{{ route('room.update', $room) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="flex flex-col sm:flex-row items-start gap-2">
+                                    <div class="w-full sm:w-auto">
+                                        <input type="text"
+                                            id="user_search"
+                                            placeholder="Поиск пользователя..."
+                                            class="w-full mb-2 px-3 py-1.5 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                        <select id="responsible_user_id" name="responsible_user_id"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                            <option value="">Не назначен</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" data-name="{{ strtolower($user->name) }}" {{ $room->responsible_user_id == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->name }} {{ $user->phone ? "({$user->phone})" : "" }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="submit"
+                                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                        Сохранить
+                                    </button>
+                                </div>
+                            </form>
                         </dd>
                     </div>
                     @if($room->phone)
@@ -474,3 +482,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userSearch = document.getElementById('user_search');
+        const userSelect = document.getElementById('responsible_user_id');
+        const userOptions = userSelect.querySelectorAll('option');
+
+        userSearch.addEventListener('input', function() {
+            const searchTerm = userSearch.value.toLowerCase().trim();
+
+            userOptions.forEach(option => {
+                if (option.value === '') return; // Пропускаем опцию "Не выбран"
+
+                const userName = option.getAttribute('data-name');
+                const shouldShow = userName.includes(searchTerm);
+
+                option.style.display = shouldShow ? '' : 'none';
+            });
+        });
+    });
+</script>
+@endpush

@@ -150,13 +150,17 @@
                                     data-number="{{ $room->number }}"
                                     data-name="{{ $room->name ?? $room->type_name }}"
                                     data-building="{{ $room->building }}"
-                                    data-floor="{{ $room->floor }}">
+                                    data-floor="{{ $room->floor }}"
+                                    @if(isset($userResponsibleRoom) && $userResponsibleRoom && $userResponsibleRoom->id == $room->id)
+                                        style="font-weight: bold; background-color: #EFF6FF; color: #1E40AF;"
+                                    @endif
+                                    >
                                     {{ $room->number }} - {{ $room->name ?? $room->type_name }}
                                     @if($room->building || $room->floor)
                                         ({{ $room->full_address }})
                                     @endif
                                     @if(isset($userResponsibleRoom) && $userResponsibleRoom && $userResponsibleRoom->id == $room->id)
-                                        <strong>(Вы ответственный)</strong>
+                                        [✓ Вы ответственный]
                                     @endif
                                 </option>
                                 @endforeach
@@ -165,7 +169,12 @@
                         <p class="mt-1 text-sm text-gray-500">
                             Найдите кабинет по номеру или названию или выберите из списка
                             @if(isset($userResponsibleRoom) && $userResponsibleRoom)
-                                <br><span class="text-blue-600 font-medium">Автоматически выбран кабинет, за который вы ответственны</span>
+                                <br><span class="inline-flex items-center mt-1 text-blue-600 font-medium">
+                                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    Автоматически выбран кабинет, за который вы ответственны
+                                </span>
                             @endif
                         </p>
                     </div>
