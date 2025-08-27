@@ -350,4 +350,51 @@ class AllTicketsController extends Controller
             "last_updated" => now()->format("d.m.Y H:i:s"),
         ]);
     }
+
+    /**
+     * API для обновления статуса заявки
+     */
+    public function updateStatus(Request $request, Ticket $ticket)
+    {
+        // Проверка аутентификации и роли
+        if (
+            !Auth::check() ||
+            !in_array(optional(Auth::user()->role)->slug, [
+                "admin",
+                "master",
+                "technician",
+            ])
+        ) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            "status" => "required|in:open,in_progress,resolved,closed",
+        ]);
+
+        $ticket->update(["status" => $data["status"]]);
+
+        // Добавление системного комментария о смене статуса
+        $user = Auth::user();
+        $statusLabels = [
+            "open" => "Открыта",
+            "in_progress" => "В работе",
+            "resolved" => "Решена",
+            "closed" => "Закрыта",
+        ];
+
+        \App\Models\TicketComment::create([
+            "ticket_id" => $ticket->id,
+            "user_id" => $user->id,
+            "content" => "Статус заявки изменен на «{$statusLabels[$data["status"]]}»",
+            "is_system" => true,
+        ]);
+
+        return response()->json([
+            "success" => true,
+            "message" => "Статус заявки изменен",
+            "status" => $ticket->status,
+            "statusLabel" => $statusLabels[$ticket->status] ?? $ticket->status,
+        ]);
+    }
 }

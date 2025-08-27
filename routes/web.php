@@ -166,6 +166,10 @@ Route::middleware("auth")->group(function () {
             AllTicketsController::class,
             "api",
         ])->name("all-tickets.api");
+        Route::post("/api/tickets/{ticket}/status", [
+            AllTicketsController::class,
+            "updateStatus",
+        ])->name("api.tickets.status");
         Route::get("/all-tickets/stats", [
             AllTicketsController::class,
             "stats",

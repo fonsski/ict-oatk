@@ -166,12 +166,49 @@
             </div>
         </div>
 
+        <!-- Bulk Actions Bar -->
+        <div id="bulk-actions-bar" class="hidden items-center justify-between py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
+                    <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
+                </svg>
+                <span class="font-medium text-blue-800">Выбрано заявок: <span id="selected-count">0</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <button id="bulk-actions-button" type="button" class="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        Действия
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div id="bulk-actions-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                        <div class="py-1">
+                            <button type="button" class="bulk-action-item block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-status="in_progress">Взять в работу</button>
+                            <button type="button" class="bulk-action-item block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-status="resolved">Отметить как решенные</button>
+                            <button type="button" class="bulk-action-item block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-status="closed">Закрыть заявки</button>
+                            <button type="button" class="bulk-action-item block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="assign-to">Назначить исполнителя</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="bulk-cancel-button" type="button" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition">
+                    Отменить
+                </button>
+            </div>
+        </div>
+
         <div id="tickets-container" class="overflow-x-auto rounded-lg border border-slate-200 mt-4">
             @if($tickets->count() > 0)
                 <div class="w-full overflow-auto">
                     <table class="w-full table-auto">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
+                                <th class="px-3 py-4 text-left">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="select-all-checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </div>
+                                </th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/4">Заявка</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-1/6">Заявитель</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900 w-24">Статус</th>
@@ -370,6 +407,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return `
             <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="${ticket.id}">
+                <td class="px-3 py-4 w-10">
+                    <div class="flex items-center">
+                        <input type="checkbox" class="ticket-checkbox rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" data-id="${ticket.id}">
+                    </div>
+                </td>
                 <td class="px-6 py-4">
                     <div>
                         <a href="${ticket.url}"
@@ -414,6 +456,22 @@ document.addEventListener('DOMContentLoaded', function() {
                            class="text-blue-600 hover:text-blue-700 font-medium text-sm">
                             Просмотр
                         </a>
+                        <div class="relative ml-2" data-dropdown-id="${ticket.id}">
+                            <button type="button" class="actions-menu-button p-1 rounded-full hover:bg-slate-200 focus:outline-none" aria-label="Действия" data-id="${ticket.id}">
+                                <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                </svg>
+                            </button>
+                            <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                <div class="py-1">
+                                    <a href="${ticket.url}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Просмотр заявки</a>
+                                    ${ticket.status !== 'in_progress' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
+                                    ${ticket.status !== 'resolved' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить как решенную</button>` : ''}
+                                    ${ticket.status !== 'closed' ? `<button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
+                                    <button type="button" class="single-action block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-action="assign-to" data-id="${ticket.id}">Назначить исполнителя</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </tr>
@@ -422,6 +480,223 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // События
     refreshBtn.addEventListener('click', refreshTickets);
+
+    // Обработка клика на кнопке действий
+    document.addEventListener('click', function(e) {
+        // Закрытие всех открытых меню при клике вне них
+        if (!e.target.closest('.actions-menu-button') && !e.target.closest('.actions-menu')) {
+            document.querySelectorAll('.actions-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+
+        // Открытие меню действий при клике на кнопку
+        if (e.target.closest('.actions-menu-button')) {
+            const button = e.target.closest('.actions-menu-button');
+            const ticketId = button.getAttribute('data-id');
+            const dropdown = button.parentElement.querySelector('.actions-menu');
+
+            // Закрыть все другие открытые меню
+            document.querySelectorAll('.actions-menu').forEach(menu => {
+                if (menu !== dropdown) {
+                    menu.classList.add('hidden');
+                }
+            });
+
+            // Переключить текущее меню
+            dropdown.classList.toggle('hidden');
+            e.stopPropagation();
+        }
+
+        // Обработка одиночных действий
+        if (e.target.closest('.single-action')) {
+            const button = e.target.closest('.single-action');
+            const action = button.getAttribute('data-action');
+            const ticketId = button.getAttribute('data-id');
+            const status = button.getAttribute('data-status');
+
+            if (action === 'change-status' && status) {
+                changeTicketStatus(ticketId, status);
+            } else if (action === 'assign-to') {
+                assignTicket(ticketId);
+            }
+
+            // Закрыть меню
+            const dropdown = button.closest('.actions-menu');
+            if (dropdown) {
+                dropdown.classList.add('hidden');
+            }
+        }
+    });
+
+    // Обработка чекбоксов и массовых действий
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const bulkActionsButton = document.getElementById('bulk-actions-button');
+    const bulkActionsMenu = document.getElementById('bulk-actions-menu');
+    const bulkCancelButton = document.getElementById('bulk-cancel-button');
+
+    // Переключение всех чекбоксов
+    selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        document.querySelectorAll('.ticket-checkbox').forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+        updateBulkActionsBar();
+    });
+
+    // Обновление панели массовых действий при изменении отдельных чекбоксов
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('ticket-checkbox')) {
+            updateBulkActionsBar();
+        }
+    });
+
+    // Обновление отображения панели массовых действий
+    function updateBulkActionsBar() {
+        const checkedCheckboxes = document.querySelectorAll('.ticket-checkbox:checked');
+        const selectedCount = checkedCheckboxes.length;
+
+        if (selectedCount > 0) {
+            bulkActionsBar.classList.remove('hidden');
+            bulkActionsBar.classList.add('flex');
+            selectedCountSpan.textContent = selectedCount;
+        } else {
+            bulkActionsBar.classList.add('hidden');
+            bulkActionsBar.classList.remove('flex');
+            selectAllCheckbox.checked = false;
+        }
+    }
+
+    // Открытие/закрытие выпадающего меню массовых действий
+    bulkActionsButton.addEventListener('click', function() {
+        bulkActionsMenu.classList.toggle('hidden');
+    });
+
+    // Закрытие выпадающего меню при клике вне его
+    document.addEventListener('click', function(e) {
+        if (!bulkActionsButton.contains(e.target) && !bulkActionsMenu.contains(e.target)) {
+            bulkActionsMenu.classList.add('hidden');
+        }
+    });
+
+    // Отмена выбора
+    bulkCancelButton.addEventListener('click', function() {
+        document.querySelectorAll('.ticket-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectAllCheckbox.checked = false;
+        updateBulkActionsBar();
+    });
+
+    // Обработка массовых действий
+    document.querySelectorAll('.bulk-action-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            const status = this.getAttribute('data-status');
+            const selectedTickets = Array.from(document.querySelectorAll('.ticket-checkbox:checked')).map(cb => cb.getAttribute('data-id'));
+
+            if (selectedTickets.length === 0) return;
+
+            if (action === 'change-status' && status) {
+                // Изменение статуса для всех выбранных заявок
+                Promise.all(selectedTickets.map(id => changeTicketStatus(id, status)))
+                    .then(() => {
+                        // После обработки всех заявок
+                        refreshTickets();
+                        bulkActionsMenu.classList.add('hidden');
+                        updateBulkActionsBar();
+                    });
+            } else if (action === 'assign-to') {
+                // Назначение исполнителя для всех выбранных заявок
+                assignMultipleTickets(selectedTickets);
+                bulkActionsMenu.classList.add('hidden');
+            }
+        });
+    });
+
+    // Функция изменения статуса заявки
+    function changeTicketStatus(ticketId, status) {
+        return fetch(`/api/tickets/${ticketId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification(`Статус заявки #${ticketId} изменен на "${getStatusLabel(status)}"`, 'success');
+                refreshTickets();
+                return response.json();
+            }
+            throw new Error('Ошибка при изменении статуса');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Произошла ошибка при изменении статуса заявки', 'error');
+        });
+    }
+
+    // Функция назначения исполнителя для заявки
+    function assignTicket(ticketId) {
+        // Здесь можно реализовать модальное окно для выбора исполнителя
+        // Пока просто заглушка
+        showNotification('Функция назначения исполнителя находится в разработке', 'info');
+    }
+
+    // Функция назначения исполнителя для нескольких заявок
+    function assignMultipleTickets(ticketIds) {
+        // Здесь можно реализовать модальное окно для выбора исполнителя
+        // Пока просто заглушка
+        showNotification('Функция назначения исполнителя находится в разработке', 'info');
+    }
+
+    // Функция получения текстового представления статуса
+    function getStatusLabel(status) {
+        const statusLabels = {
+            'open': 'Открыта',
+            'in_progress': 'В работе',
+            'resolved': 'Решена',
+            'closed': 'Закрыта'
+        };
+        return statusLabels[status] || status;
+    }
+
+    // Функция для отображения уведомлений
+    function showNotification(message, type = 'info') {
+        const notificationElement = document.createElement('div');
+        notificationElement.classList.add('fixed', 'bottom-4', 'right-4', 'px-6', 'py-3', 'rounded-lg', 'shadow-lg', 'z-50', 'transform', 'transition-all', 'duration-500', 'translate-y-20', 'opacity-0');
+
+        // Добавляем цвета в зависимости от типа уведомления
+        if (type === 'success') {
+            notificationElement.classList.add('bg-green-600', 'text-white');
+        } else if (type === 'error') {
+            notificationElement.classList.add('bg-red-600', 'text-white');
+        } else if (type === 'info') {
+            notificationElement.classList.add('bg-blue-600', 'text-white');
+        } else if (type === 'warning') {
+            notificationElement.classList.add('bg-yellow-500', 'text-white');
+        }
+
+        notificationElement.innerHTML = message;
+        document.body.appendChild(notificationElement);
+
+        // Анимируем появление
+        setTimeout(() => {
+            notificationElement.classList.remove('translate-y-20', 'opacity-0');
+        }, 100);
+
+        // Удаляем через 3 секунды
+        setTimeout(() => {
+            notificationElement.classList.add('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                document.body.removeChild(notificationElement);
+            }, 500);
+        }, 3000);
+    }
 
     // Автоматическое применение фильтров
     const filtersForm = document.getElementById('filters-form');
