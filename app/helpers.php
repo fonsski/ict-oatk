@@ -1,5 +1,85 @@
 <?php
 
+if (!function_exists("format_phone")) {
+    /**
+     * Форматирует номер телефона в стандартный вид
+     * Преобразует различные форматы в единый вид: +7 (XXX) XXX-XX-XX
+     *
+     * @param string|null $phone Номер телефона
+     * @return string|null Отформатированный номер телефона или null если телефон не указан
+     */
+    function format_phone($phone)
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        // Очищаем номер от всего кроме цифр и +
+        $cleaned = preg_replace("/[^0-9+]/", "", $phone);
+
+        // Если после очистки номер пустой, возвращаем null
+        if (empty($cleaned)) {
+            return null;
+        }
+
+        // Нормализуем номер в формат +7XXXXXXXXXX
+        if (strlen($cleaned) >= 10) {
+            // Если начинается с 8 и длина 11, заменяем на +7
+            if (substr($cleaned, 0, 1) === "8" && strlen($cleaned) === 11) {
+                $cleaned = "+7" . substr($cleaned, 1);
+            }
+            // Если начинается с 7 без + и длина 11, добавляем +
+            elseif (
+                substr($cleaned, 0, 1) === "7" &&
+                strlen($cleaned) === 11 &&
+                substr($cleaned, 0, 1) !== "+"
+            ) {
+                $cleaned = "+7" . substr($cleaned, 1);
+            }
+            // Если длина 10 и начинается с 9, добавляем +7
+            elseif (
+                strlen($cleaned) === 10 &&
+                preg_match('/^9\d{9}$/', $cleaned)
+            ) {
+                $cleaned = "+7" . $cleaned;
+            }
+            // Если нет + вначале и длина >= 10, добавляем +7 к последним 10 цифрам
+            elseif (substr($cleaned, 0, 1) !== "+" && strlen($cleaned) >= 10) {
+                $cleaned = "+7" . substr($cleaned, -10);
+            }
+        }
+
+        // Если номер не начинается с +7, не форматируем его
+        if (substr($cleaned, 0, 2) !== "+7" || strlen($cleaned) < 12) {
+            return $cleaned;
+        }
+
+        // Форматируем номер в вид +7 (XXX) XXX-XX-XX
+        return preg_replace(
+            '/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/',
+            '+7 ($1) $2-$3-$4',
+            $cleaned,
+        );
+    }
+}
+
+if (!function_exists("clean_phone")) {
+    /**
+     * Очищает номер телефона от форматирования, оставляя только цифры и +
+     *
+     * @param string|null $phone Номер телефона
+     * @return string|null Очищенный номер телефона или null если телефон не указан
+     */
+    function clean_phone($phone)
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        return preg_replace("/[^0-9+]/", "", $phone);
+    }
+}
+
 if (!function_exists("user_has_role")) {
     /**
      * Проверить, имеет ли текущий пользователь определенную роль

@@ -31,7 +31,7 @@
                     </div>
                     <div class="flex-1">
                         <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ $user->name }}</h2>
-                        <p class="text-slate-600 mb-4">{{ $user->phone }}</p>
+                        <p class="text-slate-600 mb-4">{{ $user->formatted_phone }}</p>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>

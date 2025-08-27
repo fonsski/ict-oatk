@@ -23,7 +23,7 @@
         <td class="px-6 py-4">
             <div class="text-sm">
                 <div class="font-medium text-slate-900">{{ $ticket->reporter_name ?: '—' }}</div>
-                <div class="text-slate-600">{{ $ticket->reporter_phone ?: '—' }}</div>
+                <div class="text-slate-600">{{ format_phone($ticket->reporter_phone) ?: '—' }}</div>
             </div>
         </td>
         <td class="px-6 py-4">

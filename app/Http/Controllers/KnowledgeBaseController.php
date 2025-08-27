@@ -78,13 +78,28 @@ class KnowledgeBaseController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            "title" => "required|string|max:255",
-            "category_id" => "required|exists:knowledge_categories,id",
-            "description" => "nullable|string|max:1000",
-            "content" => "required|string",
-            "tags" => "nullable|string|max:255",
-        ]);
+        $messages = [
+            "title.required" => "Пожалуйста, укажите заголовок статьи",
+            "title.max" => "Заголовок не должен превышать 255 символов",
+            "category_id.required" => "Пожалуйста, выберите категорию",
+            "category_id.exists" => "Выбранная категория не существует",
+            "description.max" => "Описание не должно превышать 1000 символов",
+            "content.required" => "Пожалуйста, добавьте содержимое статьи",
+            "content.max" =>
+                "Содержимое статьи не должно превышать 50000 символов",
+            "tags.max" => "Теги не должны превышать 255 символов",
+        ];
+
+        $data = $request->validate(
+            [
+                "title" => "required|string|max:255",
+                "category_id" => "required|exists:knowledge_categories,id",
+                "description" => "nullable|string|max:1000",
+                "content" => "required|string|max:50000",
+                "tags" => "nullable|string|max:255",
+            ],
+            $messages,
+        );
 
         $article = new KnowledgeBase();
         $article->title = $data["title"];
@@ -102,7 +117,24 @@ class KnowledgeBaseController extends Controller
 
         $article->content = $this->sanitizeHtml($html);
 
-        $article->tags = $data["tags"] ?? null;
+        // Обрабатываем теги, убираем символы # если они есть
+        if (isset($data["tags"])) {
+            $tags = explode(",", $data["tags"]);
+            $cleanTags = [];
+            foreach ($tags as $tag) {
+                $tag = trim($tag);
+                // Удаляем символ # в начале тега, если он есть
+                if (substr($tag, 0, 1) === "#") {
+                    $tag = substr($tag, 1);
+                }
+                if (!empty($tag)) {
+                    $cleanTags[] = $tag;
+                }
+            }
+            $article->tags = implode(", ", $cleanTags);
+        } else {
+            $article->tags = null;
+        }
         $article->author_id = Auth::id();
         $article->published_at = now();
         $article->save();
@@ -184,13 +216,28 @@ class KnowledgeBaseController extends Controller
      */
     public function update(Request $request, KnowledgeBase $knowledge)
     {
-        $data = $request->validate([
-            "title" => "required|string|max:255",
-            "category_id" => "required|exists:knowledge_categories,id",
-            "description" => "nullable|string|max:1000",
-            "content" => "required|string",
-            "tags" => "nullable|string|max:255",
-        ]);
+        $messages = [
+            "title.required" => "Пожалуйста, укажите заголовок статьи",
+            "title.max" => "Заголовок не должен превышать 255 символов",
+            "category_id.required" => "Пожалуйста, выберите категорию",
+            "category_id.exists" => "Выбранная категория не существует",
+            "description.max" => "Описание не должно превышать 1000 символов",
+            "content.required" => "Пожалуйста, добавьте содержимое статьи",
+            "content.max" =>
+                "Содержимое статьи не должно превышать 50000 символов",
+            "tags.max" => "Теги не должны превышать 255 символов",
+        ];
+
+        $data = $request->validate(
+            [
+                "title" => "required|string|max:255",
+                "category_id" => "required|exists:knowledge_categories,id",
+                "description" => "nullable|string|max:1000",
+                "content" => "required|string|max:50000",
+                "tags" => "nullable|string|max:255",
+            ],
+            $messages,
+        );
 
         $knowledge->title = $data["title"];
         $knowledge->slug = Str::slug($data["title"]);
@@ -205,7 +252,24 @@ class KnowledgeBaseController extends Controller
             $knowledge->content = "<p>" . nl2br(e($data["content"])) . "</p>";
         }
 
-        $knowledge->tags = $data["tags"] ?? null;
+        // Обрабатываем теги, убираем символы # если они есть
+        if (isset($data["tags"])) {
+            $tags = explode(",", $data["tags"]);
+            $cleanTags = [];
+            foreach ($tags as $tag) {
+                $tag = trim($tag);
+                // Удаляем символ # в начале тега, если он есть
+                if (substr($tag, 0, 1) === "#") {
+                    $tag = substr($tag, 1);
+                }
+                if (!empty($tag)) {
+                    $cleanTags[] = $tag;
+                }
+            }
+            $knowledge->tags = implode(", ", $cleanTags);
+        } else {
+            $knowledge->tags = null;
+        }
         $knowledge->save();
 
         return redirect()

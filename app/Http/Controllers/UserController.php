@@ -68,13 +68,31 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            "name" => "required|string|max:255",
-            "phone" => "required|string|max:20|unique:users",
-            "role_id" => "required|exists:roles,id",
-            "password" => "required|string|min:8|confirmed",
-            "is_active" => "boolean",
-        ]);
+        $messages = [
+            "name.required" => "Пожалуйста, укажите имя пользователя",
+            "name.max" => "Имя пользователя не должно превышать 255 символов",
+            "phone.required" => "Пожалуйста, укажите номер телефона",
+            "phone.max" => "Номер телефона не должен превышать 20 символов",
+            "phone.unique" =>
+                "Пользователь с таким номером телефона уже существует",
+            "role_id.required" => "Пожалуйста, выберите роль пользователя",
+            "role_id.exists" => "Выбранная роль не существует в системе",
+            "password.required" => "Пожалуйста, укажите пароль",
+            "password.min" => "Пароль должен содержать не менее 8 символов",
+            "password.confirmed" => "Пароли не совпадают",
+        ];
+
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "name" => "required|string|max:255",
+                "phone" => "required|string|max:20|unique:users",
+                "role_id" => "required|exists:roles,id",
+                "password" => "required|string|min:8|confirmed",
+                "is_active" => "boolean",
+            ],
+            $messages,
+        );
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -135,17 +153,32 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $validator = Validator::make($request->all(), [
-            "name" => "required|string|max:255",
-            "phone" => [
-                "required",
-                "string",
-                "max:20",
-                Rule::unique("users")->ignore($user->id),
+        $messages = [
+            "name.required" => "Пожалуйста, укажите имя пользователя",
+            "name.max" => "Имя пользователя не должно превышать 255 символов",
+            "phone.required" => "Пожалуйста, укажите номер телефона",
+            "phone.max" => "Номер телефона не должен превышать 20 символов",
+            "phone.unique" =>
+                "Пользователь с таким номером телефона уже существует",
+            "role_id.required" => "Пожалуйста, выберите роль пользователя",
+            "role_id.exists" => "Выбранная роль не существует в системе",
+        ];
+
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "name" => "required|string|max:255",
+                "phone" => [
+                    "required",
+                    "string",
+                    "max:20",
+                    Rule::unique("users")->ignore($user->id),
+                ],
+                "role_id" => "required|exists:roles,id",
+                "is_active" => "boolean",
             ],
-            "role_id" => "required|exists:roles,id",
-            "is_active" => "boolean",
-        ]);
+            $messages,
+        );
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -202,9 +235,20 @@ class UserController extends Controller
      */
     public function resetPassword(Request $request, User $user)
     {
-        $validator = Validator::make($request->all(), [
-            "new_password" => "required|string|min:8|confirmed",
-        ]);
+        $messages = [
+            "new_password.required" => "Пожалуйста, укажите новый пароль",
+            "new_password.min" =>
+                "Новый пароль должен содержать не менее 8 символов",
+            "new_password.confirmed" => "Пароли не совпадают",
+        ];
+
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "new_password" => "required|string|min:8|confirmed",
+            ],
+            $messages,
+        );
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -271,12 +315,30 @@ class UserController extends Controller
      */
     public function bulkAction(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            "action" => "required|in:activate,deactivate,delete,change_role",
-            "user_ids" => "required|array",
-            "user_ids.*" => "exists:users,id",
-            "new_role_id" => "required_if:action,change_role|exists:roles,id",
-        ]);
+        $messages = [
+            "action.required" => "Пожалуйста, выберите действие",
+            "action.in" => "Выбрано недопустимое действие",
+            "user_ids.required" => "Пожалуйста, выберите пользователей",
+            "user_ids.array" => "Некорректный формат списка пользователей",
+            "user_ids.*.exists" =>
+                "Один или несколько выбранных пользователей не существуют",
+            "new_role_id.required_if" =>
+                "Для изменения роли необходимо выбрать новую роль",
+            "new_role_id.exists" => "Выбранная роль не существует",
+        ];
+
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "action" =>
+                    "required|in:activate,deactivate,delete,change_role",
+                "user_ids" => "required|array",
+                "user_ids.*" => "exists:users,id",
+                "new_role_id" =>
+                    "required_if:action,change_role|exists:roles,id",
+            ],
+            $messages,
+        );
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator);

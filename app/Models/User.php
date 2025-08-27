@@ -172,6 +172,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Форматирует номер телефона перед отображением
+     */
+    public function getFormattedPhoneAttribute()
+    {
+        return format_phone($this->phone);
+    }
+
+    /**
+     * Сохраняет номер телефона в нормализованном виде
+     */
+    public function setPhoneAttribute($value)
+    {
+        $this->attributes["phone"] = clean_phone($value);
+    }
+
+    /**
      * Получение статуса активности в читаемом виде
      */
     public function getStatusTextAttribute()

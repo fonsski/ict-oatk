@@ -155,7 +155,7 @@
                                         </div>
                                         <div>
                                             <div class="font-medium text-slate-900">{{ $user->name }}</div>
-                                            <div class="text-sm text-slate-600">{{ $user->phone }}</div>
+                                            <div class="text-sm text-slate-600">{{ $user->formatted_phone }}</div>
                                         </div>
                                     </div>
                                 </td>

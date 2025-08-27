@@ -100,6 +100,23 @@
                 </div>
 
                 <!-- Article Footer -->
+                <!-- Tags Section -->
+                @if($article->tags)
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Теги:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(explode(',', $article->tags) as $tag)
+                        @php $tag = trim($tag); @endphp
+                        @if(!empty($tag))
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            #{{ $tag }}
+                        </span>
+                        @endif
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
                     <div class="text-sm text-gray-500">
                         <span>Просмотров: {{ $article->views_count }}</span>

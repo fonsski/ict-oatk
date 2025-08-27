@@ -115,9 +115,15 @@ class TicketController extends Controller
             "description.min" =>
                 "Описание должно содержать не менее 10 символов",
             "description.max" => "Описание не должно превышать 5000 символов",
-            "location_id.exists" => "Выбранное местоположение не существует",
-            "room_id.exists" => "Выбранный кабинет не существует",
-            "equipment_id.exists" => "Выбранное оборудование не существует",
+            "location_id.exists" =>
+                "Выбранное местоположение не существует в системе",
+            "room_id.exists" => "Выбранный кабинет не существует в системе",
+            "equipment_id.exists" =>
+                "Выбранное оборудование не существует в системе",
+            "reporter_phone.regex" =>
+                "Номер телефона содержит недопустимые символы. Используйте только цифры, +, (), - и пробелы",
+            "reporter_id.max" =>
+                "Идентификатор заявителя не должен превышать 50 символов",
         ];
 
         $data = $request->validate(
@@ -429,27 +435,41 @@ class TicketController extends Controller
     {
         $this->authorizeAssign();
 
+        // Проверяем, что заявка не закрыта
+        if ($ticket->status === "closed") {
+            return Redirect::back()->with(
+                "error",
+                "Нельзя назначить исполнителя на закрытую заявку",
+            );
+        }
+
         $messages = [
             "assigned_to_id.exists" =>
                 "Выбранный исполнитель не существует в системе",
         ];
 
-        $data = $request->validate(
-            [
-                "assigned_to_id" => "nullable|exists:users,id",
-            ],
-            $messages,
-        );
+        // Проверяем, если выбрано "Не назначено"
+        if (
+            $request->has("assigned_to_id") &&
+            $request->assigned_to_id === ""
+        ) {
+            $newAssignedId = null;
+        } else {
+            $data = $request->validate(
+                [
+                    "assigned_to_id" => "nullable|exists:users,id",
+                ],
+                $messages,
+            );
+            $newAssignedId = $data["assigned_to_id"] ?? null;
+        }
 
         $oldAssignedId = $ticket->assigned_to_id;
-        $ticket->update(["assigned_to_id" => $data["assigned_to_id"] ?? null]);
+        $ticket->update(["assigned_to_id" => $newAssignedId]);
 
         // Отправляем уведомление о назначении, если заявка была назначена новому пользователю
-        if (
-            $data["assigned_to_id"] &&
-            $data["assigned_to_id"] !== $oldAssignedId
-        ) {
-            $assignedUser = User::find($data["assigned_to_id"]);
+        if ($newAssignedId && $newAssignedId !== $oldAssignedId) {
+            $assignedUser = User::find($newAssignedId);
             if ($assignedUser) {
                 $this->notificationService->notifyTicketAssigned(
                     $ticket,
@@ -464,7 +484,7 @@ class TicketController extends Controller
                     "is_system" => true,
                 ]);
             }
-        } elseif ($oldAssignedId && empty($data["assigned_to_id"])) {
+        } elseif ($oldAssignedId && $newAssignedId === null) {
             // Уведомление о снятии назначения
             $oldAssignedUser = User::find($oldAssignedId);
             if ($oldAssignedUser) {

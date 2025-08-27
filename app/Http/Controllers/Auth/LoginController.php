@@ -18,10 +18,18 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            "login" => "required|string",
-            "password" => "required|string",
-        ]);
+        $messages = [
+            "login.required" => "Пожалуйста, введите номер телефона",
+            "password.required" => "Пожалуйста, введите пароль",
+        ];
+
+        $request->validate(
+            [
+                "login" => "required|string",
+                "password" => "required|string",
+            ],
+            $messages,
+        );
 
         // Форматируем номер телефона для поиска (удаляем пробелы, скобки и дефисы)
         $login = $request->login;
@@ -41,7 +49,9 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                "login" => ["Учетная запись не существует."],
+                "login" => [
+                    "Учетная запись с таким номером телефона не найдена.",
+                ],
             ]);
         }
 
@@ -66,7 +76,9 @@ class LoginController extends Controller
                 ]);
 
                 throw ValidationException::withMessages([
-                    "login" => ["Учетная запись заблокирована."],
+                    "login" => [
+                        "Учетная запись заблокирована. Пожалуйста, обратитесь к администратору.",
+                    ],
                 ]);
             }
         }
@@ -107,7 +119,9 @@ class LoginController extends Controller
         ]);
 
         throw ValidationException::withMessages([
-            "login" => ["Неверный пароль."],
+            "login" => [
+                "Неверный пароль. Пожалуйста, проверьте введенные данные и попробуйте снова.",
+            ],
         ]);
     }
 

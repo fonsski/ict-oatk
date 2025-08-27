@@ -19,11 +19,26 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
-            "name" => "required|string|max:255",
-            "phone" => "required|string|max:20|regex:/^[0-9+\-\s\(\)]+$/",
-            "password" => "required|string|min:8|confirmed",
-        ]);
+        $messages = [
+            "name.required" => "Пожалуйста, укажите ваше имя",
+            "name.max" => "Имя не должно превышать 255 символов",
+            "phone.required" => "Пожалуйста, укажите номер телефона",
+            "phone.max" => "Номер телефона не должен превышать 20 символов",
+            "phone.regex" =>
+                "Номер телефона может содержать только цифры, +, -, пробелы и скобки",
+            "password.required" => "Пожалуйста, введите пароль",
+            "password.min" => "Пароль должен содержать не менее 8 символов",
+            "password.confirmed" => "Пароли не совпадают",
+        ];
+
+        $request->validate(
+            [
+                "name" => "required|string|max:255",
+                "phone" => "required|string|max:20|regex:/^[0-9+\-\s\(\)]+$/",
+                "password" => "required|string|min:8|confirmed",
+            ],
+            $messages,
+        );
 
         // Проверка на пустой телефон после очистки от форматирования
         $cleanPhoneForCheck = preg_replace("/[^0-9+]/", "", $request->phone);
