@@ -34,8 +34,8 @@
             @endif
         </div>
 
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
+        <div class="hidden sm:flex sm:flex-col sm:items-center">
+            <div class="mb-4 text-center">
                 <p class="text-sm text-gray-700 leading-5">
                     Показано
                     <span class="font-medium">{{ $paginator->firstItem() }}</span>
@@ -47,7 +47,7 @@
                 </p>
             </div>
 
-            <div>
+            <div class="flex justify-center">
                 <span class="relative z-0 inline-flex shadow-sm rounded-md">
                     {{-- Previous Page Link --}}
                     @if ($paginator->onFirstPage())

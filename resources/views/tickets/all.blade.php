@@ -205,7 +205,7 @@
 
     <!-- Pagination -->
     @if($tickets->hasPages())
-        <div class="mt-8 flex justify-center" id="pagination-container">
+        <div class="mt-8 flex flex-col items-center" id="pagination-container">
             <div class="pagination-wrapper">
                 {{ $tickets->links() }}
             </div>
