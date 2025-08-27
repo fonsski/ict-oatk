@@ -152,7 +152,7 @@ class User extends Authenticatable
      */
     public function canManageEquipment()
     {
-        return $this->hasRole(["admin", "master"]);
+        return $this->hasRole(["admin", "master", "technician"]);
     }
 
     /**

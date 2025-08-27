@@ -83,10 +83,7 @@ class EquipmentController extends Controller
      */
     public function create()
     {
-        if (
-            !Auth::check() ||
-            !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
-        ) {
+        if (!Auth::check() || !Auth::user()->canManageEquipment()) {
             abort(403);
         }
 
@@ -109,7 +106,10 @@ class EquipmentController extends Controller
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
         ) {
-            abort(403);
+            abort(
+                403,
+                "Только администраторы и мастера могут создавать новое оборудование",
+            );
         }
 
         $messages = [
@@ -191,10 +191,7 @@ class EquipmentController extends Controller
      */
     public function edit(Equipment $equipment)
     {
-        if (
-            !Auth::check() ||
-            !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
-        ) {
+        if (!Auth::check() || !Auth::user()->canManageEquipment()) {
             abort(403);
         }
 
@@ -217,7 +214,10 @@ class EquipmentController extends Controller
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
         ) {
-            abort(403);
+            abort(
+                403,
+                "Только администраторы и мастера могут изменять оборудование",
+            );
         }
 
         $messages = [
@@ -284,7 +284,10 @@ class EquipmentController extends Controller
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
         ) {
-            abort(403);
+            abort(
+                403,
+                "Только администраторы и мастера могут удалять оборудование",
+            );
         }
 
         $equipment->delete();
@@ -335,10 +338,7 @@ class EquipmentController extends Controller
      */
     public function moveForm(Equipment $equipment)
     {
-        if (
-            !Auth::check() ||
-            !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
-        ) {
+        if (!Auth::check() || !Auth::user()->canManageEquipment()) {
             abort(403);
         }
 
@@ -356,7 +356,10 @@ class EquipmentController extends Controller
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, ["admin", "master"])
         ) {
-            abort(403);
+            abort(
+                403,
+                "Только администраторы и мастера могут перемещать оборудование",
+            );
         }
 
         $data = $request->validate([

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCategoryController;
+use App\Http\Controllers\EquipmentServiceController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\AllTicketsController;
 use App\Http\Controllers\UserController;
@@ -221,6 +222,47 @@ Route::middleware("auth")->group(function () {
             EquipmentController::class,
             "move",
         ])->name("equipment.move");
+
+        // Маршруты для обслуживания оборудования
+        Route::get("/equipment/{equipment}/service", [
+            EquipmentServiceController::class,
+            "index",
+        ])->name("equipment.service.index");
+
+        Route::get("/equipment/{equipment}/service/create", [
+            EquipmentServiceController::class,
+            "create",
+        ])->name("equipment.service.create");
+
+        Route::post("/equipment/{equipment}/service", [
+            EquipmentServiceController::class,
+            "store",
+        ])->name("equipment.service.store");
+
+        Route::get("/equipment/{equipment}/service/{service}", [
+            EquipmentServiceController::class,
+            "show",
+        ])->name("equipment.service.show");
+
+        Route::get("/equipment/{equipment}/service/{service}/edit", [
+            EquipmentServiceController::class,
+            "edit",
+        ])->name("equipment.service.edit");
+
+        Route::put("/equipment/{equipment}/service/{service}", [
+            EquipmentServiceController::class,
+            "update",
+        ])->name("equipment.service.update");
+
+        Route::delete("/equipment/{equipment}/service/{service}", [
+            EquipmentServiceController::class,
+            "destroy",
+        ])->name("equipment.service.destroy");
+
+        Route::get(
+            "/equipment/{equipment}/service/{service}/attachment/{index}",
+            [EquipmentServiceController::class, "downloadAttachment"],
+        )->name("equipment.service.attachment");
 
         // Маршруты для управления категориями оборудования
         Route::resource(
