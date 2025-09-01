@@ -58,13 +58,23 @@ class TicketController extends Controller
             });
         }
 
-        // Если пользователь не админ/мастер — показываем только его заявки
+        // Фильтрация заявок в зависимости от роли пользователя
         $user = Auth::user();
-        if (
-            $user &&
-            !($user->role && in_array($user->role->slug, ["admin", "master"]))
-        ) {
-            $query->where("user_id", $user->id);
+        if ($user && $user->role) {
+            if (in_array($user->role->slug, ["admin", "master"])) {
+                // Администраторы и мастера видят все заявки
+            } elseif ($user->role->slug === "technician") {
+                // Технические специалисты видят свои заявки и назначенные на них
+                $query->where(function ($q) use ($user) {
+                    $q->where("user_id", $user->id)->orWhere(
+                        "assigned_to_id",
+                        $user->id,
+                    );
+                });
+            } else {
+                // Обычные пользователи видят только свои заявки
+                $query->where("user_id", $user->id);
+            }
         }
 
         $tickets = $query->latest()->paginate(10)->withQueryString();
@@ -305,7 +315,7 @@ class TicketController extends Controller
     // Переход в работу
     public function start(Ticket $ticket)
     {
-        if (!$this->canModify($ticket)) {
+        if (!$this->canTakeTicketInWork($ticket)) {
             abort(403);
         }
 
@@ -559,6 +569,24 @@ class TicketController extends Controller
         }
         // Обычный пользователь — только свои
         return $ticket->user_id && $ticket->user_id === $user->id;
+    }
+
+    /**
+     * Check whether current user can take ticket in work
+     */
+    private function canTakeTicketInWork(Ticket $ticket): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->role) {
+            return false;
+        }
+
+        // Только админ, мастер или технический специалист могут брать заявки в работу
+        if (in_array($user->role->slug, ["admin", "master", "technician"])) {
+            return $this->canTakeInWork($ticket);
+        }
+
+        return false;
     }
 
     /**

@@ -243,7 +243,7 @@
                                         <a href="{{ route('tickets.show', $ticket) }}" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
                                             Открыть
                                         </a>
-                                        @if($ticket->status === 'open')
+                                        @if($ticket->status === 'open' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
                                             <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" class="text-green-600 hover:text-green-700 font-medium text-sm ml-2">
@@ -726,7 +726,7 @@
 
             actionsDiv.appendChild(openLink);
 
-            if (ticket.status === 'open') {
+            if (ticket.status === 'open' && userRole && ['admin', 'master', 'technician'].includes(userRole)) {
                 const startForm = document.createElement('form');
                 startForm.method = 'POST';
                 startForm.action = `/tickets/${ticket.id}/start`;

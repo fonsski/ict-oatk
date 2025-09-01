@@ -83,7 +83,7 @@
                             </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
                             <div class="py-1">
-                                @if($ticket->status !== 'in_progress' && $ticket->status !== 'closed')
+                                @if($ticket->status !== 'in_progress' && $ticket->status !== 'closed' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
                                     <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">
