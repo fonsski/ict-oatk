@@ -121,7 +121,7 @@ class TicketController extends Controller
         $messages = [
             "title.required" => "Пожалуйста, укажите заголовок заявки",
             "title.min" => "Заголовок должен содержать не менее 5 символов",
-            "title.max" => "Заголовок не должен превышать 255 символов",
+            "title.max" => "Заголовок не должен превышать 60 символов",
             "category.required" => "Пожалуйста, выберите категорию заявки",
             "priority.required" => "Пожалуйста, выберите приоритет заявки",
             "description.required" => "Пожалуйста, добавьте описание проблемы",
@@ -141,7 +141,7 @@ class TicketController extends Controller
 
         $data = $request->validate(
             [
-                "title" => "required|string|min:5|max:255",
+                "title" => "required|string|min:5|max:60",
                 "category" => "required|string",
                 "priority" => "required|string",
                 "description" => "required|string|min:10|max:5000",
@@ -241,7 +241,7 @@ class TicketController extends Controller
         $messages = [
             "title.required" => "Пожалуйста, укажите заголовок заявки",
             "title.min" => "Заголовок должен содержать не менее 5 символов",
-            "title.max" => "Заголовок не должен превышать 255 символов",
+            "title.max" => "Заголовок не должен превышать 60 символов",
             "category.required" => "Пожалуйста, выберите категорию заявки",
             "priority.required" => "Пожалуйста, выберите приоритет заявки",
             "description.required" => "Пожалуйста, добавьте описание проблемы",
@@ -260,7 +260,7 @@ class TicketController extends Controller
 
         $data = $request->validate(
             [
-                "title" => "required|string|min:5|max:255",
+                "title" => "required|string|min:5|max:60",
                 "category" => "required|string",
                 "priority" => "required|string",
                 "description" => "required|string|min:10|max:5000",

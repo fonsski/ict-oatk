@@ -20,6 +20,7 @@ class User extends Authenticatable
         "name",
         "email",
         "phone", // оставляем поле, но делаем необязательным
+        "telegram_id",
         "password",
         "role_id",
         "is_active",
@@ -65,6 +66,7 @@ class User extends Authenticatable
         "last_login_at" => "datetime",
         "phone" => "string",
         "phone_verified_at" => "datetime",
+        "telegram_id" => "string",
     ];
 
     /**

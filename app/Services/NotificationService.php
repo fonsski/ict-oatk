@@ -10,6 +10,28 @@ use Illuminate\Support\Str;
 
 class NotificationService
 {
+    protected $telegramBotController;
+
+    public function __construct()
+    {
+        // Отложенная инициализация контроллера телеграм-бота,
+        // чтобы избежать циклической зависимости
+        $this->telegramBotController = null;
+    }
+
+    /**
+     * Получить экземпляр TelegramBotController
+     */
+    protected function getTelegramBotController()
+    {
+        if ($this->telegramBotController === null) {
+            $this->telegramBotController = app(
+                \App\Http\Controllers\TelegramBotController::class,
+            );
+        }
+        return $this->telegramBotController;
+    }
+
     /**
      * Отправить уведомление о снятии исполнителя с заявки
      */
@@ -44,8 +66,19 @@ class NotificationService
     /**
      * Отправить уведомление о новой заявке
      */
-    public function notifyNewTicket(Ticket $ticket)
+    function notifyNewTicket(Ticket $ticket)
     {
+        // Отправка уведомления в Telegram
+        try {
+            $this->getTelegramBotController()->sendNewTicketNotification(
+                $ticket,
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error(
+                "Ошибка отправки уведомления в Telegram: " . $e->getMessage(),
+            );
+        }
+
         try {
             // Получаем всех пользователей, которые должны получить уведомление
             $recipients = User::whereHas("role", function ($q) {

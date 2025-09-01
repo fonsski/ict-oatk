@@ -66,9 +66,9 @@
                         maxlength="255"
                         minlength="5"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <p class="mt-1 text-xs text-gray-500">Максимальная длина: 255 символов</p>
+                    <p class="mt-1 text-xs text-gray-500">Максимальная длина: 60 символов</p>
                     <p class="mt-1 text-sm text-gray-500">
-                        Минимум 5, максимум 255 символов
+                        Минимум 5, максимум 60 символов
                     </p>
                 </div>
 

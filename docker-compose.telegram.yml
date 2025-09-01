@@ -1,0 +1,25 @@
+version: "3"
+services:
+  telegram-bot:
+    image: sail-8.4/app
+    restart: unless-stopped
+    environment:
+      WWWUSER: "${WWWUSER}"
+      LARAVEL_SAIL: 1
+      CONTAINER_ROLE: "telegram-bot"
+    volumes:
+      - ".:/var/www/html"
+      - "telegram-bot-data:/var/www/html/storage/telegram"
+    networks:
+      - sail
+    depends_on:
+      - laravel.test
+    command: php artisan telegram:standalone
+
+networks:
+  sail:
+    external: true
+
+volumes:
+  telegram-bot-data:
+    driver: local
