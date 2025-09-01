@@ -353,10 +353,10 @@
                                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
-                                @if($ticket->assigned_to)
-                                <span class="text-sm text-gray-900 text-wrap">{{ $ticket->assigned_to->name }}
-                                    @if($ticket->assigned_to->role)
-                                    <span class="text-xs text-gray-500 text-wrap">({{ $ticket->assigned_to->role->name }})</span>
+                                @if($ticket->assignedTo)
+                                <span class="text-sm text-gray-900 text-wrap">{{ $ticket->assignedTo->name }}
+                                    @if($ticket->assignedTo->role)
+                                    <span class="text-xs text-gray-500 text-wrap">({{ $ticket->assignedTo->role->name }})</span>
                                     @endif
                                 </span>
                                 @else
