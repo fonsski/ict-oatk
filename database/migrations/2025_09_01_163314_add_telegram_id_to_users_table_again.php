@@ -10,12 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (Schema::hasTable("users")) {
-            if (!Schema::hasColumn("users", "telegram_id")) {
-                Schema::table("users", function (Blueprint $table) {
-                    $table->string("telegram_id")->nullable()->after("phone");
-                });
-            }
+        // Проверяем наличие колонки telegram_id в таблице users
+        if (
+            Schema::hasTable("users") &&
+            !Schema::hasColumn("users", "telegram_id")
+        ) {
+            Schema::table("users", function (Blueprint $table) {
+                $table->string("telegram_id")->nullable()->after("phone");
+            });
         }
     }
 
