@@ -110,17 +110,17 @@ class TelegramBotController extends Controller
         });
 
         // Показать подробную информацию о заявке
-        $this->botman->hears("/ticket {id}", function (BotMan $bot, $id) {
+        $this->botman->hears("/ticket_{id}", function (BotMan $bot, $id) {
             $this->showTicketDetails($bot, $id);
         });
 
         // Взять заявку в работу
-        $this->botman->hears("/start_ticket {id}", function (BotMan $bot, $id) {
+        $this->botman->hears("/start_ticket_{id}", function (BotMan $bot, $id) {
             $this->startTicket($bot, $id);
         });
 
         // Назначить заявку себе
-        $this->botman->hears("/assign {id}", function (BotMan $bot, $id) {
+        $this->botman->hears("/assign_{id}", function (BotMan $bot, $id) {
             $this->assignTicket($bot, $id);
         });
 
@@ -203,9 +203,9 @@ class TelegramBotController extends Controller
         $help = "Доступные команды:\n\n";
         $help .= "/login - Войти в систему\n";
         $help .= "/tickets - Показать список текущих заявок\n";
-        $help .= "/ticket {id} - Показать подробную информацию о заявке\n";
-        $help .= "/start_ticket {id} - Взять в работу\n";
-        $help .= "/assign {id} - Назначить себе\n";
+        $help .= "/ticket_{id} - Показать подробную информацию о заявке\n";
+        $help .= "/start_ticket_{id} - Взять в работу\n";
+        $help .= "/assign_{id} - Назначить себе\n";
         $help .= "/resolve_{id} - Отметить заявку решённой\n";
         $help .= "/logout - Выйти из системы\n";
         $help .= "/help - Показать эту справку";
@@ -606,6 +606,19 @@ class TelegramBotController extends Controller
      */
     public function sendNewTicketNotification(Ticket $ticket)
     {
+        // Проверяем, не отправляли ли мы уже уведомление для этой заявки
+        if (
+            \App\Models\SentTelegramNotification::wasNotificationSent(
+                $ticket->id,
+                "new_ticket",
+            )
+        ) {
+            Log::info(
+                "Уведомление о заявке #{$ticket->id} уже было отправлено ранее. Пропускаем.",
+            );
+            return;
+        }
+
         // Получаем список пользователей, которые могут обрабатывать заявки и настроили Telegram
         $users = User::whereHas("role", function ($query) {
             $query->whereIn("slug", ["admin", "master", "technician"]);
@@ -629,6 +642,9 @@ class TelegramBotController extends Controller
         $message .= "*Заявитель:* {$ticket->reporter_name}\n\n";
         $message .= "/ticket_{$ticket->id} - Подробнее";
 
+        // Массив для хранения ID пользователей, которым было отправлено уведомление
+        $notifiedUserIds = [];
+
         foreach ($users as $user) {
             try {
                 $this->botman->say(
@@ -637,6 +653,7 @@ class TelegramBotController extends Controller
                     TelegramDriver::class,
                     ["parse_mode" => "Markdown"],
                 );
+                $notifiedUserIds[] = $user->id;
             } catch (\Exception $e) {
                 Log::error(
                     "Не удалось отправить уведомление в Telegram для пользователя {$user->id}: " .
@@ -644,5 +661,12 @@ class TelegramBotController extends Controller
                 );
             }
         }
+
+        // Регистрируем отправку уведомления в базе данных
+        \App\Models\SentTelegramNotification::registerSentNotification(
+            $ticket->id,
+            "new_ticket",
+            $notifiedUserIds,
+        );
     }
 }

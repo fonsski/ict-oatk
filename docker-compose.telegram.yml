@@ -1,4 +1,4 @@
-version: "3"
+# version: "3" - версия убрана, т.к. вызывала предупреждение
 services:
   telegram-bot:
     image: sail-8.4/app
@@ -7,17 +7,31 @@ services:
       WWWUSER: "${WWWUSER}"
       LARAVEL_SAIL: 1
       CONTAINER_ROLE: "telegram-bot"
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
     volumes:
       - ".:/var/www/html"
       - "telegram-bot-data:/var/www/html/storage/telegram"
     networks:
-      - sail
+      - default
     depends_on:
       - laravel.test
+      - mysql
+    healthcheck:
+      test: ["CMD", "php", "artisan", "telegram:basic-test"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     command: php artisan telegram:standalone
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
-  sail:
+  default:
+    name: ict_sail
     external: true
 
 volumes:

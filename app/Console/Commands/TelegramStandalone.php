@@ -401,13 +401,13 @@ class TelegramStandalone extends Command
     protected function handleHelpCommand($chatId)
     {
         $help = "Доступные команды:\n\n";
+        $help .= "/start - Начать взаимодействие с ботом\n";
         $help .= "/login - Войти в систему\n";
         $help .= "/tickets - Показать список текущих заявок\n";
         $help .= "/ticket_{id} - Показать подробную информацию о заявке\n";
         $help .= "/start_ticket_{id} - Взять заявку в работу\n";
         $help .= "/assign_{id} - Назначить заявку себе\n";
-        $help .= "/resolve_{id} - Отметить заявку решённой\n";
-        $help .= "/logout - Выйти из системы\n";
+        $help .= "/resolve_{id} - Отметить заявку как решённую\n";
         $help .= "/help - Показать эту справку";
 
         $this->sendMessage($chatId, $help);
@@ -669,25 +669,24 @@ class TelegramStandalone extends Command
         $this->info("Checking for new tickets...");
 
         try {
-            // Проверяем, инициализирован ли массив уведомленных заявок
-            if (!is_array($this->notifiedTickets)) {
-                $this->notifiedTickets = [];
-                $this->info("Инициализирован массив уведомленных заявок");
-            }
-
             // Получаем новые заявки, созданные за последние 15 минут
             $fifteenMinutesAgo = now()->subMinutes(15);
 
+            // Используем таблицу sent_telegram_notifications для отслеживания уже отправленных уведомлений
             $newTickets = Ticket::where("created_at", ">=", $fifteenMinutesAgo)
-                ->whereNotIn("id", $this->notifiedTickets)
+                ->whereNotExists(function ($query) {
+                    $query
+                        ->select(\DB::raw(1))
+                        ->from("sent_telegram_notifications")
+                        ->whereRaw(
+                            "sent_telegram_notifications.ticket_id = tickets.id",
+                        )
+                        ->where("notification_type", "new_ticket");
+                })
                 ->get();
 
             if ($newTickets->isNotEmpty()) {
                 $this->info("Found " . $newTickets->count() . " new tickets!");
-                $this->info(
-                    "Already notified tickets: " .
-                        implode(", ", $this->notifiedTickets),
-                );
 
                 // Получаем список пользователей с Telegram ID
                 $users = User::whereNotNull("telegram_id")
@@ -706,8 +705,13 @@ class TelegramStandalone extends Command
                 }
 
                 foreach ($newTickets as $ticket) {
-                    // Проверяем, не уведомляли ли мы уже об этой заявке
-                    if (in_array($ticket->id, $this->notifiedTickets)) {
+                    // Проверяем еще раз перед отправкой, чтобы избежать гонки условий
+                    if (
+                        \App\Models\SentTelegramNotification::wasNotificationSent(
+                            $ticket->id,
+                            "new_ticket",
+                        )
+                    ) {
                         $this->info(
                             "Skipping already notified ticket #{$ticket->id}",
                         );
@@ -730,20 +734,21 @@ class TelegramStandalone extends Command
                     $message .= "Заявитель: {$ticket->reporter_name}\n\n";
                     $message .= "/ticket_{$ticket->id} - Подробнее";
 
+                    // Массив для хранения ID пользователей, которым было отправлено уведомление
+                    $notifiedUserIds = [];
+
                     foreach ($users as $user) {
                         $this->sendMessage($user->telegram_id, $message);
+                        $notifiedUserIds[] = $user->id;
                     }
 
-                    // Добавляем ID заявки в список уведомленных
-                    $this->notifiedTickets[] = $ticket->id;
+                    // Регистрируем отправку уведомления в базе данных
+                    \App\Models\SentTelegramNotification::registerSentNotification(
+                        $ticket->id,
+                        "new_ticket",
+                        $notifiedUserIds,
+                    );
                 }
-
-                // Сохраняем список уведомленных заявок в кеш, чтобы избежать дублирования при перезапуске
-                cache()->put(
-                    "telegram_notified_tickets",
-                    $this->notifiedTickets,
-                    now()->addDays(1),
-                );
             } else {
                 $this->info("No new tickets found");
             }

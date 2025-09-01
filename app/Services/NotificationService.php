@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 class NotificationService
 {
     protected $telegramBotController;
+    protected $notificationLock = [];
 
     public function __construct()
     {
@@ -68,15 +69,52 @@ class NotificationService
      */
     function notifyNewTicket(Ticket $ticket)
     {
-        // Отправка уведомления в Telegram
+        // Проверяем, не отправляли ли мы уже уведомление для этой заявки
+        if (
+            \App\Models\SentTelegramNotification::wasNotificationSent(
+                $ticket->id,
+                "new_ticket",
+            )
+        ) {
+            \Illuminate\Support\Facades\Log::info(
+                "Уведомление для заявки #{$ticket->id} уже было отправлено ранее. Пропускаем.",
+            );
+            return;
+        }
+
+        // Используем мьютекс для предотвращения одновременного выполнения
+        $lockKey = "notification_lock_ticket_{$ticket->id}";
+        if (
+            isset($this->notificationLock[$lockKey]) &&
+            $this->notificationLock[$lockKey]
+        ) {
+            \Illuminate\Support\Facades\Log::info(
+                "Уведомление для заявки #{$ticket->id} уже обрабатывается. Пропускаем.",
+            );
+            return;
+        }
+
+        // Устанавливаем блокировку
+        $this->notificationLock[$lockKey] = true;
+
         try {
+            // Отправка уведомления в Telegram
             $this->getTelegramBotController()->sendNewTicketNotification(
                 $ticket,
+            );
+
+            // Регистрируем отправленное уведомление в базе данных
+            \App\Models\SentTelegramNotification::registerSentNotification(
+                $ticket->id,
+                "new_ticket",
             );
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error(
                 "Ошибка отправки уведомления в Telegram: " . $e->getMessage(),
             );
+        } finally {
+            // Снимаем блокировку в любом случае
+            $this->notificationLock[$lockKey] = false;
         }
 
         try {
