@@ -354,43 +354,13 @@ class NotificationService
         $limit = 10,
         $unreadOnly = false,
     ) {
-        $cacheKey =
-            "notifications_user_{$user->id}_limit_{$limit}_unread_" .
-            ($unreadOnly ? "1" : "0");
-
-        \Log::debug("Getting notifications for user", [
-            "user_id" => $user->id,
-            "limit" => $limit,
-            "unread_only" => $unreadOnly,
-            "cache_key" => $cacheKey,
-        ]);
-
-        // Временно отключаем кеширование для отладки
-        $notifications = collect(session("notifications.{$user->id}", []));
-
-        \Log::debug("Raw notifications from session", [
-            "count" => $notifications->count(),
-            "notifications" => $notifications->toArray(),
-        ]);
+        $query = $user->notifications()->latest();
 
         if ($unreadOnly) {
-            $notifications = $notifications->where("read_at", null);
-            \Log::debug("After unread filter", [
-                "count" => $notifications->count(),
-            ]);
+            $query->whereNull('read_at');
         }
 
-        $result = $notifications
-            ->sortByDesc("created_at")
-            ->take($limit)
-            ->values();
-
-        \Log::debug("Final notifications result", [
-            "count" => $result->count(),
-            "notifications" => $result->toArray(),
-        ]);
-
-        return $result;
+        return $query->limit($limit)->get();
     }
 
     /**
@@ -398,33 +368,11 @@ class NotificationService
      */
     public function markAsRead(User $user, $notificationId)
     {
-        \Log::debug("Marking notification as read", [
-            "user_id" => $user->id,
-            "notification_id" => $notificationId,
-        ]);
-
-        $notifications = collect(session("notifications.{$user->id}", []));
-        \Log::debug("Current notifications", [
-            "count" => $notifications->count(),
-        ]);
-
-        $notifications = $notifications->map(function ($notification) use (
-            $notificationId,
-        ) {
-            if ($notification["id"] === $notificationId) {
-                \Log::debug("Found notification to mark as read", [
-                    "notification" => $notification,
-                ]);
-                $notification["read_at"] = now()->toDateTimeString();
-            }
-            return $notification;
-        });
-
-        session(["notifications.{$user->id}" => $notifications->toArray()]);
-        Cache::forget("notifications_user_{$user->id}_limit_10_unread_1");
-        Cache::forget("notifications_user_{$user->id}_limit_10_unread_0");
-
-        \Log::debug("Notification marked as read and cache cleared");
+        $notification = $user->notifications()->find($notificationId);
+        
+        if ($notification && !$notification->read_at) {
+            $notification->markAsRead();
+        }
     }
 
     /**
@@ -432,16 +380,7 @@ class NotificationService
      */
     public function markAllAsRead(User $user)
     {
-        $notifications = collect(session("notifications.{$user->id}", []));
-
-        $notifications = $notifications->map(function ($notification) {
-            $notification["read_at"] = now()->toDateTimeString();
-            return $notification;
-        });
-
-        session(["notifications.{$user->id}" => $notifications->toArray()]);
-        Cache::forget("notifications_user_{$user->id}_limit_10_unread_1");
-        Cache::forget("notifications_user_{$user->id}_limit_10_unread_0");
+        $user->unreadNotifications()->update(['read_at' => now()]);
     }
 
     /**
@@ -449,63 +388,31 @@ class NotificationService
      */
     public function getUnreadCount(User $user)
     {
-        $count = $this->getUserNotifications($user, 100, true)->count();
-        \Log::debug("Unread notifications count", [
-            "user_id" => $user->id,
-            "count" => $count,
-        ]);
-        return $count;
+        return $user->unreadNotifications()->count();
     }
 
     /**
-     * Создать уведомление (сохраняем в сессии для простоты)
+     * Создать уведомление
      */
     public function createNotification(array $data)
     {
-        \Log::debug("Creating notification", [
-            "data" => $data,
-        ]);
-
-        $notification = array_merge($data, [
-            "id" => uniqid(),
-            "created_at" => now()->toDateTimeString(),
-            "read_at" => null,
-        ]);
-
-        \Log::debug("Prepared notification", [
-            "notification" => $notification,
-        ]);
-
-        $userId = $data["user_id"];
-        $existingNotifications = collect(
-            session("notifications.{$userId}", []),
-        );
-
-        \Log::debug("Existing notifications", [
-            "user_id" => $userId,
-            "count" => $existingNotifications->count(),
-        ]);
-
-        $existingNotifications->push($notification);
-
-        // Ограничиваем количество уведомлений для каждого пользователя
-        if ($existingNotifications->count() > 50) {
-            $existingNotifications = $existingNotifications
-                ->sortByDesc("created_at")
-                ->take(50);
-            \Log::debug("Limited notifications to 50");
+        $user = User::find($data['user_id']);
+        
+        if (!$user) {
+            Log::error("User not found for notification", ['user_id' => $data['user_id']]);
+            return;
         }
 
-        $notificationsToStore = $existingNotifications->values()->toArray();
-        session([
-            "notifications.{$userId}" => $notificationsToStore,
-        ]);
+        $notificationData = [
+            'title' => $data['title'] ?? 'Уведомление',
+            'message' => $data['message'] ?? '',
+            'icon' => $data['icon'] ?? 'info',
+            'color' => $data['color'] ?? 'blue',
+            'link' => $data['url'] ?? null,
+            'data' => $data['data'] ?? [],
+        ];
 
-        \Log::debug("Notification stored in session", [
-            "user_id" => $userId,
-            "notification_id" => $notification["id"],
-            "total_count" => count($notificationsToStore),
-        ]);
+        $user->notify(new \App\Notifications\TicketNotification($notificationData));
     }
 
     /**
@@ -513,9 +420,13 @@ class NotificationService
      */
     public function cleanupOldNotifications($daysOld = 30)
     {
-        // В реальном приложении здесь была бы очистка из базы данных
-        // Для сессий это не так критично, так как они автоматически очищаются
-        Log::info("Cleanup notifications older than {$daysOld} days");
+        $cutoffDate = now()->subDays($daysOld);
+        
+        $deletedCount = \App\Models\Notification::where('created_at', '<', $cutoffDate)->delete();
+        
+        Log::info("Cleaned up {$deletedCount} notifications older than {$daysOld} days");
+        
+        return $deletedCount;
     }
 
     /**
@@ -523,19 +434,14 @@ class NotificationService
      */
     public function getNotificationStats(User $user)
     {
-        $notifications = collect(session("notifications.{$user->id}", []));
+        $notifications = $user->notifications();
+        $recentDate = now()->subDays(7);
 
         return [
             "total" => $notifications->count(),
-            "unread" => $notifications->where("read_at", null)->count(),
-            "by_type" => $notifications->groupBy("type")->map->count(),
-            "recent" => $notifications
-                ->where(
-                    "created_at",
-                    ">=",
-                    now()->subDays(7)->toDateTimeString(),
-                )
-                ->count(),
+            "unread" => $user->unreadNotifications()->count(),
+            "by_type" => $notifications->get()->groupBy("type")->map->count(),
+            "recent" => $notifications->where("created_at", ">=", $recentDate)->count(),
         ];
     }
 }

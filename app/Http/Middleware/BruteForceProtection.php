@@ -167,7 +167,17 @@ class BruteForceProtection
         }
 
         // For password reset, check if there are no validation errors
-        return session()->has("status") && !session()->has("errors");
+        if (Str::contains($request->route()->getName(), "password")) {
+            return session()->has("status") && !session()->has("errors");
+        }
+
+        // For registration, check if user was created successfully
+        if (Str::contains($request->route()->getName(), "register")) {
+            return session()->has("success") && !session()->has("errors");
+        }
+
+        // Default to false for other routes
+        return false;
     }
 
     /**

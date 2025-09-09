@@ -63,6 +63,7 @@ class SqlInjectionProtection
             "js",
             "knowledge/upload-image",
             "homepage-faq/upload-image",
+            "api/notifications", // Исключаем API уведомлений
         ];
         foreach ($excludedPaths as $excludedPath) {
             if (Str::startsWith($path, $excludedPath)) {
@@ -132,7 +133,9 @@ class SqlInjectionProtection
             Str::startsWith($key, "_token") ||
             Str::startsWith($key, "_method") ||
             $key === "image" ||
-            $key === "file"
+            $key === "file" ||
+            $key === "content" || // Пропускаем поле content для статей базы знаний
+            $key === "description" // Пропускаем поле description
         ) {
             return;
         }

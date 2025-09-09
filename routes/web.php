@@ -397,44 +397,41 @@ Route::middleware("auth")->group(function () {
         ])->name("homepage-faq.upload-image");
     });
 
-    // Группа маршрутов для работы с холстом для рисования
-    // Доступна только администраторам, техникам и мастерам
+    // Маршруты для работы с холстом для рисования
+    // Доступны только администраторам, техникам и мастерам
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,technician,master",
     ])->group(function () {
-        // Оставляем маршруты внутри группы, но они будут доступны только авторизованным пользователям
+        Route::get("/drawing-canvas", [
+            DrawingCanvasController::class,
+            "index",
+        ])->name("drawing-canvas.index");
+        Route::get("/drawing-canvas/create", [
+            DrawingCanvasController::class,
+            "create",
+        ])->name("drawing-canvas.create");
+        Route::post("/drawing-canvas", [
+            DrawingCanvasController::class,
+            "store",
+        ])->name("drawing-canvas.store");
+        Route::get("/drawing-canvas/{drawing_canvas}", [
+            DrawingCanvasController::class,
+            "show",
+        ])->name("drawing-canvas.show");
+        Route::get("/drawing-canvas/{drawing_canvas}/edit", [
+            DrawingCanvasController::class,
+            "edit",
+        ])->name("drawing-canvas.edit");
+        Route::put("/drawing-canvas/{drawing_canvas}", [
+            DrawingCanvasController::class,
+            "update",
+        ])->name("drawing-canvas.update");
+        Route::delete("/drawing-canvas/{drawing_canvas}", [
+            DrawingCanvasController::class,
+            "destroy",
+        ])->name("drawing-canvas.destroy");
     });
-
-    // Явные маршруты для инструмента рисования - доступны всем пользователям без middleware
-    Route::get("/drawing-canvas", [
-        DrawingCanvasController::class,
-        "index",
-    ])->name("drawing-canvas.index");
-    Route::get("/drawing-canvas/create", [
-        DrawingCanvasController::class,
-        "create",
-    ])->name("drawing-canvas.create");
-    Route::post("/drawing-canvas", [
-        DrawingCanvasController::class,
-        "store",
-    ])->name("drawing-canvas.store");
-    Route::get("/drawing-canvas/{drawing_canvas}", [
-        DrawingCanvasController::class,
-        "show",
-    ])->name("drawing-canvas.show");
-    Route::get("/drawing-canvas/{drawing_canvas}/edit", [
-        DrawingCanvasController::class,
-        "edit",
-    ])->name("drawing-canvas.edit");
-    Route::put("/drawing-canvas/{drawing_canvas}", [
-        DrawingCanvasController::class,
-        "update",
-    ])->name("drawing-canvas.update");
-    Route::delete("/drawing-canvas/{drawing_canvas}", [
-        DrawingCanvasController::class,
-        "destroy",
-    ])->name("drawing-canvas.destroy");
 
     // Test route for canvas controller
     Route::get("/test-canvas", [TestCanvasController::class, "test"])->name(

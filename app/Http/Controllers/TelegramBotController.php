@@ -647,6 +647,12 @@ class TelegramBotController extends Controller
 
         foreach ($users as $user) {
             try {
+                // Проверяем, что у пользователя есть telegram_id
+                if (empty($user->telegram_id)) {
+                    Log::warning("User {$user->id} has no telegram_id set");
+                    continue;
+                }
+
                 $this->botman->say(
                     $message,
                     $user->telegram_id,
@@ -654,11 +660,25 @@ class TelegramBotController extends Controller
                     ["parse_mode" => "Markdown"],
                 );
                 $notifiedUserIds[] = $user->id;
+                
+                Log::info("Successfully sent Telegram notification to user {$user->id}");
             } catch (\Exception $e) {
                 Log::error(
-                    "Не удалось отправить уведомление в Telegram для пользователя {$user->id}: " .
-                        $e->getMessage(),
+                    "Failed to send Telegram notification to user {$user->id}: " . $e->getMessage(),
+                    [
+                        'user_id' => $user->id,
+                        'telegram_id' => $user->telegram_id,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]
                 );
+                
+                // Если ошибка связана с неверным telegram_id, очищаем его
+                if (strpos($e->getMessage(), 'chat not found') !== false || 
+                    strpos($e->getMessage(), 'user not found') !== false) {
+                    $user->update(['telegram_id' => null]);
+                    Log::info("Cleared invalid telegram_id for user {$user->id}");
+                }
             }
         }
 

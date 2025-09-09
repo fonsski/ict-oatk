@@ -297,7 +297,7 @@
             }
         </style>
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 mb-4 gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-5 mt-6 mb-4 gap-4">
             <h2 class="text-xl font-semibold text-slate-900">Заявки в системе <span class="text-slate-500 text-sm font-normal ml-2">{{ $tickets->total() }} записей</span></h2>
             <div class="flex items-center gap-3">
                 <div id="last-updated-info" class="text-sm text-slate-500">

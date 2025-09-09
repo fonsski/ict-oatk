@@ -10,17 +10,34 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use App\Notifications\AccountActivationNotification;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\BulkUserActionRequest;
+use App\Events\UserCreated;
+use App\Events\UserStatusChanged;
+use App\Services\CacheService;
+use App\Traits\HasPagination;
 
 class UserController extends Controller
 {
-    // Middleware настраивается в маршрутах
+    use HasPagination;
+
+    protected $cacheService;
+
+    public function __construct(CacheService $cacheService)
+    {
+        $this->cacheService = $cacheService;
+    }
 
     /**
      * Список всех пользователей
      */
     public function index(Request $request)
     {
-        $query = User::with("role")->orderBy("created_at", "desc");
+        $query = User::withFullUserData()
+            ->withLimited('tickets', 5)
+            ->orderBy("created_at", "desc");
 
         // Фильтрация по статусу
         if ($request->filled("status")) {
@@ -48,8 +65,8 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->paginate(15);
-        $roles = Role::all();
+        $users = $this->paginateQuery($query, $request, 'users');
+        $roles = $this->cacheService->getRoles();
 
         return view("user.index", compact("users", "roles"));
     }
@@ -59,52 +76,30 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all();
+        $roles = $this->cacheService->getRoles();
         return view("user.create", compact("roles"));
     }
 
     /**
      * Сохранение нового пользователя
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $messages = [
-            "name.required" => "Пожалуйста, укажите имя пользователя",
-            "name.max" => "Имя пользователя не должно превышать 255 символов",
-            "phone.required" => "Пожалуйста, укажите номер телефона",
-            "phone.max" => "Номер телефона не должен превышать 20 символов",
-            "phone.unique" =>
-                "Пользователь с таким номером телефона уже существует",
-            "role_id.required" => "Пожалуйста, выберите роль пользователя",
-            "role_id.exists" => "Выбранная роль не существует в системе",
-            "password.required" => "Пожалуйста, укажите пароль",
-            "password.min" => "Пароль должен содержать не менее 8 символов",
-            "password.confirmed" => "Пароли не совпадают",
-        ];
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                "name" => "required|string|max:255",
-                "phone" => "required|string|max:20|unique:users",
-                "role_id" => "required|exists:roles,id",
-                "password" => "required|string|min:8|confirmed",
-                "is_active" => "boolean",
-            ],
-            $messages,
-        );
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        $data = $request->validated();
 
         $user = User::create([
-            "name" => $request->name,
-            "phone" => $request->phone,
-            "role_id" => $request->role_id,
-            "password" => Hash::make($request->password),
-            "is_active" => $request->boolean("is_active", true),
+            "name" => $data["name"],
+            "phone" => $data["phone"],
+            "role_id" => $data["role_id"],
+            "password" => Hash::make($data["password"]),
+            "is_active" => $data["is_active"] ?? true,
         ]);
+
+        // Отправляем событие о создании пользователя
+        event(new UserCreated($user, auth()->user()));
+
+        // Очищаем кеш, связанный с пользователями
+        $this->cacheService->clearUserRelatedCache();
 
         return redirect()
             ->route("user.index")
@@ -116,7 +111,13 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user->load(["role", "tickets", "tickets.comments"]);
+        $user->load([
+            "role:id,name,slug",
+            "tickets:id,user_id,title,status,priority,category,created_at",
+            "tickets.comments:id,ticket_id,user_id,content,created_at",
+            "assignedTickets:id,assigned_to_id,title,status,priority,category,created_at",
+            "responsibleForRooms:id,responsible_user_id,number,name,type,building,floor"
+        ]);
 
         // Статистика пользователя
         $stats = [
@@ -134,6 +135,8 @@ class UserController extends Controller
             "total_comments" => $user->tickets->sum(function ($ticket) {
                 return $ticket->comments->count();
             }),
+            "assigned_tickets" => $user->assignedTickets->count(),
+            "responsible_rooms" => $user->responsibleForRooms->count(),
         ];
 
         return view("user.show", compact("user", "stats"));
@@ -144,52 +147,26 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles = Role::all();
+        $roles = $this->cacheService->getRoles();
         return view("user.edit", compact("user", "roles"));
     }
 
     /**
      * Обновление пользователя
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $messages = [
-            "name.required" => "Пожалуйста, укажите имя пользователя",
-            "name.max" => "Имя пользователя не должно превышать 255 символов",
-            "phone.required" => "Пожалуйста, укажите номер телефона",
-            "phone.max" => "Номер телефона не должен превышать 20 символов",
-            "phone.unique" =>
-                "Пользователь с таким номером телефона уже существует",
-            "role_id.required" => "Пожалуйста, выберите роль пользователя",
-            "role_id.exists" => "Выбранная роль не существует в системе",
-        ];
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                "name" => "required|string|max:255",
-                "phone" => [
-                    "required",
-                    "string",
-                    "max:20",
-                    Rule::unique("users")->ignore($user->id),
-                ],
-                "role_id" => "required|exists:roles,id",
-                "is_active" => "boolean",
-            ],
-            $messages,
-        );
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        $data = $request->validated();
 
         $user->update([
-            "name" => $request->name,
-            "phone" => $request->phone,
-            "role_id" => $request->role_id,
-            "is_active" => $request->boolean("is_active"),
+            "name" => $data["name"],
+            "phone" => $data["phone"],
+            "role_id" => $data["role_id"],
+            "is_active" => $data["is_active"] ?? false,
         ]);
+
+        // Очищаем кеш, связанный с пользователями
+        $this->cacheService->clearUserRelatedCache();
 
         return redirect()
             ->route("user.index")
@@ -225,6 +202,9 @@ class UserController extends Controller
 
         $user->delete();
 
+        // Очищаем кеш, связанный с пользователями
+        $this->cacheService->clearUserRelatedCache();
+
         return redirect()
             ->route("user.index")
             ->with("success", "Пользователь успешно удален");
@@ -233,29 +213,12 @@ class UserController extends Controller
     /**
      * Сброс пароля пользователя
      */
-    public function resetPassword(Request $request, User $user)
+    public function resetPassword(ResetPasswordRequest $request, User $user)
     {
-        $messages = [
-            "new_password.required" => "Пожалуйста, укажите новый пароль",
-            "new_password.min" =>
-                "Новый пароль должен содержать не менее 8 символов",
-            "new_password.confirmed" => "Пароли не совпадают",
-        ];
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                "new_password" => "required|string|min:8|confirmed",
-            ],
-            $messages,
-        );
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        $data = $request->validated();
 
         $user->update([
-            "password" => Hash::make($request->new_password),
+            "password" => Hash::make($data["new_password"]),
         ]);
 
         return redirect()
@@ -279,10 +242,17 @@ class UserController extends Controller
         }
 
         $wasActive = $user->is_active;
+        $newStatus = !$user->is_active;
 
         $user->update([
-            "is_active" => !$user->is_active,
+            "is_active" => $newStatus,
         ]);
+
+        // Отправляем событие об изменении статуса пользователя
+        event(new UserStatusChanged($user, $wasActive, $newStatus, auth()->user()));
+
+        // Очищаем кеш, связанный с пользователями
+        $this->cacheService->clearUserRelatedCache();
 
         $status = $user->is_active ? "активирована" : "деактивирована";
 
@@ -303,38 +273,11 @@ class UserController extends Controller
     /**
      * Массовые операции с пользователями
      */
-    public function bulkAction(Request $request)
+    public function bulkAction(BulkUserActionRequest $request)
     {
-        $messages = [
-            "action.required" => "Пожалуйста, выберите действие",
-            "action.in" => "Выбрано недопустимое действие",
-            "user_ids.required" => "Пожалуйста, выберите пользователей",
-            "user_ids.array" => "Некорректный формат списка пользователей",
-            "user_ids.*.exists" =>
-                "Один или несколько выбранных пользователей не существуют",
-            "new_role_id.required_if" =>
-                "Для изменения роли необходимо выбрать новую роль",
-            "new_role_id.exists" => "Выбранная роль не существует",
-        ];
+        $data = $request->validated();
 
-        $validator = Validator::make(
-            $request->all(),
-            [
-                "action" =>
-                    "required|in:activate,deactivate,delete,change_role",
-                "user_ids" => "required|array",
-                "user_ids.*" => "exists:users,id",
-                "new_role_id" =>
-                    "required_if:action,change_role|exists:roles,id",
-            ],
-            $messages,
-        );
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator);
-        }
-
-        $userIds = $request->user_ids;
+        $userIds = $data["user_ids"];
         $currentUserId = auth()->id();
 
         // Убираем текущего пользователя из списка
@@ -350,7 +293,7 @@ class UserController extends Controller
 
         $users = User::whereIn("id", $userIds);
 
-        switch ($request->action) {
+        switch ($data["action"]) {
             case "activate":
                 // Активируем пользователей и отправляем им уведомления
                 $users->get()->each(function ($user) {
@@ -375,7 +318,7 @@ class UserController extends Controller
                 break;
 
             case "change_role":
-                $users->update(["role_id" => $request->new_role_id]);
+                $users->update(["role_id" => $data["new_role_id"]]);
                 $message = "Роли пользователей успешно изменены";
                 break;
 
@@ -395,6 +338,24 @@ class UserController extends Controller
                             "error",
                             "Следующие пользователи имеют активные заявки и не могут быть удалены: " .
                                 implode(", ", $usersWithActiveTickets),
+                        );
+                }
+
+                // Дополнительная проверка: пользователи не могут быть назначены исполнителями активных заявок
+                $usersAssignedToActiveTickets = User::whereIn("id", $userIds)
+                    ->whereHas("assignedTickets", function ($query) {
+                        $query->whereIn("status", ["open", "in_progress"]);
+                    })
+                    ->pluck("name")
+                    ->toArray();
+
+                if (!empty($usersAssignedToActiveTickets)) {
+                    return redirect()
+                        ->back()
+                        ->with(
+                            "error",
+                            "Следующие пользователи назначены исполнителями активных заявок и не могут быть удалены: " .
+                                implode(", ", $usersAssignedToActiveTickets),
                         );
                 }
 

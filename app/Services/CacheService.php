@@ -2,246 +2,307 @@
 
 namespace App\Services;
 
+use App\Models\Role;
+use App\Models\Location;
+use App\Models\Room;
+use App\Models\Equipment;
+use App\Models\EquipmentCategory;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class CacheService
 {
     /**
-     * Default cache expiration time in seconds (24 hours)
+     * Ключи кеша
      */
-    protected const DEFAULT_TTL = 86400;
+    const CACHE_KEYS = [
+        'roles' => 'roles_list',
+        'locations' => 'locations_list',
+        'rooms' => 'rooms_list',
+        'equipment_categories' => 'equipment_categories_list',
+        'active_equipment' => 'active_equipment_list',
+        'assignable_users' => 'assignable_users_list',
+        'ticket_categories' => 'ticket_categories_list',
+        'ticket_priorities' => 'ticket_priorities_list',
+        'ticket_statuses' => 'ticket_statuses_list',
+    ];
 
     /**
-     * Cache tag prefix for model instances
+     * Время жизни кеша (в секундах)
      */
-    protected const MODEL_TAG_PREFIX = 'model.';
+    const CACHE_TTL = [
+        'roles' => 3600, // 1 час
+        'locations' => 3600, // 1 час
+        'rooms' => 1800, // 30 минут
+        'equipment_categories' => 3600, // 1 час
+        'active_equipment' => 1800, // 30 минут
+        'assignable_users' => 1800, // 30 минут
+        'ticket_categories' => 7200, // 2 часа
+        'ticket_priorities' => 7200, // 2 часа
+        'ticket_statuses' => 7200, // 2 часа
+    ];
 
     /**
-     * Cache tag prefix for collections
+     * Получить список ролей
      */
-    protected const COLLECTION_TAG_PREFIX = 'collection.';
-
-    /**
-     * Get an item from the cache, or store the default value.
-     *
-     * @param string $key
-     * @param int|null $ttl
-     * @param \Closure $callback
-     * @param array|null $tags
-     * @return mixed
-     */
-    public function remember(string $key, ?int $ttl, \Closure $callback, ?array $tags = null)
+    public function getRoles()
     {
-        $ttl = $ttl ?: self::DEFAULT_TTL;
+        return Cache::remember(
+            self::CACHE_KEYS['roles'],
+            self::CACHE_TTL['roles'],
+            function () {
+                return Role::select('id', 'name', 'slug')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
+    }
 
-        if ($tags) {
-            return Cache::tags($tags)->remember($key, $ttl, $callback);
+    /**
+     * Получить список местоположений
+     */
+    public function getLocations()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['locations'],
+            self::CACHE_TTL['locations'],
+            function () {
+                return Location::select('id', 'name')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
+    }
+
+    /**
+     * Получить список активных кабинетов
+     */
+    public function getActiveRooms()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['rooms'],
+            self::CACHE_TTL['rooms'],
+            function () {
+                return Room::active()
+                    ->select('id', 'number', 'name', 'type', 'building', 'floor')
+                    ->orderBy('number')
+                    ->get();
+            }
+        );
+    }
+
+    /**
+     * Получить список категорий оборудования
+     */
+    public function getEquipmentCategories()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['equipment_categories'],
+            self::CACHE_TTL['equipment_categories'],
+            function () {
+                return EquipmentCategory::select('id', 'name', 'description')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
+    }
+
+    /**
+     * Получить список активного оборудования
+     */
+    public function getActiveEquipment()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['active_equipment'],
+            self::CACHE_TTL['active_equipment'],
+            function () {
+                return Equipment::active()
+                    ->with(['category', 'room'])
+                    ->select('id', 'name', 'model', 'serial_number', 'category_id', 'room_id')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
+    }
+
+    /**
+     * Получить список пользователей, которым можно назначать заявки
+     */
+    public function getAssignableUsers()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['assignable_users'],
+            self::CACHE_TTL['assignable_users'],
+            function () {
+                return \App\Models\User::whereHas('role', function ($q) {
+                    $q->whereIn('slug', ['admin', 'master', 'technician']);
+                })
+                ->where('is_active', true)
+                ->select('id', 'name', 'phone')
+                ->orderBy('name')
+                ->get();
+            }
+        );
+    }
+
+    /**
+     * Получить список категорий заявок
+     */
+    public function getTicketCategories()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['ticket_categories'],
+            self::CACHE_TTL['ticket_categories'],
+            function () {
+                return [
+                    'hardware' => 'Оборудование',
+                    'software' => 'Программное обеспечение',
+                    'network' => 'Сеть и интернет',
+                    'account' => 'Учетная запись',
+                    'other' => 'Другое',
+                ];
+            }
+        );
+    }
+
+    /**
+     * Получить список приоритетов заявок
+     */
+    public function getTicketPriorities()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['ticket_priorities'],
+            self::CACHE_TTL['ticket_priorities'],
+            function () {
+                return [
+                    'low' => 'Низкий',
+                    'medium' => 'Средний',
+                    'high' => 'Высокий',
+                    'urgent' => 'Срочный',
+                ];
+            }
+        );
+    }
+
+    /**
+     * Получить список статусов заявок
+     */
+    public function getTicketStatuses()
+    {
+        return Cache::remember(
+            self::CACHE_KEYS['ticket_statuses'],
+            self::CACHE_TTL['ticket_statuses'],
+            function () {
+                return [
+                    'open' => 'Открыта',
+                    'in_progress' => 'В работе',
+                    'resolved' => 'Решена',
+                    'closed' => 'Закрыта',
+                ];
+            }
+        );
+    }
+
+    /**
+     * Очистить кеш для конкретного типа данных
+     */
+    public function clearCache(string $type): void
+    {
+        if (isset(self::CACHE_KEYS[$type])) {
+            Cache::forget(self::CACHE_KEYS[$type]);
+            Log::info("Cache cleared for type: {$type}");
+        }
+    }
+
+    /**
+     * Очистить весь кеш приложения
+     */
+    public function clearAllCache(): void
+    {
+        foreach (self::CACHE_KEYS as $key) {
+            Cache::forget($key);
+        }
+        Log::info('All application cache cleared');
+    }
+
+    /**
+     * Очистить кеш, связанный с пользователями
+     */
+    public function clearUserRelatedCache(): void
+    {
+        $this->clearCache('assignable_users');
+        Log::info('User-related cache cleared');
+    }
+
+    /**
+     * Очистить кеш, связанный с заявками
+     */
+    public function clearTicketRelatedCache(): void
+    {
+        $this->clearCache('ticket_categories');
+        $this->clearCache('ticket_priorities');
+        $this->clearCache('ticket_statuses');
+        Log::info('Ticket-related cache cleared');
+    }
+
+    /**
+     * Очистить кеш, связанный с оборудованием
+     */
+    public function clearEquipmentRelatedCache(): void
+    {
+        $this->clearCache('equipment_categories');
+        $this->clearCache('active_equipment');
+        $this->clearCache('rooms');
+        Log::info('Equipment-related cache cleared');
+    }
+
+    /**
+     * Очистить кеш, связанный с местоположениями
+     */
+    public function clearLocationRelatedCache(): void
+    {
+        $this->clearCache('locations');
+        $this->clearCache('rooms');
+        Log::info('Location-related cache cleared');
+    }
+
+    /**
+     * Получить статистику кеша
+     */
+    public function getCacheStats(): array
+    {
+        $stats = [];
+        
+        foreach (self::CACHE_KEYS as $type => $key) {
+            $stats[$type] = [
+                'key' => $key,
+                'ttl' => self::CACHE_TTL[$type],
+                'exists' => Cache::has($key),
+            ];
         }
 
-        return Cache::remember($key, $ttl, $callback);
+        return $stats;
     }
 
     /**
-     * Store a model in the cache.
-     *
-     * @param \Illuminate\Database\Eloquent\Model $model
-     * @param int|null $ttl
-     * @return bool
+     * Предварительно загрузить все кеши
      */
-    public function storeModel(Model $model, ?int $ttl = null): bool
+    public function warmUpCache(): void
     {
-        $modelClass = get_class($model);
-        $modelId = $model->getKey();
-        $key = $this->generateModelCacheKey($modelClass, $modelId);
-        $tags = $this->generateModelCacheTags($modelClass);
-
-        return Cache::tags($tags)->put($key, $model, $ttl ?: self::DEFAULT_TTL);
-    }
-
-    /**
-     * Get a model from the cache.
-     *
-     * @param string $modelClass
-     * @param mixed $modelId
-     * @param \Closure|null $callback
-     * @param int|null $ttl
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
-    public function getModel(string $modelClass, $modelId, ?\Closure $callback = null, ?int $ttl = null): ?Model
-    {
-        $key = $this->generateModelCacheKey($modelClass, $modelId);
-        $tags = $this->generateModelCacheTags($modelClass);
-
-        if ($callback) {
-            return Cache::tags($tags)->remember($key, $ttl ?: self::DEFAULT_TTL, $callback);
+        try {
+            $this->getRoles();
+            $this->getLocations();
+            $this->getActiveRooms();
+            $this->getEquipmentCategories();
+            $this->getActiveEquipment();
+            $this->getAssignableUsers();
+            $this->getTicketCategories();
+            $this->getTicketPriorities();
+            $this->getTicketStatuses();
+            
+            Log::info('Cache warmed up successfully');
+        } catch (\Exception $e) {
+            Log::error('Failed to warm up cache: ' . $e->getMessage());
         }
-
-        return Cache::tags($tags)->get($key);
-    }
-
-    /**
-     * Remove a model from the cache.
-     *
-     * @param string $modelClass
-     * @param mixed $modelId
-     * @return bool
-     */
-    public function forgetModel(string $modelClass, $modelId): bool
-    {
-        $key = $this->generateModelCacheKey($modelClass, $modelId);
-        $tags = $this->generateModelCacheTags($modelClass);
-
-        return Cache::tags($tags)->forget($key);
-    }
-
-    /**
-     * Store a collection in the cache.
-     *
-     * @param string $collectionKey
-     * @param \Illuminate\Database\Eloquent\Collection $collection
-     * @param string|null $modelClass
-     * @param int|null $ttl
-     * @return bool
-     */
-    public function storeCollection(string $collectionKey, Collection $collection, ?string $modelClass = null, ?int $ttl = null): bool
-    {
-        $key = $this->generateCollectionCacheKey($collectionKey);
-        $tags = $this->generateCollectionCacheTags($collectionKey, $modelClass);
-
-        return Cache::tags($tags)->put($key, $collection, $ttl ?: self::DEFAULT_TTL);
-    }
-
-    /**
-     * Get a collection from the cache.
-     *
-     * @param string $collectionKey
-     * @param \Closure|null $callback
-     * @param string|null $modelClass
-     * @param int|null $ttl
-     * @return \Illuminate\Database\Eloquent\Collection|mixed
-     */
-    public function getCollection(string $collectionKey, ?\Closure $callback = null, ?string $modelClass = null, ?int $ttl = null)
-    {
-        $key = $this->generateCollectionCacheKey($collectionKey);
-        $tags = $this->generateCollectionCacheTags($collectionKey, $modelClass);
-
-        if ($callback) {
-            return Cache::tags($tags)->remember($key, $ttl ?: self::DEFAULT_TTL, $callback);
-        }
-
-        return Cache::tags($tags)->get($key);
-    }
-
-    /**
-     * Remove a collection from the cache.
-     *
-     * @param string $collectionKey
-     * @param string|null $modelClass
-     * @return bool
-     */
-    public function forgetCollection(string $collectionKey, ?string $modelClass = null): bool
-    {
-        $key = $this->generateCollectionCacheKey($collectionKey);
-        $tags = $this->generateCollectionCacheTags($collectionKey, $modelClass);
-
-        return Cache::tags($tags)->forget($key);
-    }
-
-    /**
-     * Flush all cached models of a given class.
-     *
-     * @param string $modelClass
-     * @return bool
-     */
-    public function flushModelCache(string $modelClass): bool
-    {
-        $tag = self::MODEL_TAG_PREFIX . $this->getShortClassName($modelClass);
-        return Cache::tags([$tag])->flush();
-    }
-
-    /**
-     * Flush all cached collections of a given model class.
-     *
-     * @param string|null $modelClass
-     * @return bool
-     */
-    public function flushCollectionCache(?string $modelClass = null): bool
-    {
-        $tags = [self::COLLECTION_TAG_PREFIX . '*'];
-
-        if ($modelClass) {
-            $tags[] = self::MODEL_TAG_PREFIX . $this->getShortClassName($modelClass);
-        }
-
-        return Cache::tags($tags)->flush();
-    }
-
-    /**
-     * Generate a cache key for a model.
-     *
-     * @param string $modelClass
-     * @param mixed $modelId
-     * @return string
-     */
-    protected function generateModelCacheKey(string $modelClass, $modelId): string
-    {
-        $shortClassName = $this->getShortClassName($modelClass);
-        return self::MODEL_TAG_PREFIX . strtolower($shortClassName) . '.' . $modelId;
-    }
-
-    /**
-     * Generate cache tags for a model.
-     *
-     * @param string $modelClass
-     * @return array
-     */
-    protected function generateModelCacheTags(string $modelClass): array
-    {
-        $shortClassName = $this->getShortClassName($modelClass);
-        return [self::MODEL_TAG_PREFIX . $shortClassName];
-    }
-
-    /**
-     * Generate a cache key for a collection.
-     *
-     * @param string $collectionKey
-     * @return string
-     */
-    protected function generateCollectionCacheKey(string $collectionKey): string
-    {
-        return self::COLLECTION_TAG_PREFIX . strtolower(Str::slug($collectionKey));
-    }
-
-    /**
-     * Generate cache tags for a collection.
-     *
-     * @param string $collectionKey
-     * @param string|null $modelClass
-     * @return array
-     */
-    protected function generateCollectionCacheTags(string $collectionKey, ?string $modelClass = null): array
-    {
-        $tags = [self::COLLECTION_TAG_PREFIX . Str::slug($collectionKey)];
-
-        if ($modelClass) {
-            $tags[] = self::MODEL_TAG_PREFIX . $this->getShortClassName($modelClass);
-        }
-
-        return $tags;
-    }
-
-    /**
-     * Get the short class name from a fully qualified class name.
-     *
-     * @param string $class
-     * @return string
-     */
-    protected function getShortClassName(string $class): string
-    {
-        $parts = explode('\\', $class);
-        return end($parts);
     }
 }

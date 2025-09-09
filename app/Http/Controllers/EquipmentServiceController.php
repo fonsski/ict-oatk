@@ -24,7 +24,7 @@ class EquipmentServiceController extends Controller
         $serviceHistory = $equipment->serviceHistory()
             ->with('performedBy')
             ->orderBy('service_date', 'desc')
-            ->get();
+            ->paginate(15);
 
         return view('equipment.service.index', compact('equipment', 'serviceHistory'));
     }

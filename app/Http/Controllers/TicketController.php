@@ -12,14 +12,27 @@ use App\Models\Location;
 use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\StoreTicketRequest;
+use App\Http\Requests\UpdateTicketRequest;
+use App\Http\Requests\StoreTicketCommentRequest;
+use App\Http\Requests\AssignTicketRequest;
+use App\Events\TicketCreated;
+use App\Events\TicketStatusChanged;
+use App\Events\TicketAssigned;
+use App\Services\CacheService;
+use App\Traits\HasPagination;
 
 class TicketController extends Controller
 {
-    protected $notificationService;
+    use HasPagination;
 
-    public function __construct(NotificationService $notificationService)
+    protected $notificationService;
+    protected $cacheService;
+
+    public function __construct(NotificationService $notificationService, CacheService $cacheService)
     {
         $this->notificationService = $notificationService;
+        $this->cacheService = $cacheService;
     }
     /**
      * Display a listing of the resource.
@@ -27,7 +40,7 @@ class TicketController extends Controller
     public function index(Request $request)
     {
         // Список заявок с фильтрами и пагинацией
-        $query = Ticket::with(["user", "location", "assignedTo"]);
+        $query = Ticket::withFullTicketData();
 
         if ($request->filled("status")) {
             $query->where("status", $request->get("status"));
@@ -77,17 +90,10 @@ class TicketController extends Controller
             }
         }
 
-        $tickets = $query->latest()->paginate(10)->withQueryString();
+        $tickets = $this->paginateQuery($query->latest(), $request, 'tickets');
 
-        $locations = Cache::remember("locations_list", 3600, function () {
-            return Location::select("id", "name")->orderBy("name")->get();
-        });
-
-        $assignable = User::whereHas("role", function ($q) {
-            $q->whereIn("slug", ["admin", "master", "technician"]);
-        })
-            ->select("id", "name")
-            ->get();
+        $locations = $this->cacheService->getLocations();
+        $assignable = $this->cacheService->getAssignableUsers();
 
         return view(
             "tickets.index",
@@ -101,12 +107,7 @@ class TicketController extends Controller
     public function create()
     {
         // Форма создания заявки
-        $rooms = Cache::remember("rooms_list", 3600, function () {
-            return \App\Models\Room::active()
-                ->select("id", "number", "name", "type", "building", "floor")
-                ->orderBy("number")
-                ->get();
-        });
+        $rooms = $this->cacheService->getActiveRooms();
 
         // Получаем комнату, за которую ответственен текущий пользователь
         $userResponsibleRoom = null;
@@ -126,42 +127,9 @@ class TicketController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTicketRequest $request)
     {
-        $messages = [
-            "title.required" => "Пожалуйста, укажите заголовок заявки",
-            "title.min" => "Заголовок должен содержать не менее 5 символов",
-            "title.max" => "Заголовок не должен превышать 60 символов",
-            "category.required" => "Пожалуйста, выберите категорию заявки",
-            "priority.required" => "Пожалуйста, выберите приоритет заявки",
-            "description.required" => "Пожалуйста, добавьте описание проблемы",
-            "description.min" =>
-                "Описание должно содержать не менее 10 символов",
-            "description.max" => "Описание не должно превышать 5000 символов",
-            "location_id.exists" =>
-                "Выбранное местоположение не существует в системе",
-            "room_id.exists" => "Выбранный кабинет не существует в системе",
-            "equipment_id.exists" =>
-                "Выбранное оборудование не существует в системе",
-            "reporter_phone.regex" =>
-                "Номер телефона содержит недопустимые символы. Используйте только цифры, +, (), - и пробелы",
-            "reporter_id.max" =>
-                "Идентификатор заявителя не должен превышать 50 символов",
-        ];
-
-        $data = $request->validate(
-            [
-                "title" => "required|string|min:5|max:60",
-                "category" => "required|string",
-                "priority" => "required|string",
-                "description" => "required|string|min:10|max:5000",
-                "reporter_id" => "nullable|string|max:50",
-                "location_id" => "nullable|exists:locations,id",
-                "room_id" => "nullable|exists:rooms,id",
-                "equipment_id" => "nullable|exists:equipment,id",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         // Всегда используем данные авторизованного пользователя
         $user = Auth::user();
@@ -173,6 +141,9 @@ class TicketController extends Controller
 
         $data["user_id"] = $user ? $user->id : null;
         $ticket = Ticket::create($data);
+
+        // Отправляем событие о создании заявки
+        event(new TicketCreated($ticket, $user));
 
         // Отправляем уведомление о новой заявке
         $this->notificationService->notifyNewTicket($ticket);
@@ -190,26 +161,26 @@ class TicketController extends Controller
     {
         // Просмотр отдельной заявки
         try {
-            $locations = Cache::remember("locations_list", 3600, function () {
-                return Location::select(["id", "name"])
-                    ->orderBy("name")
-                    ->get();
-            });
+            // Загружаем связанные данные для заявки
+            $ticket->load([
+                'user:id,name,phone,role_id',
+                'user.role:id,name,slug',
+                'location:id,name',
+                'assignedTo:id,name,phone,role_id',
+                'assignedTo.role:id,name,slug',
+                'room:id,number,name,type,building,floor',
+                'equipment:id,name,model,serial_number',
+                'comments.user:id,name',
+                'comments' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }
+            ]);
 
-            $assignable = User::whereHas("role", function ($q) {
-                $q->whereIn("slug", ["admin", "master", "technician"]);
-            })
-                ->select(["id", "name"])
-                ->get();
+            $locations = $this->cacheService->getLocations();
+            $assignable = $this->cacheService->getAssignableUsers();
 
             // Формирование массива для категорий, аналогично массиву в представлении
-            $categoryLabels = [
-                "hardware" => "Оборудование",
-                "software" => "Программное обеспечение",
-                "network" => "Сеть и интернет",
-                "account" => "Учетная запись",
-                "other" => "Другое",
-            ];
+            $categoryLabels = $this->cacheService->getTicketCategories();
 
             return view(
                 "tickets.show",
@@ -242,53 +213,13 @@ class TicketController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Ticket $ticket)
+    public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
         if (!$this->canModify($ticket)) {
             abort(403);
         }
 
-        $messages = [
-            "title.required" => "Пожалуйста, укажите заголовок заявки",
-            "title.min" => "Заголовок должен содержать не менее 5 символов",
-            "title.max" => "Заголовок не должен превышать 60 символов",
-            "category.required" => "Пожалуйста, выберите категорию заявки",
-            "priority.required" => "Пожалуйста, выберите приоритет заявки",
-            "description.required" => "Пожалуйста, добавьте описание проблемы",
-            "description.min" =>
-                "Описание должно содержать не менее 10 символов",
-            "description.max" => "Описание не должно превышать 5000 символов",
-            "reporter_phone.max" =>
-                "Номер телефона не должен превышать 20 символов",
-            "reporter_phone.regex" =>
-                "Номер телефона должен быть в формате: +7 (999) 999-99-99",
-            "location_id.exists" => "Выбранное местоположение не существует",
-            "room_id.exists" => "Выбранный кабинет не существует",
-            "equipment_id.exists" => "Выбранное оборудование не существует",
-            "status.required" => "Пожалуйста, укажите статус заявки",
-        ];
-
-        $data = $request->validate(
-            [
-                "title" => "required|string|min:5|max:60",
-                "category" => "required|string",
-                "priority" => "required|string",
-                "description" => "required|string|min:10|max:5000",
-                "reporter_name" => "nullable|string|max:255",
-                "reporter_id" => "nullable|string|max:50",
-                "reporter_phone" => [
-                    "nullable",
-                    "string",
-                    "max:20",
-                    "regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/",
-                ],
-                "location_id" => "nullable|exists:locations,id",
-                "room_id" => "nullable|exists:rooms,id",
-                "equipment_id" => "nullable|exists:equipment,id",
-                "status" => "nullable|string",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         $ticket->update($data);
         return Redirect::route("tickets.show", $ticket)->with(
@@ -330,6 +261,9 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "in_progress"]);
 
+        // Отправляем событие об изменении статуса
+        event(new TicketStatusChanged($ticket, $oldStatus, "in_progress", Auth::user()));
+
         // Отправляем уведомление об изменении статуса
         $this->notificationService->notifyTicketStatusChanged(
             $ticket,
@@ -366,6 +300,9 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "resolved"]);
 
+        // Отправляем событие об изменении статуса
+        event(new TicketStatusChanged($ticket, $oldStatus, "resolved", Auth::user()));
+
         // Отправляем уведомление об изменении статуса
         $this->notificationService->notifyTicketStatusChanged(
             $ticket,
@@ -397,6 +334,9 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "closed"]);
 
+        // Отправляем событие об изменении статуса
+        event(new TicketStatusChanged($ticket, $oldStatus, "closed", Auth::user()));
+
         // Отправляем уведомление об изменении статуса
         $this->notificationService->notifyTicketStatusChanged(
             $ticket,
@@ -416,20 +356,9 @@ class TicketController extends Controller
     }
 
     // Добавить комментарий
-    public function commentStore(Request $request, Ticket $ticket)
+    public function commentStore(StoreTicketCommentRequest $request, Ticket $ticket)
     {
-        $messages = [
-            "content.required" => "Пожалуйста, введите текст комментария",
-            "content.min" => "Комментарий должен содержать не менее 2 символов",
-            "content.max" => "Комментарий не должен превышать 1000 символов",
-        ];
-
-        $data = $request->validate(
-            [
-                "content" => "required|string|min:2|max:1000",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         // Проверка на превышение длины перед сохранением
         if (strlen($data["content"]) > 1000) {
@@ -454,7 +383,7 @@ class TicketController extends Controller
     }
 
     // Назначить заявку пользователю (ассайн)
-    public function assign(Request $request, Ticket $ticket)
+    public function assign(AssignTicketRequest $request, Ticket $ticket)
     {
         $this->authorizeAssign();
 
@@ -466,26 +395,9 @@ class TicketController extends Controller
             );
         }
 
-        $messages = [
-            "assigned_to_id.exists" =>
-                "Выбранный исполнитель не существует в системе",
-        ];
-
         // Проверяем, если выбрано "Не назначено"
-        if (
-            $request->has("assigned_to_id") &&
-            $request->assigned_to_id === ""
-        ) {
-            $newAssignedId = null;
-        } else {
-            $data = $request->validate(
-                [
-                    "assigned_to_id" => "nullable|exists:users,id",
-                ],
-                $messages,
-            );
-            $newAssignedId = $data["assigned_to_id"] ?? null;
-        }
+        $data = $request->validated();
+        $newAssignedId = $data["assigned_to_id"] ?? null;
 
         $oldAssignedId = $ticket->assigned_to_id;
         $ticket->update(["assigned_to_id" => $newAssignedId]);
@@ -494,6 +406,9 @@ class TicketController extends Controller
         if ($newAssignedId && $newAssignedId !== $oldAssignedId) {
             $assignedUser = User::find($newAssignedId);
             if ($assignedUser) {
+                // Отправляем событие о назначении заявки
+                event(new TicketAssigned($ticket, $assignedUser, Auth::user()));
+
                 $this->notificationService->notifyTicketAssigned(
                     $ticket,
                     $assignedUser,
@@ -563,12 +478,20 @@ class TicketController extends Controller
         if (!$user) {
             return false;
         }
+        
         // Админ/мастер могут управлять всеми заявками
         if ($user->role && in_array($user->role->slug, ["admin", "master"])) {
             return true;
         }
-        // Обычный пользователь — только свои
-        return $ticket->user_id && $ticket->user_id === $user->id;
+        
+        // Техник может управлять заявками, которые не закрыты
+        if ($user->role && $user->role->slug === "technician" && $ticket->status !== "closed") {
+            return true;
+        }
+        
+        // Обычный пользователь — только свои заявки (проверяем и user_id и reporter_id)
+        return ($ticket->user_id && $ticket->user_id === $user->id) || 
+               ($ticket->reporter_id && $ticket->reporter_id === $user->id);
     }
 
     /**

@@ -42,8 +42,6 @@ class Equipment extends Model
         return $this->belongsTo(EquipmentCategory::class);
     }
 
-    // Связь с Location удалена, так как поле location_id больше не используется
-
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);

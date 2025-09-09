@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\QueryOptimizer;
 
 class Ticket extends Model
 {
+    use QueryOptimizer;
+
     protected $fillable = [
         "title",
         "category",
@@ -53,5 +56,10 @@ class Ticket extends Model
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
+    }
+
+    public function reporter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reporter_id');
     }
 }
