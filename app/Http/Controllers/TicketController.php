@@ -259,10 +259,21 @@ class TicketController extends Controller
         }
 
         $oldStatus = $ticket->status;
-        $ticket->update(["status" => "in_progress"]);
+        $oldAssignedId = $ticket->assigned_to_id;
+        
+        // Обновляем статус и назначаем исполнителя
+        $ticket->update([
+            "status" => "in_progress",
+            "assigned_to_id" => Auth::id()
+        ]);
 
         // Отправляем событие об изменении статуса
         event(new TicketStatusChanged($ticket, $oldStatus, "in_progress", Auth::user()));
+
+        // Если исполнитель изменился, отправляем событие о назначении
+        if ($oldAssignedId !== Auth::id()) {
+            event(new TicketAssigned($ticket, Auth::user(), Auth::user()));
+        }
 
         // Отправляем уведомление об изменении статуса
         $this->notificationService->notifyTicketStatusChanged(
@@ -271,11 +282,16 @@ class TicketController extends Controller
             "in_progress",
         );
 
-        // Добавляем комментарий о смене статуса
+        // Добавляем комментарий о смене статуса и назначении
+        $commentContent = "Заявка взята в работу";
+        if ($oldAssignedId !== Auth::id()) {
+            $commentContent .= " и назначена на " . Auth::user()->name;
+        }
+        
         TicketComment::create([
             "ticket_id" => $ticket->id,
             "user_id" => Auth::id(),
-            "content" => "Заявка взята в работу",
+            "content" => $commentContent,
             "is_system" => true,
         ]);
 

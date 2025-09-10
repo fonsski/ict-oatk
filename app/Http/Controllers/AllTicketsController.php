@@ -287,7 +287,18 @@ class AllTicketsController extends Controller
             "status" => "required|in:open,in_progress,resolved,closed",
         ]);
 
-        $ticket->update(["status" => $data["status"]]);
+        $oldStatus = $ticket->status;
+        $oldAssignedId = $ticket->assigned_to_id;
+        
+        // Если статус меняется на "in_progress" и исполнитель не назначен, назначаем текущего пользователя
+        if ($data["status"] === "in_progress" && !$ticket->assigned_to_id) {
+            $ticket->update([
+                "status" => $data["status"],
+                "assigned_to_id" => Auth::id()
+            ]);
+        } else {
+            $ticket->update(["status" => $data["status"]]);
+        }
 
         return response()->json([
             "success" => true,
@@ -389,7 +400,18 @@ class AllTicketsController extends Controller
             "status" => "required|in:open,in_progress,resolved,closed",
         ]);
 
-        $ticket->update(["status" => $data["status"]]);
+        $oldStatus = $ticket->status;
+        $oldAssignedId = $ticket->assigned_to_id;
+        
+        // Если статус меняется на "in_progress" и исполнитель не назначен, назначаем текущего пользователя
+        if ($data["status"] === "in_progress" && !$ticket->assigned_to_id) {
+            $ticket->update([
+                "status" => $data["status"],
+                "assigned_to_id" => Auth::id()
+            ]);
+        } else {
+            $ticket->update(["status" => $data["status"]]);
+        }
 
         // Добавление системного комментария о смене статуса
         $user = Auth::user();
@@ -400,10 +422,16 @@ class AllTicketsController extends Controller
             "closed" => "Закрыта",
         ];
 
+        // Формируем комментарий
+        $commentContent = "Статус заявки изменен на «{$statusLabels[$data["status"]]}»";
+        if ($data["status"] === "in_progress" && $oldAssignedId !== Auth::id()) {
+            $commentContent .= " и назначена на " . $user->name;
+        }
+        
         \App\Models\TicketComment::create([
             "ticket_id" => $ticket->id,
             "user_id" => $user->id,
-            "content" => "Статус заявки изменен на «{$statusLabels[$data["status"]]}»",
+            "content" => $commentContent,
             "is_system" => true,
         ]);
 
