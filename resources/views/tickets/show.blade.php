@@ -189,7 +189,7 @@
                                           id="commentContent"
                                           rows="4"
                                           required
-                                          maxlength="1000"
+                                          maxlength="500"
                                           minlength="2"
                                           onkeyup="checkCommentLength(this)"
                                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('content') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror"
@@ -200,7 +200,7 @@
                                             <p class="text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>
-                                    <div id="charCounter" class="text-xs text-gray-500 font-medium">0/1000 символов</div>
+                                    <div id="charCounter" class="text-xs text-gray-500 font-medium">0/500 символов</div>
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -216,18 +216,18 @@
                             function checkCommentLength(textarea) {
                                 const charCounter = document.getElementById('charCounter');
                                 const currentLength = textarea.value.length;
-                                charCounter.textContent = currentLength + '/1000 символов';
+                                charCounter.textContent = currentLength + '/500 символов';
 
                                 // Меняем цвет счетчика, если приближаемся к лимиту
-                                if (currentLength > 950 && currentLength < 1000) {
+                                if (currentLength > 450 && currentLength < 500) {
                                     charCounter.classList.remove('text-gray-500', 'text-red-500');
                                     charCounter.classList.add('text-orange-500');
-                                } else if (currentLength >= 1000) {
+                                } else if (currentLength >= 500) {
                                     charCounter.classList.remove('text-gray-500', 'text-orange-500');
                                     charCounter.classList.add('text-red-500');
 
                                     // Обрезаем текст, если он превышает максимальную длину
-                                    textarea.value = textarea.value.substring(0, 1000);
+                                    textarea.value = textarea.value.substring(0, 500);
                                 } else {
                                     charCounter.classList.remove('text-orange-500', 'text-red-500');
                                     charCounter.classList.add('text-gray-500');

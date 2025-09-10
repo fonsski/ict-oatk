@@ -22,7 +22,7 @@ class StoreTicketCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'content' => 'required|string|min:2|max:1000',
+            'content' => 'required|string|min:2|max:500',
         ];
     }
 
@@ -36,7 +36,7 @@ class StoreTicketCommentRequest extends FormRequest
         return [
             'content.required' => 'Пожалуйста, введите текст комментария',
             'content.min' => 'Комментарий должен содержать не менее 2 символов',
-            'content.max' => 'Комментарий не должен превышать 1000 символов',
+            'content.max' => 'Комментарий не должен превышать 500 символов',
         ];
     }
 
