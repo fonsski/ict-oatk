@@ -653,6 +653,23 @@ class TelegramBotController extends Controller
                     continue;
                 }
 
+                // Проверяем на дублирование сообщений
+                $messageHash = md5($user->telegram_id . $message);
+                $cacheKey = "telegram_botman_message_sent_{$messageHash}";
+                
+                if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                    Log::warning("Duplicate BotMan message prevented", [
+                        'user_id' => $user->id,
+                        'telegram_id' => $user->telegram_id,
+                        'message_preview' => substr($message, 0, 100),
+                        'message_hash' => $messageHash
+                    ]);
+                    continue;
+                }
+                
+                // Сохраняем хеш сообщения на 30 секунд для предотвращения дублирования
+                \Illuminate\Support\Facades\Cache::put($cacheKey, true, 30);
+
                 $this->botman->say(
                     $message,
                     $user->telegram_id,

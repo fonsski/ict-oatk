@@ -66,6 +66,34 @@ class NotificationService
     }
 
     /**
+     * Отправить уведомление в Telegram (только в обычном окружении)
+     */
+    public function sendTelegramNotification($chatId, $message, $params = [])
+    {
+        // В Docker окружении не отправляем Telegram уведомления через NotificationService
+        // Они обрабатываются через TelegramStandalone
+        if (env('LARAVEL_SAIL')) {
+            Log::info("Telegram notification skipped in Docker environment", [
+                'chat_id' => $chatId,
+                'message_preview' => substr($message, 0, 100)
+            ]);
+            return;
+        }
+
+        try {
+            $botman = app(\BotMan\BotMan\BotMan::class);
+            $botman->say($message, $chatId, \BotMan\Drivers\Telegram\TelegramDriver::class, $params);
+            
+            Log::info("Telegram notification sent via NotificationService", [
+                'chat_id' => $chatId,
+                'message_preview' => substr($message, 0, 100)
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to send Telegram notification via NotificationService: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Отправить уведомление о новой заявке
      */
     function notifyNewTicket(Ticket $ticket)
@@ -99,10 +127,14 @@ class NotificationService
         $this->notificationLock[$lockKey] = true;
 
         try {
-            // Отправка уведомления в Telegram
-            $this->getTelegramBotController()->sendNewTicketNotification(
-                $ticket,
-            );
+            // В Docker окружении Telegram уведомления обрабатываются через TelegramStandalone
+            // Не отправляем дублирующие уведомления
+            if (!env('LARAVEL_SAIL')) {
+                // Отправка уведомления в Telegram только в обычном окружении
+                $this->getTelegramBotController()->sendNewTicketNotification(
+                    $ticket,
+                );
+            }
 
             // Регистрируем отправленное уведомление в базе данных
             \App\Models\SentTelegramNotification::registerSentNotification(
@@ -417,7 +449,8 @@ class NotificationService
         $user->notify(new \App\Notifications\TicketNotification($notificationData));
 
         // Отправляем событие для WebSocket уведомления
-        event(new SystemNotificationCreated($user, $notificationData, auth()->user()));
+        $createdBy = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::user() : $user;
+        event(new SystemNotificationCreated($user, $notificationData, $createdBy));
     }
 
     /**

@@ -1227,22 +1227,18 @@ class TelegramStandalone extends Command
                 "is_system" => true,
             ]);
 
-            // Отправляем уведомления через NotificationService
-            $notificationService = app(\App\Services\NotificationService::class);
+            // Отправляем только прямое сообщение пользователю
+            // NotificationService отключен для избежания дублирования уведомлений
+            Log::info("Sending direct message to user about ticket start", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id
+            ]);
             
-            // Уведомление об изменении статуса
-            $notificationService->notifyTicketStatusChanged(
-                $ticket,
-                $oldStatus,
-                "in_progress"
+            $this->sendMessage(
+                $chatId,
+                "✅ Заявка #{$ticket->id} успешно взята в работу и назначена на вас!",
             );
-
-            // Если пользователь не был назначен до этого, отправляем уведомление о назначении
-            if ($oldAssignedId !== $user->id) {
-                $notificationService->notifyTicketAssigned($ticket, $user);
-            }
-
-            // Не отправляем прямое сообщение - уведомления придут через NotificationService
 
             Log::info("Successfully started ticket", [
                 'chat_id' => $chatId,
@@ -1348,6 +1344,29 @@ class TelegramStandalone extends Command
      */
     protected function sendMessage($chatId, $text, $markdown = false)
     {
+        // Проверяем на дублирование сообщений
+        $messageHash = md5($chatId . $text);
+        $cacheKey = "telegram_message_sent_{$messageHash}";
+        
+        if (Cache::has($cacheKey)) {
+            Log::warning("Duplicate message prevented", [
+                'chat_id' => $chatId,
+                'text_preview' => substr($text, 0, 100) . (strlen($text) > 100 ? '...' : ''),
+                'message_hash' => $messageHash
+            ]);
+            return;
+        }
+        
+        // Сохраняем хеш сообщения на 30 секунд для предотвращения дублирования
+        Cache::put($cacheKey, true, 30);
+        
+        Log::info("TelegramStandalone sendMessage called", [
+            'chat_id' => $chatId,
+            'text_preview' => substr($text, 0, 100) . (strlen($text) > 100 ? '...' : ''),
+            'markdown' => $markdown,
+            'message_hash' => $messageHash
+        ]);
+        
         $params = [
             "chat_id" => $chatId,
             "text" => $text,
