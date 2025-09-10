@@ -299,17 +299,6 @@
 
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-5 mt-6 mb-4 gap-4">
             <h2 class="text-xl font-semibold text-slate-900">Заявки в системе <span class="text-slate-500 text-sm font-normal ml-2">{{ $tickets->total() }} записей</span></h2>
-            <div class="flex items-center gap-3">
-                <div id="last-updated-info" class="text-sm text-slate-500">
-                    Обновлено: {{ now()->format('d.m.Y H:i') }}
-                </div>
-                <button type="button" id="refresh-button" class="refresh-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                    </svg>
-                    Обновить данные
-                </button>
-            </div>
         </div>
         <div id="tickets-container" style="overflow-x: auto !important;">
             @if($tickets->count() > 0)
@@ -317,13 +306,12 @@
                     <table class="w-full border-collapse" style="table-layout: fixed !important; border-spacing: 0;">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Заявитель</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Статус</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Приоритет</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Исполнитель</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Дата</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 8%;">Действия</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 35%;">Заявка</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Заявитель</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Статус</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Приоритет</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Исполнитель</th>
+                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 11%;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -621,11 +609,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-6 py-5">
                     <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}" style="min-width: 90px; text-align: center;">
                         ${priorityLabels[ticket.priority]}
-                    </span>
-                </td>
-                <td class="px-6 py-5">
-                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' : ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' : ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}" style="min-width: 90px; text-align: center; white-space: nowrap;">
-                        ${ticket.priority === 'urgent' ? 'Срочный' : ticket.priority === 'high' ? 'Высокий' : ticket.priority === 'medium' ? 'Средний' : ticket.priority === 'low' ? 'Низкий' : ticket.priority}
                     </span>
                 </td>
                 <td class="px-6 py-5">

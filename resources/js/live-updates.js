@@ -178,8 +178,6 @@ class LiveUpdates {
 }
 
 // Экспорт для использования в других модулях
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = LiveUpdates;
-} else if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined') {
     window.LiveUpdates = LiveUpdates;
 }
