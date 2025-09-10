@@ -355,6 +355,9 @@ class TelegramStandalone extends Command
                 case "/tickets":
                     $this->handleTicketsCommand($chatId);
                     break;
+                case "/active":
+                    $this->handleActiveTicketsCommand($chatId);
+                    break;
                 case "/resolve":
                     $this->sendMessage(
                         $chatId,
@@ -404,6 +407,7 @@ class TelegramStandalone extends Command
         $help .= "/start - Начать взаимодействие с ботом\n";
         $help .= "/login - Войти в систему\n";
         $help .= "/tickets - Показать список текущих заявок\n";
+        $help .= "/active - Показать активные заявки (в работе)\n";
         $help .= "/ticket_{id} - Показать подробную информацию о заявке\n";
         $help .= "/start_ticket_{id} - Взять заявку в работу\n";
         $help .= "/assign_{id} - Назначить заявку себе\n";
@@ -666,6 +670,83 @@ class TelegramStandalone extends Command
         }
 
         $this->sendMessage($chatId, $reply);
+    }
+
+    /**
+     * Обработчик команды просмотра активных заявок (в работе)
+     */
+    protected function handleActiveTicketsCommand($chatId)
+    {
+        // Проверяем авторизацию и активность
+        if (!$this->checkAndUpdateUserActivity($chatId)) {
+            $this->sendMessage(
+                $chatId,
+                "Для выполнения этой команды необходимо авторизоваться. Отправьте /login для входа.",
+            );
+            return;
+        }
+
+        $userData = Cache::get("telegram_user_{$chatId}");
+        $user = User::find($userData["user_id"]);
+
+        if (!$user->canManageTickets()) {
+            $this->sendMessage(
+                $chatId,
+                "У вас нет прав для просмотра списка заявок.",
+            );
+            return;
+        }
+
+        // Получаем только заявки в работе
+        if ($user->isAdmin() || $user->isMaster()) {
+            $tickets = Ticket::where("status", "in_progress")
+                ->orderBy("updated_at", "desc")
+                ->take(15)
+                ->get();
+        } else {
+            $tickets = Ticket::where("status", "in_progress")
+                ->where("assigned_to_id", $user->id)
+                ->orderBy("updated_at", "desc")
+                ->take(15)
+                ->get();
+        }
+
+        if ($tickets->isEmpty()) {
+            $this->sendMessage($chatId, "🔄 Активных заявок в работе не найдено.");
+            return;
+        }
+
+        $reply = "🔄 Активные заявки в работе:\n\n";
+
+        foreach ($tickets as $ticket) {
+            $priority = $this->getPriorityEmoji($ticket->priority) . " " . ucfirst($ticket->priority);
+            
+            $reply .= "🆔 #{$ticket->id}: {$ticket->title}\n";
+            $reply .= "📊 Приоритет: {$priority}\n";
+            
+            if ($ticket->assignedTo) {
+                $reply .= "👤 Исполнитель: {$ticket->assignedTo->name}\n";
+            }
+            
+            $reply .= "📅 Взята в работу: " . $ticket->updated_at->format("d.m.Y H:i") . "\n";
+            $reply .= "📝 Заявитель: {$ticket->reporter_name}\n";
+            
+            // Добавляем кнопки действий
+            if ($ticket->assigned_to_id === $user->id) {
+                $reply .= "/resolve_{$ticket->id} - Отметить решённой\n";
+            }
+            $reply .= "/ticket_{$ticket->id} - Подробнее\n\n";
+        }
+
+        $reply .= "💡 Используйте /tickets для просмотра всех заявок";
+
+        $this->sendMessage($chatId, $reply);
+        
+        Log::info("Active tickets command executed", [
+            'chat_id' => $chatId,
+            'user_id' => $user->id,
+            'tickets_count' => $tickets->count()
+        ]);
     }
 
     /**
@@ -1161,10 +1242,7 @@ class TelegramStandalone extends Command
                 $notificationService->notifyTicketAssigned($ticket, $user);
             }
 
-            $this->sendMessage(
-                $chatId,
-                "✅ Заявка #{$ticket->id} успешно взята в работу и назначена на вас!",
-            );
+            // Не отправляем прямое сообщение - уведомления придут через NotificationService
 
             Log::info("Successfully started ticket", [
                 'chat_id' => $chatId,
