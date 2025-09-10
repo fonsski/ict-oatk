@@ -360,16 +360,6 @@ class TicketController extends Controller
     {
         $data = $request->validated();
 
-        // Проверка на превышение длины перед сохранением
-        if (strlen($data["content"]) > 1000) {
-            return back()
-                ->withErrors([
-                    "content" =>
-                        "Комментарий не должен превышать 1000 символов",
-                ])
-                ->withInput();
-        }
-
         $comment = TicketComment::create([
             "ticket_id" => $ticket->id,
             "user_id" => Auth::id(),

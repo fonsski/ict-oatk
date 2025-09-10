@@ -134,7 +134,7 @@ class ValidationService
 
             // Правила для комментариев к заявкам
             'ticket.comment' => [
-                'content' => 'required|string|min:2',
+                'content' => 'required|string|min:2|max:1000',
                 'ticket_id' => 'required|exists:tickets,id',
                 'attachment' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,zip|max:10240',
             ],

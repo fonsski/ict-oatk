@@ -300,3 +300,4 @@ return new class extends Migration
         // (для краткости не показываю весь код)
     }
 };
+
