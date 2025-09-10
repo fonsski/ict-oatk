@@ -8,6 +8,8 @@ use App\Models\EquipmentCategory;
 use App\Models\Room;
 use App\Models\EquipmentLocationHistory;
 use App\Traits\HasLiveSearch;
+use App\Events\EquipmentStatusChanged;
+use App\Events\EquipmentLocationChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -254,20 +256,41 @@ class EquipmentController extends Controller
             $messages,
         );
 
-        // Проверяем, изменился ли кабинет
+        // Проверяем, изменился ли кабинет и статус
         $oldRoomId = $equipment->room_id;
         $newRoomId = $data["room_id"] ?? null;
+        $oldStatusId = $equipment->status_id;
+        $newStatusId = $data["status_id"] ?? null;
 
         // Обновляем оборудование
         $equipment->update($data);
 
-        // Если кабинет изменился, записываем историю перемещения
+        // Если статус изменился, отправляем событие
+        if ($oldStatusId !== $newStatusId) {
+            $oldStatus = EquipmentStatus::find($oldStatusId);
+            $newStatus = EquipmentStatus::find($newStatusId);
+            event(new EquipmentStatusChanged(
+                $equipment, 
+                $oldStatus ? $oldStatus->name : 'Неизвестно',
+                $newStatus ? $newStatus->name : 'Неизвестно',
+                Auth::user()
+            ));
+        }
+
+        // Если кабинет изменился, записываем историю перемещения и отправляем событие
         if ($oldRoomId !== $newRoomId) {
             $equipment->recordLocationChange(
                 $oldRoomId,
                 $newRoomId,
                 "Перемещение при обновлении данных оборудования",
             );
+            
+            event(new EquipmentLocationChanged(
+                $equipment,
+                $oldRoomId,
+                $newRoomId,
+                Auth::user()
+            ));
         }
 
         return redirect()

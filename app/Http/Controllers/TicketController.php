@@ -19,6 +19,7 @@ use App\Http\Requests\AssignTicketRequest;
 use App\Events\TicketCreated;
 use App\Events\TicketStatusChanged;
 use App\Events\TicketAssigned;
+use App\Events\TicketCommentCreated;
 use App\Services\CacheService;
 use App\Traits\HasPagination;
 
@@ -381,6 +382,9 @@ class TicketController extends Controller
             "user_id" => Auth::id(),
             "content" => $data["content"],
         ]);
+
+        // Отправляем событие о создании комментария
+        event(new TicketCommentCreated($comment, Auth::user()));
 
         return Redirect::route("tickets.show", $ticket)->with(
             "success",

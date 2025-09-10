@@ -60,6 +60,9 @@ services:
             WWWUSER: "${WWWUSER}"
             LARAVEL_SAIL: 1
             CONTAINER_ROLE: "websocket-server"
+            WEBSOCKET_HOST: "0.0.0.0"
+            WEBSOCKET_PORT: "8080"
+            WEBSOCKET_ENABLED: "true"
         volumes:
             - ".:/var/www/html"
         networks:
@@ -69,6 +72,12 @@ services:
         depends_on:
             - laravel.test
             - mysql
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/test"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
         command: php artisan websocket:serve --port=8080
         logging:
             driver: "json-file"

@@ -952,6 +952,10 @@
         });
     </script>
 
+    <!-- WebSocket Scripts -->
+    <script src="{{ asset('build/assets/websocket-client-DkAC7rby.js') }}"></script>
+    <script src="{{ asset('build/assets/live-updates-CmzvS4RK.js') }}"></script>
+
     @stack('scripts')
 </body>
 </html>

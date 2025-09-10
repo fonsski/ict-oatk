@@ -5,13 +5,25 @@ namespace App\Providers;
 use App\Events\TicketCreated;
 use App\Events\TicketStatusChanged;
 use App\Events\TicketAssigned;
+use App\Events\TicketCommentCreated;
 use App\Events\UserCreated;
 use App\Events\UserStatusChanged;
+use App\Events\EquipmentStatusChanged;
+use App\Events\EquipmentLocationChanged;
+use App\Events\KnowledgeBaseArticleCreated;
+use App\Events\KnowledgeBaseArticleUpdated;
+use App\Events\SystemNotificationCreated;
 use App\Listeners\LogTicketCreated;
 use App\Listeners\LogTicketStatusChanged;
 use App\Listeners\LogTicketAssigned;
+use App\Listeners\LogTicketCommentCreated;
 use App\Listeners\LogUserCreated;
 use App\Listeners\LogUserStatusChanged;
+use App\Listeners\LogEquipmentStatusChanged;
+use App\Listeners\LogEquipmentLocationChanged;
+use App\Listeners\LogKnowledgeBaseArticleCreated;
+use App\Listeners\LogKnowledgeBaseArticleUpdated;
+use App\Listeners\LogSystemNotificationCreated;
 use App\Listeners\WebSocketNotificationListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -46,13 +58,48 @@ class EventServiceProvider extends ServiceProvider
             WebSocketNotificationListener::class,
         ],
 
+        TicketCommentCreated::class => [
+            LogTicketCommentCreated::class,
+            WebSocketNotificationListener::class,
+        ],
+
         // События пользователей
         UserCreated::class => [
             LogUserCreated::class,
+            WebSocketNotificationListener::class,
         ],
 
         UserStatusChanged::class => [
             LogUserStatusChanged::class,
+            WebSocketNotificationListener::class,
+        ],
+
+        // События оборудования
+        EquipmentStatusChanged::class => [
+            LogEquipmentStatusChanged::class,
+            WebSocketNotificationListener::class,
+        ],
+
+        EquipmentLocationChanged::class => [
+            LogEquipmentLocationChanged::class,
+            WebSocketNotificationListener::class,
+        ],
+
+        // События базы знаний
+        KnowledgeBaseArticleCreated::class => [
+            LogKnowledgeBaseArticleCreated::class,
+            WebSocketNotificationListener::class,
+        ],
+
+        KnowledgeBaseArticleUpdated::class => [
+            LogKnowledgeBaseArticleUpdated::class,
+            WebSocketNotificationListener::class,
+        ],
+
+        // События системных уведомлений
+        SystemNotificationCreated::class => [
+            LogSystemNotificationCreated::class,
+            WebSocketNotificationListener::class,
         ],
     ];
 

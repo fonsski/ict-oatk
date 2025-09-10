@@ -132,4 +132,19 @@ return [
         "driver" => env("APP_MAINTENANCE_DRIVER", "file"),
         "store" => env("APP_MAINTENANCE_STORE", "database"),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | WebSocket Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for WebSocket server and real-time notifications
+    |
+    */
+
+    "websocket_host" => env("WEBSOCKET_HOST", "localhost"),
+    "websocket_port" => env("WEBSOCKET_PORT", 8080),
+    "websocket_enabled" => env("WEBSOCKET_ENABLED", true),
+    "websocket_timeout" => env("WEBSOCKET_TIMEOUT", 5),
+    "websocket_docker_host" => env("WEBSOCKET_DOCKER_HOST", "websocket-server"),
 ];

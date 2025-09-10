@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Ticket;
 use App\Models\User;
+use App\Events\SystemNotificationCreated;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -404,6 +405,7 @@ class NotificationService
         }
 
         $notificationData = [
+            'type' => $data['type'] ?? 'general',
             'title' => $data['title'] ?? 'Уведомление',
             'message' => $data['message'] ?? '',
             'icon' => $data['icon'] ?? 'info',
@@ -413,6 +415,9 @@ class NotificationService
         ];
 
         $user->notify(new \App\Notifications\TicketNotification($notificationData));
+
+        // Отправляем событие для WebSocket уведомления
+        event(new SystemNotificationCreated($user, $notificationData, auth()->user()));
     }
 
     /**

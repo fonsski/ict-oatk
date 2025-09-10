@@ -110,6 +110,30 @@ class LiveUpdates {
             case 'ticket_assigned':
                 this.handleTicketAssigned(data.data);
                 break;
+            case 'user_created':
+                this.handleUserCreated(data.data);
+                break;
+            case 'user_status_changed':
+                this.handleUserStatusChanged(data.data);
+                break;
+            case 'ticket_comment_created':
+                this.handleTicketCommentCreated(data.data);
+                break;
+            case 'equipment_status_changed':
+                this.handleEquipmentStatusChanged(data.data);
+                break;
+            case 'equipment_location_changed':
+                this.handleEquipmentLocationChanged(data.data);
+                break;
+            case 'knowledge_article_created':
+                this.handleKnowledgeArticleCreated(data.data);
+                break;
+            case 'knowledge_article_updated':
+                this.handleKnowledgeArticleUpdated(data.data);
+                break;
+            case 'system_notification_created':
+                this.handleSystemNotificationCreated(data.data);
+                break;
             default:
                 console.log('LiveUpdates: Неизвестный тип сообщения:', data.type);
         }
@@ -135,6 +159,71 @@ class LiveUpdates {
         console.log('LiveUpdates: Заявка назначена:', ticketData);
         // Показываем уведомление
         this.showNotification(ticketData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleUserCreated(userData) {
+        console.log('LiveUpdates: Новый пользователь создан:', userData);
+        // Показываем уведомление
+        this.showNotification(userData.message, 'success');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleUserStatusChanged(userData) {
+        console.log('LiveUpdates: Статус пользователя изменен:', userData);
+        // Показываем уведомление
+        this.showNotification(userData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleTicketCommentCreated(commentData) {
+        console.log('LiveUpdates: Комментарий к заявке создан:', commentData);
+        // Показываем уведомление
+        this.showNotification(commentData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleEquipmentStatusChanged(equipmentData) {
+        console.log('LiveUpdates: Статус оборудования изменен:', equipmentData);
+        // Показываем уведомление
+        this.showNotification(equipmentData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleEquipmentLocationChanged(equipmentData) {
+        console.log('LiveUpdates: Местоположение оборудования изменено:', equipmentData);
+        // Показываем уведомление
+        this.showNotification(equipmentData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleKnowledgeArticleCreated(articleData) {
+        console.log('LiveUpdates: Создана статья в базе знаний:', articleData);
+        // Показываем уведомление
+        this.showNotification(articleData.message, 'success');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleKnowledgeArticleUpdated(articleData) {
+        console.log('LiveUpdates: Обновлена статья в базе знаний:', articleData);
+        // Показываем уведомление
+        this.showNotification(articleData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleSystemNotificationCreated(notificationData) {
+        console.log('LiveUpdates: Создано системное уведомление:', notificationData);
+        // Показываем уведомление с соответствующим цветом
+        const color = notificationData.color || 'info';
+        this.showNotification(notificationData.message, color);
         // Обновляем данные
         this.refresh();
     }

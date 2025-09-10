@@ -9,6 +9,10 @@
         <div>
             <h1 class="text-3xl font-bold text-slate-900 mb-2">Управление пользователями</h1>
             <p class="text-slate-600">Администрирование учетных записей системы</p>
+            <div class="flex items-center mt-2">
+                <div id="status-indicator" class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                <span id="last-updated" class="text-xs text-slate-500">Обновление...</span>
+            </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
             <a href="{{ route('user.statistics') }}" class="btn-outline">
@@ -419,6 +423,66 @@
 
     if (statusSelect) {
         statusSelect.addEventListener('change', performSearch);
+    }
+
+    // WebSocket интеграция для real-time обновлений
+    let liveUpdates;
+    
+    // Инициализируем LiveUpdates для пользователей
+    if (typeof LiveUpdates !== 'undefined') {
+        liveUpdates = new LiveUpdates({
+            apiEndpoint: '{{ route("user.index") }}',
+            csrfToken: '{{ csrf_token() }}',
+            useWebSocket: true,
+            websocketUrl: 'ws://localhost:8080',
+            refreshInterval: 5000, // 5 секунд
+            onSuccess: function(data) {
+                console.log('LiveUpdates: Данные пользователей обновлены');
+                // Обновляем статистику
+                updateUserStats(data);
+            },
+            onError: function(error) {
+                console.error('LiveUpdates: Ошибка обновления пользователей:', error);
+            }
+        });
+    }
+
+    function updateUserStats(data) {
+        // Обновляем статистические карточки
+        const statsCards = document.querySelectorAll('.card.p-6.text-center');
+        if (statsCards.length >= 4) {
+            // Обновляем общее количество пользователей
+            const totalUsers = data.users ? data.users.total : {{ $users->total() }};
+            statsCards[0].querySelector('.text-2xl').textContent = totalUsers;
+            
+            // Обновляем активных пользователей
+            const activeUsers = data.users ? data.users.where('is_active', true).count() : {{ $users->where('is_active', true)->count() }};
+            statsCards[1].querySelector('.text-2xl').textContent = activeUsers;
+            
+            // Обновляем неактивных пользователей
+            const inactiveUsers = data.users ? data.users.where('is_active', false).count() : {{ $users->where('is_active', false)->count() }};
+            statsCards[2].querySelector('.text-2xl').textContent = inactiveUsers;
+            
+            // Обновляем пользователей за 30 дней
+            const recentUsers = data.users ? data.users.where('created_at', '>=', now().subDays(30)).count() : {{ $users->where('created_at', '>=', now()->subDays(30))->count() }};
+            statsCards[3].querySelector('.text-2xl').textContent = recentUsers;
+        }
+    }
+
+    // Обработка WebSocket сообщений для пользователей
+    if (typeof WebSocketClient !== 'undefined') {
+        const wsClient = new WebSocketClient({
+            url: 'ws://localhost:8080',
+            onMessage: function(data) {
+                if (data.type === 'user_created' || data.type === 'user_status_changed') {
+                    console.log('WebSocket: Получено обновление пользователя:', data);
+                    // Обновляем страницу при изменении пользователей
+                    if (liveUpdates) {
+                        liveUpdates.refresh();
+                    }
+                }
+            }
+        });
     }
 </script>
 @endpush

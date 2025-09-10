@@ -12,6 +12,7 @@ class WebSocketServer
 {
     protected $clients = [];
     protected $loop;
+    protected $startTime;
 
     public function __construct()
     {
@@ -66,6 +67,39 @@ class WebSocketServer
     }
 
     /**
+     * Broadcast message to specific user (if user tracking is implemented)
+     */
+    public function broadcastToUser($userId, $message)
+    {
+        $messageStr = is_string($message) ? $message : json_encode($message);
+        echo "Broadcasting message to user $userId: $messageStr\n";
+        
+        // For now, broadcast to all clients
+        // In a real implementation, you would track user sessions
+        $this->broadcast($message);
+    }
+
+    /**
+     * Get connected clients count
+     */
+    public function getConnectedClientsCount()
+    {
+        return count($this->clients);
+    }
+
+    /**
+     * Get server status
+     */
+    public function getStatus()
+    {
+        return [
+            'connected_clients' => count($this->clients),
+            'server_time' => now()->toISOString(),
+            'uptime' => time() - $this->startTime,
+        ];
+    }
+
+    /**
      * Start the WebSocket server
      */
     public static function start($port = 8080)
@@ -74,6 +108,7 @@ class WebSocketServer
         $socket = new SocketServer("0.0.0.0:$port", [], $loop);
         
         $wsInstance = new self();
+        $wsInstance->startTime = time();
         self::$instance = $wsInstance;
 
         // Создаем HTTP сервер для broadcast endpoint
@@ -107,6 +142,18 @@ class WebSocketServer
                 return new Response(200, ['Content-Type' => 'application/json'], json_encode(['messages' => []]));
             }
             
+            if ($path === '/status' && $method === 'GET') {
+                $wsInstance = self::getInstance();
+                $status = $wsInstance ? $wsInstance->getStatus() : ['error' => 'Server not initialized'];
+                return new Response(200, ['Content-Type' => 'application/json'], json_encode($status));
+            }
+            
+            if ($path === '/clients' && $method === 'GET') {
+                $wsInstance = self::getInstance();
+                $count = $wsInstance ? $wsInstance->getConnectedClientsCount() : 0;
+                return new Response(200, ['Content-Type' => 'application/json'], json_encode(['connected_clients' => $count]));
+            }
+            
             return new Response(404, ['Content-Type' => 'application/json'], json_encode(['error' => 'Not found']));
         });
 
@@ -119,8 +166,12 @@ class WebSocketServer
         $httpServer->listen($socket);
 
         echo "WebSocket server started on port $port\n";
-        echo "HTTP broadcast endpoint available at http://localhost:$port/broadcast\n";
-        echo "Test endpoint available at http://localhost:$port/test\n";
+        echo "HTTP endpoints available:\n";
+        echo "  - Broadcast: http://localhost:$port/broadcast\n";
+        echo "  - Test: http://localhost:$port/test\n";
+        echo "  - Status: http://localhost:$port/status\n";
+        echo "  - Clients: http://localhost:$port/clients\n";
+        echo "  - Messages: http://localhost:$port/messages\n";
         
         $loop->run();
     }

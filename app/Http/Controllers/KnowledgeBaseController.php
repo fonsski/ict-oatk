@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\KnowledgeBase;
 use App\Models\KnowledgeCategory;
+use App\Events\KnowledgeBaseArticleCreated;
+use App\Events\KnowledgeBaseArticleUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -139,6 +141,9 @@ class KnowledgeBaseController extends Controller
         $article->published_at = now();
         $article->save();
 
+        // Отправляем событие о создании статьи
+        event(new KnowledgeBaseArticleCreated($article, Auth::user()));
+
         return redirect()
             ->route("knowledge.show", $article)
             ->with("success", "Статья создана");
@@ -271,6 +276,9 @@ class KnowledgeBaseController extends Controller
             $knowledge->tags = null;
         }
         $knowledge->save();
+
+        // Отправляем событие об обновлении статьи
+        event(new KnowledgeBaseArticleUpdated($knowledge, Auth::user()));
 
         return redirect()
             ->route("knowledge.show", $knowledge)

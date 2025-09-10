@@ -5,6 +5,14 @@ namespace App\Listeners;
 use App\Events\TicketCreated;
 use App\Events\TicketStatusChanged;
 use App\Events\TicketAssigned;
+use App\Events\TicketCommentCreated;
+use App\Events\UserCreated;
+use App\Events\UserStatusChanged;
+use App\Events\EquipmentStatusChanged;
+use App\Events\EquipmentLocationChanged;
+use App\Events\KnowledgeBaseArticleCreated;
+use App\Events\KnowledgeBaseArticleUpdated;
+use App\Events\SystemNotificationCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -89,6 +97,137 @@ class WebSocketNotificationListener implements ShouldQueue
                     'timestamp' => now()->toISOString()
                 ];
 
+            case TicketCommentCreated::class:
+                $commentType = $event->comment->is_system ? 'системный комментарий' : 'комментарий';
+                return [
+                    'type' => 'ticket_comment_created',
+                    'data' => [
+                        'comment_id' => $event->comment->id,
+                        'ticket_id' => $event->comment->ticket_id,
+                        'ticket_title' => $event->comment->ticket->title ?? 'Заявка #' . $event->comment->ticket_id,
+                        'user_name' => $event->user ? $event->user->name : 'Система',
+                        'content' => $event->comment->content,
+                        'is_system' => $event->comment->is_system,
+                        'created_at' => $event->comment->created_at->toISOString(),
+                        'message' => "Добавлен {$commentType} к заявке #{$event->comment->ticket_id}"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case UserCreated::class:
+                return [
+                    'type' => 'user_created',
+                    'data' => [
+                        'user_id' => $event->user->id,
+                        'name' => $event->user->name,
+                        'phone' => $event->user->phone,
+                        'role' => $event->user->role->name ?? 'Не указана',
+                        'is_active' => $event->user->is_active,
+                        'created_by' => $event->createdBy ? $event->createdBy->name : 'Система',
+                        'created_at' => $event->user->created_at->toISOString(),
+                        'message' => "Создан новый пользователь: {$event->user->name}"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case UserStatusChanged::class:
+                $statusText = $event->newStatus ? 'активирован' : 'деактивирован';
+                return [
+                    'type' => 'user_status_changed',
+                    'data' => [
+                        'user_id' => $event->user->id,
+                        'name' => $event->user->name,
+                        'old_status' => $event->oldStatus,
+                        'new_status' => $event->newStatus,
+                        'changed_by' => $event->changedBy ? $event->changedBy->name : 'Система',
+                        'changed_at' => now()->toISOString(),
+                        'message' => "Пользователь {$event->user->name} {$statusText}"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case EquipmentStatusChanged::class:
+                return [
+                    'type' => 'equipment_status_changed',
+                    'data' => [
+                        'equipment_id' => $event->equipment->id,
+                        'name' => $event->equipment->name,
+                        'inventory_number' => $event->equipment->inventory_number,
+                        'old_status' => $event->oldStatus,
+                        'new_status' => $event->newStatus,
+                        'changed_by' => $event->user ? $event->user->name : 'Система',
+                        'changed_at' => now()->toISOString(),
+                        'message' => "Статус оборудования '{$event->equipment->name}' изменен с '{$event->oldStatus}' на '{$event->newStatus}'"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case EquipmentLocationChanged::class:
+                $oldRoom = $event->oldRoomId ? "кабинет #{$event->oldRoomId}" : "не указан";
+                $newRoom = $event->newRoomId ? "кабинет #{$event->newRoomId}" : "не указан";
+                return [
+                    'type' => 'equipment_location_changed',
+                    'data' => [
+                        'equipment_id' => $event->equipment->id,
+                        'name' => $event->equipment->name,
+                        'inventory_number' => $event->equipment->inventory_number,
+                        'old_room_id' => $event->oldRoomId,
+                        'new_room_id' => $event->newRoomId,
+                        'changed_by' => $event->user ? $event->user->name : 'Система',
+                        'changed_at' => now()->toISOString(),
+                        'message' => "Оборудование '{$event->equipment->name}' перемещено из {$oldRoom} в {$newRoom}"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case KnowledgeBaseArticleCreated::class:
+                return [
+                    'type' => 'knowledge_article_created',
+                    'data' => [
+                        'article_id' => $event->article->id,
+                        'title' => $event->article->title,
+                        'slug' => $event->article->slug,
+                        'category' => $event->article->category ? $event->article->category->name : 'Без категории',
+                        'author' => $event->user ? $event->user->name : 'Неизвестно',
+                        'created_at' => $event->article->created_at->toISOString(),
+                        'message' => "Создана новая статья в базе знаний: '{$event->article->title}'"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case KnowledgeBaseArticleUpdated::class:
+                return [
+                    'type' => 'knowledge_article_updated',
+                    'data' => [
+                        'article_id' => $event->article->id,
+                        'title' => $event->article->title,
+                        'slug' => $event->article->slug,
+                        'category' => $event->article->category ? $event->article->category->name : 'Без категории',
+                        'updated_by' => $event->user ? $event->user->name : 'Неизвестно',
+                        'updated_at' => $event->article->updated_at->toISOString(),
+                        'message' => "Обновлена статья в базе знаний: '{$event->article->title}'"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
+            case SystemNotificationCreated::class:
+                return [
+                    'type' => 'system_notification_created',
+                    'data' => [
+                        'user_id' => $event->user->id,
+                        'user_name' => $event->user->name,
+                        'notification_type' => $event->notificationData['type'] ?? 'unknown',
+                        'title' => $event->notificationData['title'] ?? 'Уведомление',
+                        'message' => $event->notificationData['message'] ?? '',
+                        'icon' => $event->notificationData['icon'] ?? 'info',
+                        'color' => $event->notificationData['color'] ?? 'blue',
+                        'created_by' => $event->createdBy ? $event->createdBy->name : 'Система',
+                        'created_at' => now()->toISOString(),
+                        'message' => "Новое уведомление для {$event->user->name}: {$event->notificationData['title']}"
+                    ],
+                    'timestamp' => now()->toISOString()
+                ];
+
             default:
                 return null;
         }
@@ -100,8 +239,15 @@ class WebSocketNotificationListener implements ShouldQueue
     private function sendToWebSocket(array $message): void
     {
         try {
-            // Получаем хост из конфигурации или используем localhost
-            $host = config('app.websocket_host', 'localhost');
+            // Определяем хост в зависимости от окружения
+            if (app()->environment('local') && env('LARAVEL_SAIL')) {
+                // В Docker окружении используем имя сервиса
+                $host = config('app.websocket_docker_host', 'websocket-server');
+            } else {
+                // В обычном окружении используем localhost
+                $host = config('app.websocket_host', 'localhost');
+            }
+            
             $port = config('app.websocket_port', 8080);
             
             // Отправляем HTTP запрос к WebSocket серверу для broadcast

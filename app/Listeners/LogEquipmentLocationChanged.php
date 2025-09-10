@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Listeners;
+
+use App\Events\EquipmentLocationChanged;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
+
+class LogEquipmentLocationChanged implements ShouldQueue
+{
+    use InteractsWithQueue;
+
+    /**
+     * Create the event listener.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the event.
+     */
+    public function handle(EquipmentLocationChanged $event): void
+    {
+        $equipment = $event->equipment;
+        $user = $event->user;
+        
+        Log::info('Equipment location changed', [
+            'equipment_id' => $equipment->id,
+            'equipment_name' => $equipment->name,
+            'inventory_number' => $equipment->inventory_number,
+            'old_room_id' => $event->oldRoomId,
+            'new_room_id' => $event->newRoomId,
+            'user_id' => $user ? $user->id : null,
+            'user_name' => $user ? $user->name : 'Unknown',
+            'changed_at' => now()->toISOString(),
+        ]);
+    }
+}
