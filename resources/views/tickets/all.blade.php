@@ -3,7 +3,7 @@
 @section('title', 'Все заявки - ICT')
 
 @section('content')
-<div class="container-width section-padding">
+<div class="w-full px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
@@ -186,9 +186,9 @@
             #tickets-container td {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
-                padding: 16px !important;
+                padding: 12px !important;
                 vertical-align: top;
-                line-height: 1.5;
+                line-height: 1.4;
                 max-width: 100%;
                 position: relative;
             }
@@ -306,12 +306,11 @@
                     <table class="w-full border-collapse" style="table-layout: fixed !important; border-spacing: 0;">
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 35%;">Заявка</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Заявитель</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Статус</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Приоритет</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Исполнитель</th>
-                                <th class="px-6 py-5 text-left text-sm font-semibold text-slate-900" style="width: 11%;">Действия</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 18%;">Заявитель</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Статус</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Приоритет</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 18%;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -558,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return `
             <tr class="hover:bg-slate-50 transition-all duration-300" data-ticket-id="${ticket.id}">
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">
                     <div>
                         <a href="${ticket.url}"
                            class="ticket-title line-clamp-2 break-words inline-block transition-all duration-300">
@@ -585,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-5">
+                <td class="px-4 py-3">
                     <div class="text-sm min-w-0">
                         <div class="font-medium text-slate-900 truncate mb-1 flex items-center" title="${ticket.reporter_name || '—'}">
                             <svg class="w-4 h-4 mr-1.5 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -601,49 +600,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-5">
-                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 100px; text-align: center; white-space: nowrap;">
+                <td class="px-4 py-3">
+                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 80px; text-align: center; white-space: nowrap;">
                         ${getStatusLabel(ticket.status)}
                     </span>
                 </td>
-                <td class="px-6 py-5">
-                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}" style="min-width: 90px; text-align: center;">
+                <td class="px-4 py-3">
+                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}" style="min-width: 80px; text-align: center;">
                         ${priorityLabels[ticket.priority]}
                     </span>
                 </td>
-                <td class="px-6 py-5">
-                    <div class="text-sm flex items-start gap-1.5 max-w-full" title="${ticket.assigned_to || 'Не назначено'}">
-                        ${ticket.assigned_to ?
-                            `<svg class="w-4 h-4 mt-0.5 text-slate-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="truncate font-medium text-slate-700">${ticket.assigned_to}</span>`
-                            :
-                            `<svg class="w-4 h-4 mt-0.5 text-slate-300 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="italic text-slate-400 truncate">Не назначено</span>`
-                        }
-                    </div>
-                </td>
-                <td class="px-6 py-5 whitespace-nowrap">
-                    <div class="text-sm">
-                        <div class="whitespace-nowrap flex items-center text-slate-700 font-medium" title="${ticket.created_at}">
-                            <svg class="w-4 h-4 mr-1.5 text-slate-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                            </svg>
-                            ${formatDate(ticket.created_at)}
-                        </div>
-                        ${ticket.updated_at && ticket.updated_at !== ticket.created_at ?
-                            `<div class="text-xs text-slate-500 mt-1.5 flex items-center">
-                                <svg class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                                </svg>
-                                Обн. ${formatDate(ticket.updated_at).split(' ')[0]}
-                            </div>` : ''}
-                    </div>
-                </td>
-                <td class="px-6 py-5 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                     <div class="flex items-center gap-1">
                         <a href="${ticket.url}"
                            class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition text-xs font-medium shadow-sm">
