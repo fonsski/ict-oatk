@@ -378,18 +378,19 @@
 
     @if(user_can_manage_tickets())
     @push('scripts')
+    @vite(['resources/js/live-updates.js'])
     <script>
     console.log('=== HOME.BLADE.PHP SCRIPT LOADING ===');
     const canManageTickets = @json(user_can_manage_tickets());
-    const csrfToken = '{{ csrf_token() }}';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
 
     console.log('canManageTickets:', canManageTickets);
     console.log('csrfToken:', csrfToken);
 
     // Объявляем переменные в глобальной области видимости
     let techRefreshBtn, techStatusIndicator, techLastUpdated, techTicketsContainer;
-    let techRefreshInterval;
-    const TECH_REFRESH_INTERVAL = 15000; // 15 секунд
+    let liveUpdates;
+    const TECH_REFRESH_INTERVAL = 30000; // 30 секунд
 
     // Функция инициализации панели техника
     function initTechnicianDashboard() {
@@ -408,7 +409,9 @@
         async function refreshTechTickets() {
             try {
                 console.log('Начинаем обновление заявок...');
-                techStatusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+                if (techStatusIndicator) {
+                    techStatusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+                }
 
                 const response = await fetch('{{ route("home.technician.tickets") }}', {
                     method: 'GET',
@@ -417,11 +420,19 @@
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    cache: 'no-store'
+                    cache: 'no-store',
+                    credentials: 'same-origin'
                 });
                 console.log('Получен ответ от API:', response.status);
 
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        console.warn('Ошибка аутентификации, перенаправляем на логин');
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 console.log('Получены данные:', data);
@@ -461,24 +472,39 @@
                 }
 
                 if (techLastUpdated) techLastUpdated.textContent = `Обновлено: ${data.last_updated}`;
-                techStatusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+                if (techStatusIndicator) techStatusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
                 console.log('Обновление завершено успешно');
 
             } catch (error) {
                 console.error('Ошибка при обновлении заявок:', error);
-                techStatusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+                if (techStatusIndicator) techStatusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
                 if (techLastUpdated) techLastUpdated.textContent = 'Ошибка обновления';
 
-                if (error.message.includes('403') || error.message.includes('Unauthorized')) {
-                    console.warn('Нет доступа к API заявок');
-                    // Redirect to login if unauthorized in production
-                    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                        window.location.href = `${appURL}/login`;
-                    }
+                // Обработка ошибок аутентификации
+                if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
+                    console.warn('Ошибка аутентификации, перенаправляем на логин');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 1000);
                 } else {
                     console.error('Детали ошибки:', error.message);
                 }
             }
+        }
+
+        function updateTechStats(stats) {
+            console.log('Обновление статистики:', stats);
+            const totalEl = document.getElementById('tech-total-count');
+            const openEl = document.getElementById('tech-open-count');
+            const progressEl = document.getElementById('tech-progress-count');
+            const resolvedEl = document.getElementById('tech-resolved-count');
+            const closedEl = document.getElementById('tech-closed-count');
+
+            if (totalEl) totalEl.textContent = stats.total;
+            if (openEl) openEl.textContent = stats.open;
+            if (progressEl) progressEl.textContent = stats.in_progress;
+            if (resolvedEl) resolvedEl.textContent = stats.resolved;
+            if (closedEl) closedEl.textContent = stats.closed;
         }
 
         function updateTechTicketsTable(tickets) {
@@ -764,13 +790,15 @@
         // Start event listeners setup
         function setupEventListeners() {
             if (techRefreshBtn) {
-            techRefreshBtn.addEventListener('click', function() {
-                console.log('Нажата кнопка обновления заявок');
-                refreshTechTickets();
-            });
-        } else {
-            console.warn('Кнопка обновления не найдена');
-        }
+                techRefreshBtn.addEventListener('click', function() {
+                    console.log('Нажата кнопка обновления заявок');
+                    if (liveUpdates) {
+                        liveUpdates.refresh();
+                    }
+                });
+            } else {
+                console.warn('Кнопка обновления не найдена');
+            }
 
             const testApiBtn = document.getElementById('test-api-btn');
             if (testApiBtn) {
@@ -820,29 +848,38 @@
             }
         }
 
-        console.log('Запуск автообновления заявок каждые', TECH_REFRESH_INTERVAL / 1000, 'секунд');
-        console.log('Выполняем первоначальное обновление заявок');
-
         if (canManageTickets) {
-            console.log('Пользователь может управлять заявками, запускаем обновление...');
-            refreshTechTickets();
-            startTechAutoRefresh();
+            console.log('Пользователь может управлять заявками, инициализируем LiveUpdates...');
+            
+            // Инициализируем LiveUpdates
+            liveUpdates = new LiveUpdates({
+                refreshInterval: TECH_REFRESH_INTERVAL,
+                apiEndpoint: '{{ route("home.technician.tickets") }}',
+                csrfToken: csrfToken,
+                onSuccess: function(data) {
+                    console.log('LiveUpdates: Данные получены успешно');
+                    
+                    // Обновляем статистику
+                    if (data.stats) {
+                        updateTechStats(data.stats);
+                    }
+                    
+                    // Обновляем таблицу заявок
+                    if (data.tickets && Array.isArray(data.tickets)) {
+                        updateTechTicketsTable(data.tickets.slice(0, 10));
+                    }
+                },
+                onError: function(error) {
+                    console.error('LiveUpdates: Ошибка:', error);
+                }
+            });
+            
+            if (techLastUpdated) {
+                techLastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
+            }
         } else {
             console.warn('Пользователь НЕ может управлять заявками, пропускаем автообновление');
         }
-
-        window.addEventListener('beforeunload', stopTechAutoRefresh);
-
-        if (techLastUpdated) {
-            techLastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
-        }
-
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && canManageTickets) {
-                console.log('Страница стала видимой, обновляем заявки...');
-                refreshTechTickets();
-            }
-        });
 
         // Initialize event listeners
         setupEventListeners();

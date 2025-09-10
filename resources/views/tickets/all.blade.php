@@ -379,9 +379,10 @@
 </div>
 
 @push('scripts')
+    @vite(['resources/js/live-updates.js'])
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let refreshInterval;
+    let liveUpdates;
     const REFRESH_INTERVAL = 30000; // 30 секунд
 
     // Элементы
@@ -393,23 +394,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const filtersForm = document.getElementById('filters-form');
     const clearFiltersBtn = document.getElementById('clear-filters');
 
-    // Автоматическое обновление
-    function startAutoRefresh() {
-        refreshInterval = setInterval(refreshTickets, REFRESH_INTERVAL);
-        console.log('Авто-обновление запущено с интервалом', REFRESH_INTERVAL, 'мс');
+    // Проверяем наличие необходимых элементов
+    if (!filtersForm) {
+        console.error('Форма фильтров не найдена');
+        return;
     }
 
-    function stopAutoRefresh() {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            console.log('Авто-обновление остановлено');
-        }
+    // Инициализация LiveUpdates
+    function initLiveUpdates() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        
+        liveUpdates = new LiveUpdates({
+            refreshInterval: REFRESH_INTERVAL,
+            apiEndpoint: '{{ route("all-tickets.api") }}',
+            csrfToken: csrfToken,
+            onSuccess: function(data) {
+                console.log('LiveUpdates: Данные получены успешно');
+                
+                // Обновляем статистику
+                if (data.stats) {
+                    updateStats(data.stats);
+                }
+                
+                // Обновляем таблицу заявок
+                if (data.tickets && Array.isArray(data.tickets)) {
+                    updateTicketsTable(data.tickets);
+                }
+            },
+            onError: function(error) {
+                console.error('LiveUpdates: Ошибка:', error);
+            }
+        });
     }
 
     // Обновление заявок
     async function refreshTickets() {
         try {
-            statusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+            if (statusIndicator) {
+                statusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+            }
 
             const formData = new FormData(filtersForm);
             const params = new URLSearchParams(formData);
@@ -419,42 +442,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 },
-                cache: 'no-store'
+                cache: 'no-store',
+                credentials: 'same-origin'
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    console.warn('Ошибка аутентификации, перенаправляем на логин');
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
 
             updateStats(data.stats);
             updateTicketsTable(data.tickets);
 
-            lastUpdated.textContent = `Обновлено: ${data.last_updated}`;
-            statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+            if (lastUpdated) lastUpdated.textContent = `Обновлено: ${data.last_updated}`;
+            if (statusIndicator) statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
 
         } catch (error) {
             console.error('Ошибка при обновлении заявок:', error);
-            statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
-            lastUpdated.textContent = 'Ошибка обновления';
+            if (statusIndicator) statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+            if (lastUpdated) lastUpdated.textContent = 'Ошибка обновления';
 
-            // Redirect to login if unauthorized in production
-            if (error.message.includes('403') || error.message.includes('401')) {
-                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            // Обработка ошибок аутентификации
+            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
+                console.warn('Ошибка аутентификации, перенаправляем на логин');
+                setTimeout(() => {
                     window.location.href = '/login';
-                }
+                }, 1000);
             }
         }
     }
 
     // Обновление статистики
     function updateStats(stats) {
-        document.getElementById('total-count').textContent = stats.total;
-        document.getElementById('open-count').textContent = stats.open;
-        document.getElementById('progress-count').textContent = stats.in_progress;
-        document.getElementById('resolved-count').textContent = stats.resolved;
-        document.getElementById('closed-count').textContent = stats.closed;
+        const totalEl = document.getElementById('total-count');
+        const openEl = document.getElementById('open-count');
+        const progressEl = document.getElementById('progress-count');
+        const resolvedEl = document.getElementById('resolved-count');
+        const closedEl = document.getElementById('closed-count');
+
+        if (totalEl) totalEl.textContent = stats.total;
+        if (openEl) openEl.textContent = stats.open;
+        if (progressEl) progressEl.textContent = stats.in_progress;
+        if (resolvedEl) resolvedEl.textContent = stats.resolved;
+        if (closedEl) closedEl.textContent = stats.closed;
     }
 
     // Обновление таблицы заявок
@@ -670,7 +708,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (refreshBtn) {
-        refreshBtn.addEventListener('click', refreshTickets);
+        refreshBtn.addEventListener('click', function() {
+            if (liveUpdates) {
+                liveUpdates.refresh();
+            }
+        });
     }
 
     // Обработка клика на кнопке действий
@@ -1157,46 +1199,50 @@ if (action === 'change-status' && status) {
     }
 
     // Автоматическое применение фильтров
-    const filtersForm = document.getElementById('filters-form');
     if (filtersForm) {
         const selectInputs = filtersForm.querySelectorAll('select');
         selectInputs.forEach(input => {
             input.addEventListener('change', function() {
-                stopAutoRefresh();
-                filtersForm.submit();
+                if (liveUpdates) {
+                    liveUpdates.refresh();
+                }
             });
         });
     }
 
     // Очистка фильтров
-    const clearFiltersBtn = document.getElementById('clear-filters');
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', function() {
             if (filtersForm) {
                 filtersForm.reset();
-                window.location.href = window.location.pathname;
+                if (liveUpdates) {
+                    liveUpdates.refresh();
+                }
             }
         });
     }
 
     // Поиск с задержкой
-    let searchTimeout;
-    document.getElementById('search').addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function() {
-            stopAutoRefresh();
-            refreshTickets().then(startAutoRefresh);
-        }, 500);
-    });
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                if (liveUpdates) {
+                    liveUpdates.refresh();
+                }
+            }, 500);
+        });
+    }
 
-    // Запуск автообновления
-    startAutoRefresh();
-
-    // Остановка автообновления при уходе со страницы
-    window.addEventListener('beforeunload', stopAutoRefresh);
+    // Инициализация LiveUpdates
+    initLiveUpdates();
 
     // Начальная загрузка времени
-    lastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
+    if (lastUpdated) {
+        lastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
+    }
 });
 
 // Инициализация UI элементов

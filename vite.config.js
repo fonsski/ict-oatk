@@ -11,6 +11,7 @@ export default defineConfig({
                 "resources/js/app.js",
                 "resources/js/canvas-handler.js",
                 "resources/js/simple-canvas.js",
+                "resources/js/live-updates.js",
             ],
             refresh: [
                 ...refreshPaths,
