@@ -390,7 +390,7 @@
     // Объявляем переменные в глобальной области видимости
     let techRefreshBtn, techStatusIndicator, techLastUpdated, techTicketsContainer;
     let liveUpdates;
-    const TECH_REFRESH_INTERVAL = 30000; // 30 секунд
+    const TECH_REFRESH_INTERVAL = 1000; // 1 секунда
 
     // Функция инициализации панели техника
     function initTechnicianDashboard() {

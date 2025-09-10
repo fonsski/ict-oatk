@@ -1,14 +1,17 @@
 /**
  * Live Updates для заявок
  * Обеспечивает автоматическое обновление заявок без перезагрузки страницы
+ * Поддерживает как HTTP polling, так и WebSocket
  */
 
 class LiveUpdates {
     constructor(options = {}) {
         this.options = {
-            refreshInterval: options.refreshInterval || 30000, // 30 секунд
+            refreshInterval: options.refreshInterval || 1000, // 1 секунда
             apiEndpoint: options.apiEndpoint,
             csrfToken: options.csrfToken,
+            useWebSocket: options.useWebSocket || false,
+            websocketUrl: options.websocketUrl || 'ws://localhost:8080',
             onError: options.onError || this.defaultErrorHandler,
             onSuccess: options.onSuccess || this.defaultSuccessHandler,
             ...options
@@ -18,6 +21,7 @@ class LiveUpdates {
         this.isRefreshing = false;
         this.retryCount = 0;
         this.maxRetries = 3;
+        this.websocketClient = null;
         
         this.init();
     }
@@ -31,8 +35,14 @@ class LiveUpdates {
             return;
         }
         
-        // Запускаем автообновление
-        this.startAutoRefresh();
+        // Выбираем метод обновления
+        if (this.options.useWebSocket && typeof WebSocketClient !== 'undefined') {
+            console.log('LiveUpdates: Используем WebSocket');
+            this.initWebSocket();
+        } else {
+            console.log('LiveUpdates: Используем HTTP polling');
+            this.startAutoRefresh();
+        }
         
         // Обработка видимости страницы
         document.addEventListener('visibilitychange', () => {
@@ -45,7 +55,108 @@ class LiveUpdates {
         // Остановка при уходе со страницы
         window.addEventListener('beforeunload', () => {
             this.stopAutoRefresh();
+            if (this.websocketClient) {
+                this.websocketClient.disconnect();
+            }
         });
+    }
+    
+    initWebSocket() {
+        this.websocketClient = new WebSocketClient({
+            url: this.options.websocketUrl,
+            onMessage: (data) => {
+                console.log('LiveUpdates: Получены данные через WebSocket', data);
+                
+                // Обрабатываем разные типы сообщений
+                if (data.type) {
+                    this.handleWebSocketMessage(data);
+                } else {
+                    // Fallback для старых сообщений
+                    this.options.onSuccess(data);
+                }
+                
+                this.updateStatusIndicator('success');
+                this.updateLastUpdated(data.timestamp || data.last_updated);
+            },
+            onOpen: () => {
+                console.log('LiveUpdates: WebSocket подключен');
+                this.updateStatusIndicator('success');
+                // Запрашиваем первоначальные данные через HTTP
+                this.refresh();
+            },
+            onClose: () => {
+                console.log('LiveUpdates: WebSocket отключен');
+                this.updateStatusIndicator('error');
+                // Fallback к HTTP polling
+                this.startAutoRefresh();
+            },
+            onError: (error) => {
+                console.error('LiveUpdates: Ошибка WebSocket:', error);
+                this.updateStatusIndicator('error');
+                // Fallback к HTTP polling
+                this.startAutoRefresh();
+            }
+        });
+    }
+    
+    handleWebSocketMessage(data) {
+        switch (data.type) {
+            case 'ticket_created':
+                this.handleTicketCreated(data.data);
+                break;
+            case 'ticket_status_changed':
+                this.handleTicketStatusChanged(data.data);
+                break;
+            case 'ticket_assigned':
+                this.handleTicketAssigned(data.data);
+                break;
+            default:
+                console.log('LiveUpdates: Неизвестный тип сообщения:', data.type);
+        }
+    }
+    
+    handleTicketCreated(ticketData) {
+        console.log('LiveUpdates: Новая заявка создана:', ticketData);
+        // Показываем уведомление
+        this.showNotification(ticketData.message, 'success');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleTicketStatusChanged(ticketData) {
+        console.log('LiveUpdates: Статус заявки изменен:', ticketData);
+        // Показываем уведомление
+        this.showNotification(ticketData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    handleTicketAssigned(ticketData) {
+        console.log('LiveUpdates: Заявка назначена:', ticketData);
+        // Показываем уведомление
+        this.showNotification(ticketData.message, 'info');
+        // Обновляем данные
+        this.refresh();
+    }
+    
+    showNotification(message, type = 'info') {
+        // Создаем уведомление
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm ${
+            type === 'success' ? 'bg-green-500 text-white' :
+            type === 'error' ? 'bg-red-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Автоматически удаляем через 5 секунд
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
     }
     
     async refresh() {

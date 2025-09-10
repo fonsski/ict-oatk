@@ -366,12 +366,13 @@
 </div>
 
 @push('scripts')
+<script src="{{ Vite::asset('resources/js/websocket-client.js') }}"></script>
 <script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let liveUpdates;
     let refreshInterval;
-    const REFRESH_INTERVAL = 30000; // 30 секунд
+    const REFRESH_INTERVAL = 1000; // 1 секунда
 
     // Элементы
     const refreshBtn = document.getElementById('refresh-btn');
@@ -405,6 +406,8 @@ document.addEventListener('DOMContentLoaded', function() {
             refreshInterval: REFRESH_INTERVAL,
             apiEndpoint: '{{ route("all-tickets.api") }}',
             csrfToken: csrfToken,
+            useWebSocket: true, // Включаем WebSocket
+            websocketUrl: 'ws://{{ config('app.websocket_host', request()->getHost()) }}:{{ config('app.websocket_port', 8080) }}',
             onSuccess: function(data) {
                 console.log('LiveUpdates: Данные получены успешно');
                 

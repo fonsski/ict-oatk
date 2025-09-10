@@ -12,6 +12,7 @@ use App\Listeners\LogTicketStatusChanged;
 use App\Listeners\LogTicketAssigned;
 use App\Listeners\LogUserCreated;
 use App\Listeners\LogUserStatusChanged;
+use App\Listeners\WebSocketNotificationListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -32,14 +33,17 @@ class EventServiceProvider extends ServiceProvider
         // События заявок
         TicketCreated::class => [
             LogTicketCreated::class,
+            WebSocketNotificationListener::class,
         ],
 
         TicketStatusChanged::class => [
             LogTicketStatusChanged::class,
+            WebSocketNotificationListener::class,
         ],
 
         TicketAssigned::class => [
             LogTicketAssigned::class,
+            WebSocketNotificationListener::class,
         ],
 
         // События пользователей
