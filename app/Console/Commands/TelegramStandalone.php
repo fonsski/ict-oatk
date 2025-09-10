@@ -474,6 +474,25 @@ class TelegramStandalone extends Command
      */
     protected function continueAuthProcess($chatId, $text, $authState)
     {
+        // Проверяем на дублирование обработки авторизации
+        $authProcessKey = "telegram_auth_process_{$chatId}_{$authState['step']}";
+        if (Cache::has($authProcessKey)) {
+            Log::info("Auth process already being handled, skipping duplicate", [
+                'chat_id' => $chatId,
+                'step' => $authState['step']
+            ]);
+            return;
+        }
+        
+        // Отмечаем, что процесс авторизации обрабатывается
+        Cache::put($authProcessKey, true, 10);
+        
+        Log::info("Processing auth step", [
+            'chat_id' => $chatId,
+            'step' => $authState['step'],
+            'text_preview' => substr($text, 0, 20)
+        ]);
+        
         if ($authState["step"] === "phone") {
             $phone = trim($text);
 
@@ -533,7 +552,21 @@ class TelegramStandalone extends Command
                 now()->addMinutes(15),
             );
 
-            $this->sendMessage($chatId, "Введите ваш пароль:");
+            // Проверяем, не отправляли ли мы уже сообщение о вводе пароля
+            $passwordMessageKey = "telegram_password_message_sent_{$chatId}";
+            if (!Cache::has($passwordMessageKey)) {
+                Cache::put($passwordMessageKey, true, 30);
+                $this->sendMessage($chatId, "Введите ваш пароль:");
+                Log::info("Password request message sent", [
+                    'chat_id' => $chatId,
+                    'user_id' => $user->id
+                ]);
+            } else {
+                Log::info("Password request message already sent, skipping duplicate", [
+                    'chat_id' => $chatId,
+                    'user_id' => $user->id
+                ]);
+            }
         } elseif ($authState["step"] === "password") {
             $password = $text;
             $phone = $authState["phone"];
