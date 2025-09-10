@@ -535,9 +535,16 @@ class TelegramStandalone extends Command
                     [
                         "user_id" => $user->id,
                         "authenticated_at" => now(),
+                        "last_activity" => now(),
                     ],
                     now()->addDays(30),
                 );
+                
+                Log::info("User authenticated successfully", [
+                    'chat_id' => $chatId,
+                    'user_id' => $user->id,
+                    'user_name' => $user->name
+                ]);
 
                 // Обновляем время последнего входа
                 $user->updateLastLogin();
@@ -676,7 +683,7 @@ class TelegramStandalone extends Command
             $newTickets = Ticket::where("created_at", ">=", $fifteenMinutesAgo)
                 ->whereNotExists(function ($query) {
                     $query
-                        ->select(\DB::raw(1))
+                        ->select(DB::raw(1))
                         ->from("sent_telegram_notifications")
                         ->whereRaw(
                             "sent_telegram_notifications.ticket_id = tickets.id",
@@ -684,6 +691,11 @@ class TelegramStandalone extends Command
                         ->where("notification_type", "new_ticket");
                 })
                 ->get();
+
+            Log::info("Found new tickets to notify", [
+                'count' => $newTickets->count(),
+                'ticket_ids' => $newTickets->pluck('id')->toArray()
+            ]);
 
             if ($newTickets->isNotEmpty()) {
                 $this->info("Found " . $newTickets->count() . " new tickets!");
@@ -738,8 +750,31 @@ class TelegramStandalone extends Command
                     $notifiedUserIds = [];
 
                     foreach ($users as $user) {
-                        $this->sendMessage($user->telegram_id, $message);
-                        $notifiedUserIds[] = $user->id;
+                        try {
+                            $this->sendMessage($user->telegram_id, $message);
+                            $notifiedUserIds[] = $user->id;
+                            Log::info("Successfully sent new ticket notification", [
+                                'ticket_id' => $ticket->id,
+                                'user_id' => $user->id,
+                                'telegram_id' => $user->telegram_id
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error("Failed to send new ticket notification", [
+                                'ticket_id' => $ticket->id,
+                                'user_id' => $user->id,
+                                'telegram_id' => $user->telegram_id,
+                                'error' => $e->getMessage()
+                            ]);
+                            
+                            // Если ошибка связана с неверным telegram_id, очищаем его
+                            if (strpos($e->getMessage(), 'chat not found') !== false || 
+                                strpos($e->getMessage(), 'user not found') !== false) {
+                                $user->update(['telegram_id' => null]);
+                                Log::info("Cleared invalid telegram_id for user", [
+                                    'user_id' => $user->id
+                                ]);
+                            }
+                        }
                     }
 
                     // Регистрируем отправку уведомления в базе данных
@@ -972,20 +1007,59 @@ class TelegramStandalone extends Command
     }
 
     /**
+     * Проверяет и обновляет активность пользователя
+     */
+    protected function checkAndUpdateUserActivity($chatId)
+    {
+        $userData = Cache::get("telegram_user_{$chatId}");
+        
+        if (!$userData || !isset($userData["user_id"])) {
+            return false;
+        }
+        
+        // Проверяем, не истекла ли сессия (более 7 дней без активности)
+        $lastActivity = $userData["last_activity"] ?? $userData["authenticated_at"];
+        if (now()->diffInDays($lastActivity) > 7) {
+            Cache::forget("telegram_user_{$chatId}");
+            Log::info("User session expired due to inactivity", [
+                'chat_id' => $chatId,
+                'user_id' => $userData["user_id"],
+                'last_activity' => $lastActivity
+            ]);
+            return false;
+        }
+        
+        // Обновляем время последней активности
+        $userData["last_activity"] = now();
+        Cache::put("telegram_user_{$chatId}", $userData, now()->addDays(30));
+        
+        return true;
+    }
+
+    /**
      * Обработчик команды взятия заявки в работу
      */
     protected function handleStartTicketCommand($chatId, $ticketId)
     {
-        // Проверяем авторизацию
-        $userData = Cache::get("telegram_user_{$chatId}");
+        Log::info("handleStartTicketCommand called", [
+            'chat_id' => $chatId,
+            'ticket_id' => $ticketId
+        ]);
 
-        if (!$userData || !isset($userData["user_id"])) {
+        // Проверяем авторизацию и активность
+        if (!$this->checkAndUpdateUserActivity($chatId)) {
             $this->sendMessage(
                 $chatId,
                 "Для выполнения этой команды необходимо авторизоваться. Отправьте /login для входа.",
             );
+            Log::warning("User not authenticated or session expired for start ticket command", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId
+            ]);
             return;
         }
+
+        $userData = Cache::get("telegram_user_{$chatId}");
 
         $user = User::find($userData["user_id"]);
 
@@ -995,6 +1069,11 @@ class TelegramStandalone extends Command
                 "Ваша сессия устарела. Пожалуйста, авторизуйтесь снова с помощью команды /login.",
             );
             Cache::forget("telegram_user_{$chatId}");
+            Log::warning("User session expired for start ticket command", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $userData["user_id"] ?? 'unknown'
+            ]);
             return;
         }
 
@@ -1003,6 +1082,11 @@ class TelegramStandalone extends Command
                 $chatId,
                 "У вас нет прав для взятия заявок в работу.",
             );
+            Log::warning("User lacks permissions for start ticket command", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id
+            ]);
             return;
         }
 
@@ -1010,6 +1094,11 @@ class TelegramStandalone extends Command
 
         if (!$ticket) {
             $this->sendMessage($chatId, "Заявка с ID {$ticketId} не найдена.");
+            Log::warning("Ticket not found in handleStartTicketCommand", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id
+            ]);
             return;
         }
 
@@ -1019,33 +1108,85 @@ class TelegramStandalone extends Command
                 $chatId,
                 "Нельзя взять в работу закрытую заявку.",
             );
+            Log::info("Attempted to start closed ticket", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id,
+                'ticket_status' => $ticket->status
+            ]);
             return;
         }
 
         // Проверяем, не в работе ли уже заявка
         if ($ticket->status === "in_progress") {
             $this->sendMessage($chatId, "Заявка уже находится в работе.");
+            Log::info("Attempted to start already in-progress ticket", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id,
+                'ticket_status' => $ticket->status
+            ]);
             return;
         }
 
-        $oldStatus = $ticket->status;
-        // Обновляем статус и назначаем исполнителя
-        $ticket->update([
-            "status" => "in_progress",
-            "assigned_to_id" => $user->id,
-        ]);
+        try {
+            $oldStatus = $ticket->status;
+            $oldAssignedId = $ticket->assigned_to_id;
+            
+            // Обновляем статус и назначаем исполнителя
+            $ticket->update([
+                "status" => "in_progress",
+                "assigned_to_id" => $user->id,
+            ]);
 
-        // Добавляем комментарий о смене статуса и назначении
-        $ticket->comments()->create([
-            "user_id" => $user->id,
-            "content" => "Заявка взята в работу и назначена на {$user->name}",
-            "is_system" => true,
-        ]);
+            // Добавляем комментарий о смене статуса и назначении
+            $ticket->comments()->create([
+                "user_id" => $user->id,
+                "content" => "Заявка взята в работу и назначена на {$user->name}",
+                "is_system" => true,
+            ]);
 
-        $this->sendMessage(
-            $chatId,
-            "✅ Заявка #{$ticket->id} успешно взята в работу и назначена на вас!",
-        );
+            // Отправляем уведомления через NotificationService
+            $notificationService = app(\App\Services\NotificationService::class);
+            
+            // Уведомление об изменении статуса
+            $notificationService->notifyTicketStatusChanged(
+                $ticket,
+                $oldStatus,
+                "in_progress"
+            );
+
+            // Если пользователь не был назначен до этого, отправляем уведомление о назначении
+            if ($oldAssignedId !== $user->id) {
+                $notificationService->notifyTicketAssigned($ticket, $user);
+            }
+
+            $this->sendMessage(
+                $chatId,
+                "✅ Заявка #{$ticket->id} успешно взята в работу и назначена на вас!",
+            );
+
+            Log::info("Successfully started ticket", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id,
+                'old_status' => $oldStatus,
+                'new_status' => 'in_progress'
+            ]);
+
+        } catch (\Exception $e) {
+            $this->sendMessage(
+                $chatId,
+                "❌ Произошла ошибка при взятии заявки в работу. Попробуйте еще раз.",
+            );
+            Log::error("Error starting ticket", [
+                'chat_id' => $chatId,
+                'ticket_id' => $ticketId,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
