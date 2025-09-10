@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\TelegramBotController;
+use App\Http\Controllers\TelegramController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,18 +20,7 @@ Route::middleware("auth:sanctum")->get("/user", function (Request $request) {
 });
 
 // Маршрут для обработки входящих сообщений от Telegram
-Route::any("/telegram/webhook", [TelegramBotController::class, "handle"]);
-
-// Маршрут для исправленной версии контроллера
-Route::any("/telegram/webhook-fixed", [
-    TelegramBotControllerFixed::class,
-    "handle",
-]);
+Route::any("/telegram/webhook", [TelegramController::class, "webhook"]);
 
 // Тестовый маршрут для проверки доступности API
-Route::get("/telegram/test", function () {
-    return response()->json([
-        "status" => "ok",
-        "message" => "Telegram API test route is working",
-    ]);
-});
+Route::get("/telegram/test", [TelegramController::class, "test"]);
