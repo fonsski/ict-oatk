@@ -41,12 +41,12 @@ services:
             - laravel.test
             - mysql
         healthcheck:
-            test: ["CMD", "php", "artisan", "telegram:basic-test"]
+            test: ["CMD", "php", "artisan", "telegram:bot", "--mode=webhook"]
             interval: 60s
             timeout: 10s
             retries: 3
             start_period: 30s
-        command: php artisan telegram:standalone
+        command: php artisan telegram:bot --mode=webhook
         logging:
             driver: "json-file"
             options:
