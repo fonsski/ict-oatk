@@ -2,54 +2,49 @@
 
 namespace App\WebSocket;
 
-use Ratchet\MessageComponentInterface;
-use Ratchet\ConnectionInterface;
-use Ratchet\Server\IoServer;
-use Ratchet\Http\HttpServer;
-use Ratchet\WebSocket\WsServer;
 use React\EventLoop\Loop;
 use React\Socket\SocketServer;
-use React\Http\HttpServer as ReactHttpServer;
+use React\Http\HttpServer;
 use React\Http\Message\Response;
 use Psr\Http\Message\ServerRequestInterface;
 
-class WebSocketServer implements MessageComponentInterface
+class WebSocketServer
 {
-    protected $clients;
-    protected $httpServer;
+    protected $clients = [];
+    protected $loop;
 
-    public function onOpen(ConnectionInterface $conn)
+    public function __construct()
     {
-        // Store the new connection to send messages to later
-        $this->clients->attach($conn);
-        echo "New connection! ({$conn->resourceId})\n";
+        $this->loop = Loop::get();
     }
 
-    public function onMessage(ConnectionInterface $from, $msg)
+    /**
+     * Handle client connection
+     */
+    public function handleConnection($conn)
     {
-        $numRecv = count($this->clients) - 1;
-        echo sprintf('Connection %d sending message "%s" to %d other connection%s' . "\n"
-            , $from->resourceId, $msg, $numRecv, $numRecv == 1 ? '' : 's');
+        $clientId = uniqid();
+        $this->clients[$clientId] = $conn;
+        
+        echo "New connection! (ID: $clientId)\n";
 
-        foreach ($this->clients as $client) {
-            if ($from !== $client) {
-                // The sender is not the receiver, send to each client connected
-                $client->send($msg);
+        $conn->on('data', function ($data) use ($clientId) {
+            echo "Received data from client $clientId: $data\n";
+            // Echo back to sender
+            if (isset($this->clients[$clientId])) {
+                $this->clients[$clientId]->write($data);
             }
-        }
-    }
+        });
 
-    public function onClose(ConnectionInterface $conn)
-    {
-        // The connection is closed, remove it, as we can no longer send it messages
-        $this->clients->detach($conn);
-        echo "Connection {$conn->resourceId} has disconnected\n";
-    }
+        $conn->on('close', function () use ($clientId) {
+            echo "Connection $clientId has disconnected\n";
+            unset($this->clients[$clientId]);
+        });
 
-    public function onError(ConnectionInterface $conn, \Exception $e)
-    {
-        echo "An error has occurred: {$e->getMessage()}\n";
-        $conn->close();
+        $conn->on('error', function ($error) use ($clientId) {
+            echo "Error for client $clientId: " . $error->getMessage() . "\n";
+            unset($this->clients[$clientId]);
+        });
     }
 
     /**
@@ -57,8 +52,16 @@ class WebSocketServer implements MessageComponentInterface
      */
     public function broadcast($message)
     {
-        foreach ($this->clients as $client) {
-            $client->send($message);
+        $messageStr = is_string($message) ? $message : json_encode($message);
+        echo "Broadcasting message to " . count($this->clients) . " clients: $messageStr\n";
+        
+        foreach ($this->clients as $clientId => $client) {
+            try {
+                $client->write($messageStr . "\n");
+            } catch (\Exception $e) {
+                echo "Error sending to client $clientId: " . $e->getMessage() . "\n";
+                unset($this->clients[$clientId]);
+            }
         }
     }
 
@@ -70,18 +73,11 @@ class WebSocketServer implements MessageComponentInterface
         $loop = Loop::get();
         $socket = new SocketServer("0.0.0.0:$port", [], $loop);
         
-        $wsServer = new IoServer(
-            new HttpServer(
-                new WsServer(
-                    new self()
-                )
-            ),
-            $socket,
-            $loop
-        );
+        $wsInstance = new self();
+        self::$instance = $wsInstance;
 
         // Создаем HTTP сервер для broadcast endpoint
-        $httpServer = new ReactHttpServer($loop, function (ServerRequestInterface $request) {
+        $httpServer = new HttpServer($loop, function (ServerRequestInterface $request) {
             $path = $request->getUri()->getPath();
             $method = $request->getMethod();
 
@@ -102,16 +98,31 @@ class WebSocketServer implements MessageComponentInterface
                 return new Response(400, ['Content-Type' => 'application/json'], json_encode(['error' => 'Invalid message format']));
             }
             
+            if ($path === '/test' && $method === 'GET') {
+                return new Response(200, ['Content-Type' => 'application/json'], json_encode(['status' => 'ok', 'message' => 'WebSocket server is running']));
+            }
+            
+            if ($path === '/messages' && $method === 'GET') {
+                // Возвращаем пустой массив сообщений (в реальной реализации здесь была бы очередь сообщений)
+                return new Response(200, ['Content-Type' => 'application/json'], json_encode(['messages' => []]));
+            }
+            
             return new Response(404, ['Content-Type' => 'application/json'], json_encode(['error' => 'Not found']));
         });
 
-        // Запускаем HTTP сервер на том же порту
+        // Обработка соединений
+        $socket->on('connection', function ($conn) use ($wsInstance) {
+            $wsInstance->handleConnection($conn);
+        });
+
+        // Запускаем HTTP сервер
         $httpServer->listen($socket);
 
         echo "WebSocket server started on port $port\n";
         echo "HTTP broadcast endpoint available at http://localhost:$port/broadcast\n";
+        echo "Test endpoint available at http://localhost:$port/test\n";
         
-        $wsServer->run();
+        $loop->run();
     }
 
     /**
@@ -122,11 +133,5 @@ class WebSocketServer implements MessageComponentInterface
     public static function getInstance()
     {
         return self::$instance;
-    }
-    
-    public function __construct()
-    {
-        $this->clients = new \SplObjectStorage;
-        self::$instance = $this;
     }
 }
