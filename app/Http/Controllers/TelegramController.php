@@ -154,8 +154,14 @@ class TelegramController extends Controller
             case '/tickets':
                 $this->commandService->handleTickets($chatId);
                 break;
+            case '/all_tickets':
+                $this->commandService->handleAllTickets($chatId);
+                break;
             case '/active':
                 $this->commandService->handleActive($chatId);
+                break;
+            case '/stats':
+                $this->commandService->handleStats($chatId);
                 break;
             default:
                 $this->handleUnknownCommand($chatId, $command);

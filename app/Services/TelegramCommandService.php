@@ -40,8 +40,10 @@ class TelegramCommandService
         
         if ($this->authService->isUserAuthenticated($chatId)) {
             $message .= "🔐 <b>Авторизованные команды:</b>\n";
-            $message .= "• <code>/tickets</code> - Список всех заявок\n";
-            $message .= "• <code>/active</code> - Активные заявки в работе\n";
+        $message .= "• <code>/tickets</code> - Список активных заявок\n";
+        $message .= "• <code>/all_tickets</code> - Все заявки (включая закрытые)\n";
+        $message .= "• <code>/active</code> - Активные заявки в работе\n";
+        $message .= "• <code>/stats</code> - Статистика заявок\n";
             $message .= "• <code>/ticket_123</code> - Подробности заявки #123\n";
             $message .= "• <code>/start_ticket_123</code> - Взять заявку #123 в работу\n";
             $message .= "• <code>/assign_123</code> - Назначить заявку #123 себе\n";
@@ -78,7 +80,7 @@ class TelegramCommandService
         if ($user->isAdmin() || $user->isMaster()) {
             $tickets = Ticket::where('status', '!=', 'closed')
                 ->orderBy('created_at', 'desc')
-                ->take(10)
+                ->take(20)
                 ->get();
         } else {
             $tickets = Ticket::where('status', '!=', 'closed')
@@ -87,7 +89,7 @@ class TelegramCommandService
                           ->orWhereNull('assigned_to_id');
                 })
                 ->orderBy('created_at', 'desc')
-                ->take(10)
+                ->take(20)
                 ->get();
         }
 
@@ -116,6 +118,67 @@ class TelegramCommandService
             $message .= "📅 Создано: " . $ticket->created_at->format("d.m.Y H:i") . "\n";
             $message .= "🔍 <code>/ticket_{$ticket->id}</code> - Подробнее\n\n";
         }
+
+        return $this->telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Обрабатывает команду /all_tickets
+     */
+    public function handleAllTickets(int $chatId): bool
+    {
+        $user = $this->authService->getAuthenticatedUser($chatId);
+        if (!$user) {
+            return $this->sendAuthRequired($chatId);
+        }
+
+        if (!$user->canManageTickets()) {
+            $message = "❌ У вас нет прав для просмотра заявок.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        // Получаем все заявки (включая закрытые)
+        if ($user->isAdmin() || $user->isMaster()) {
+            $tickets = Ticket::orderBy('created_at', 'desc')
+                ->take(30)
+                ->get();
+        } else {
+            $tickets = Ticket::where(function ($query) use ($user) {
+                $query->where('assigned_to_id', $user->id)
+                      ->orWhereNull('assigned_to_id');
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(30)
+            ->get();
+        }
+
+        if ($tickets->isEmpty()) {
+            $message = "📋 Заявок не найдено.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $message = "📋 <b>Все заявки:</b>\n\n";
+
+        foreach ($tickets as $ticket) {
+            $status = $this->getStatusEmoji($ticket->status) . " " . $this->getHumanReadableStatus($ticket->status);
+            $priority = $this->getPriorityEmoji($ticket->priority) . " " . ucfirst($ticket->priority);
+
+            $message .= "🆔 <b>#{$ticket->id}</b>: {$ticket->title}\n";
+            $message .= "📊 Статус: {$status}\n";
+            $message .= "⚡ Приоритет: {$priority}\n";
+
+            if ($ticket->assigned_to_id) {
+                $assignedTo = $ticket->assignedTo->name ?? "Неизвестно";
+                $message .= "👤 Исполнитель: {$assignedTo}\n";
+            } else {
+                $message .= "👤 Исполнитель: Не назначен\n";
+            }
+
+            $message .= "📅 Создано: " . $ticket->created_at->format("d.m.Y H:i") . "\n";
+            $message .= "🔍 <code>/ticket_{$ticket->id}</code> - Подробнее\n\n";
+        }
+
+        $message .= "💡 Используйте <code>/tickets</code> для просмотра только активных заявок";
 
         return $this->telegramService->sendMessage($chatId, $message);
     }
@@ -177,6 +240,63 @@ class TelegramCommandService
         }
 
         $message .= "💡 Используйте <code>/tickets</code> для просмотра всех заявок";
+
+        return $this->telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Обрабатывает команду /stats
+     */
+    public function handleStats(int $chatId): bool
+    {
+        $user = $this->authService->getAuthenticatedUser($chatId);
+        if (!$user) {
+            return $this->sendAuthRequired($chatId);
+        }
+
+        if (!$user->canManageTickets()) {
+            $message = "❌ У вас нет прав для просмотра статистики.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        // Получаем статистику в зависимости от роли пользователя
+        if ($user->isAdmin() || $user->isMaster()) {
+            $allTickets = Ticket::all();
+        } else {
+            $allTickets = Ticket::where(function ($query) use ($user) {
+                $query->where('assigned_to_id', $user->id)
+                      ->orWhereNull('assigned_to_id');
+            })->get();
+        }
+
+        $stats = [
+            'total' => $allTickets->count(),
+            'open' => $allTickets->where('status', 'open')->count(),
+            'in_progress' => $allTickets->where('status', 'in_progress')->count(),
+            'resolved' => $allTickets->where('status', 'resolved')->count(),
+            'closed' => $allTickets->where('status', 'closed')->count(),
+        ];
+
+        $message = "📊 <b>Статистика заявок</b>\n\n";
+        $message .= "📋 <b>Всего заявок:</b> {$stats['total']}\n";
+        $message .= "🆕 <b>Открытых:</b> {$stats['open']}\n";
+        $message .= "🔄 <b>В работе:</b> {$stats['in_progress']}\n";
+        $message .= "✅ <b>Решенных:</b> {$stats['resolved']}\n";
+        $message .= "🔒 <b>Закрытых:</b> {$stats['closed']}\n\n";
+
+        // Добавляем процентное соотношение
+        if ($stats['total'] > 0) {
+            $openPercent = round(($stats['open'] / $stats['total']) * 100);
+            $inProgressPercent = round(($stats['in_progress'] / $stats['total']) * 100);
+            $resolvedPercent = round(($stats['resolved'] / $stats['total']) * 100);
+            $closedPercent = round(($stats['closed'] / $stats['total']) * 100);
+
+            $message .= "📈 <b>Процентное соотношение:</b>\n";
+            $message .= "🆕 Открытых: {$openPercent}%\n";
+            $message .= "🔄 В работе: {$inProgressPercent}%\n";
+            $message .= "✅ Решенных: {$resolvedPercent}%\n";
+            $message .= "🔒 Закрытых: {$closedPercent}%";
+        }
 
         return $this->telegramService->sendMessage($chatId, $message);
     }
@@ -444,7 +564,7 @@ class TelegramCommandService
     protected function getStatusEmoji(string $status): string
     {
         return match ($status) {
-            'new' => '🆕',
+            'open' => '🆕',
             'in_progress' => '🔄',
             'resolved' => '✅',
             'closed' => '🔒',
@@ -458,7 +578,7 @@ class TelegramCommandService
     protected function getHumanReadableStatus(string $status): string
     {
         return match ($status) {
-            'new' => 'Новая',
+            'open' => 'Открыта',
             'in_progress' => 'В работе',
             'resolved' => 'Решена',
             'closed' => 'Закрыта',

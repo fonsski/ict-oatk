@@ -225,7 +225,7 @@ class TelegramService
     protected function getStatusEmoji(string $status): string
     {
         return match ($status) {
-            'new' => '🆕',
+            'open' => '🆕',
             'in_progress' => '🔄',
             'resolved' => '✅',
             'closed' => '🔒',
