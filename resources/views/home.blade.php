@@ -378,7 +378,7 @@
 
     @if(user_can_manage_tickets())
     @push('scripts')
-    @vite(['resources/js/live-updates.js'])
+    <script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
     <script>
     console.log('=== HOME.BLADE.PHP SCRIPT LOADING ===');
     const canManageTickets = @json(user_can_manage_tickets());
@@ -850,29 +850,37 @@
 
         if (canManageTickets) {
             console.log('Пользователь может управлять заявками, инициализируем LiveUpdates...');
+            console.log('Проверяем доступность LiveUpdates:', typeof LiveUpdates);
             
-            // Инициализируем LiveUpdates
-            liveUpdates = new LiveUpdates({
-                refreshInterval: TECH_REFRESH_INTERVAL,
-                apiEndpoint: '{{ route("home.technician.tickets") }}',
-                csrfToken: csrfToken,
-                onSuccess: function(data) {
-                    console.log('LiveUpdates: Данные получены успешно');
-                    
-                    // Обновляем статистику
-                    if (data.stats) {
-                        updateTechStats(data.stats);
+            if (typeof LiveUpdates === 'undefined') {
+                console.error('LiveUpdates не загружен, используем fallback');
+                // Fallback к старому методу
+                refreshTechTickets();
+                startTechAutoRefresh();
+            } else {
+                // Инициализируем LiveUpdates
+                liveUpdates = new LiveUpdates({
+                    refreshInterval: TECH_REFRESH_INTERVAL,
+                    apiEndpoint: '{{ route("home.technician.tickets") }}',
+                    csrfToken: csrfToken,
+                    onSuccess: function(data) {
+                        console.log('LiveUpdates: Данные получены успешно');
+                        
+                        // Обновляем статистику
+                        if (data.stats) {
+                            updateTechStats(data.stats);
+                        }
+                        
+                        // Обновляем таблицу заявок
+                        if (data.tickets && Array.isArray(data.tickets)) {
+                            updateTechTicketsTable(data.tickets.slice(0, 10));
+                        }
+                    },
+                    onError: function(error) {
+                        console.error('LiveUpdates: Ошибка:', error);
                     }
-                    
-                    // Обновляем таблицу заявок
-                    if (data.tickets && Array.isArray(data.tickets)) {
-                        updateTechTicketsTable(data.tickets.slice(0, 10));
-                    }
-                },
-                onError: function(error) {
-                    console.error('LiveUpdates: Ошибка:', error);
-                }
-            });
+                });
+            }
             
             if (techLastUpdated) {
                 techLastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;

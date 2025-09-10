@@ -379,10 +379,11 @@
 </div>
 
 @push('scripts')
-    @vite(['resources/js/live-updates.js'])
+<script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let liveUpdates;
+    let refreshInterval;
     const REFRESH_INTERVAL = 30000; // 30 секунд
 
     // Элементы
@@ -402,6 +403,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализация LiveUpdates
     function initLiveUpdates() {
+        console.log('Проверяем доступность LiveUpdates:', typeof LiveUpdates);
+        
+        if (typeof LiveUpdates === 'undefined') {
+            console.error('LiveUpdates не загружен, используем fallback');
+            // Fallback к старому методу
+            startAutoRefresh();
+            return;
+        }
+        
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         
         liveUpdates = new LiveUpdates({
@@ -425,6 +435,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('LiveUpdates: Ошибка:', error);
             }
         });
+    }
+    
+    // Fallback функции для старого метода
+    function startAutoRefresh() {
+        refreshInterval = setInterval(refreshTickets, REFRESH_INTERVAL);
+        console.log('Fallback: Авто-обновление запущено с интервалом', REFRESH_INTERVAL, 'мс');
     }
 
     // Обновление заявок
