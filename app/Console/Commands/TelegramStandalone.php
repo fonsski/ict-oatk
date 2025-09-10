@@ -289,6 +289,12 @@ class TelegramStandalone extends Command
         // Обрабатываем команды
         if (strpos($text, "/") === 0) {
             $command = strtolower(trim($text));
+            
+            Log::info("Processing command", [
+                'chat_id' => $chatId,
+                'command' => $command,
+                'original_text' => $text
+            ]);
 
             // Проверяем, есть ли пробел в команде (например, "/resolve 1")
             if (strpos($command, " ") !== false) {
@@ -312,8 +318,6 @@ class TelegramStandalone extends Command
                     }
                 }
             }
-
-            $command = strtolower(explode(" ", $text)[0]);
 
             // Проверка на команды с параметрами (например, /ticket_1)
             if (preg_match('/^\/ticket_(\d+)$/', $command, $matches)) {
@@ -350,6 +354,9 @@ class TelegramStandalone extends Command
                     $this->handleHelpCommand($chatId);
                     break;
                 case "/login":
+                    Log::info("Login command detected in switch statement", [
+                        'chat_id' => $chatId
+                    ]);
                     $this->handleLoginCommand($chatId);
                     break;
                 case "/tickets":
@@ -422,6 +429,25 @@ class TelegramStandalone extends Command
      */
     protected function handleLoginCommand($chatId)
     {
+        // Проверяем, не находится ли пользователь уже в процессе авторизации
+        $existingAuthState = Cache::get("telegram_auth_{$chatId}");
+        if ($existingAuthState) {
+            Log::info("Login command called but user already in auth process", [
+                'chat_id' => $chatId,
+                'existing_step' => $existingAuthState['step'] ?? 'unknown'
+            ]);
+            return;
+        }
+
+        // Проверяем, не отправляли ли мы уже сообщение о начале авторизации
+        $loginMessageKey = "telegram_login_message_sent_{$chatId}";
+        if (Cache::has($loginMessageKey)) {
+            Log::info("Login message already sent, skipping duplicate", [
+                'chat_id' => $chatId
+            ]);
+            return;
+        }
+
         // Сохраняем состояние авторизации
         Cache::put(
             "telegram_auth_{$chatId}",
@@ -429,9 +455,16 @@ class TelegramStandalone extends Command
             now()->addMinutes(15),
         );
 
+        // Отмечаем, что сообщение о начале авторизации отправлено
+        Cache::put($loginMessageKey, true, 30);
+
         $message =
             "Для авторизации в системе необходимо ввести ваши учетные данные.\n\n";
         $message .= "Введите ваш номер телефона:";
+
+        Log::info("Sending login command message", [
+            'chat_id' => $chatId
+        ]);
 
         $this->sendMessage($chatId, $message);
     }
