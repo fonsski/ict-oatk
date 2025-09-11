@@ -183,8 +183,26 @@ class TelegramBot extends Command
 
         $this->info("Received message from @{$username}: {$text}");
 
-        // Здесь можно добавить дополнительную обработку сообщений
-        // Основная обработка происходит в TelegramController
+        // Обрабатываем сообщение через TelegramController
+        try {
+            $controller = app(\App\Http\Controllers\TelegramController::class);
+            
+            // Создаем фейковый Request объект
+            $request = new \Illuminate\Http\Request();
+            $request->merge($update);
+            
+            // Обрабатываем сообщение
+            $controller->webhook($request);
+            
+        } catch (\Exception $e) {
+            $this->error('Error processing message: ' . $e->getMessage());
+            Log::error('Error processing Telegram message', [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
