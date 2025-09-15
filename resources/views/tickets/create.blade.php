@@ -63,13 +63,16 @@
                         name="title"
                         value="{{ old('title') }}"
                         required
-                        maxlength="255"
+                        maxlength="60"
                         minlength="5"
+                        onkeyup="updateTitleCounter(this)"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <p class="mt-1 text-xs text-gray-500">Максимальная длина: 60 символов</p>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Минимум 5, максимум 60 символов
-                    </p>
+                    <div class="flex justify-between mt-1">
+                        <p class="text-sm text-gray-500">
+                            Минимум 5, максимум 60 символов
+                        </p>
+                        <div id="titleCharCounter" class="text-xs text-gray-500 font-medium">0/60 символов</div>
+                    </div>
                 </div>
 
                 <!-- Категория -->
@@ -207,7 +210,31 @@
 
 @push('scripts')
 <script>
+// Функция для обновления счетчика символов в заголовке
+function updateTitleCounter(input) {
+    const charCounter = document.getElementById('titleCharCounter');
+    const currentLength = input.value.length;
+    charCounter.textContent = currentLength + '/60 символов';
+
+    // Меняем цвет счетчика, если приближаемся к лимиту
+    if (currentLength > 50 && currentLength < 60) {
+        charCounter.classList.remove('text-gray-500', 'text-red-500');
+        charCounter.classList.add('text-orange-500');
+    } else if (currentLength >= 60) {
+        charCounter.classList.remove('text-gray-500', 'text-orange-500');
+        charCounter.classList.add('text-red-500');
+    } else {
+        charCounter.classList.remove('text-orange-500', 'text-red-500');
+        charCounter.classList.add('text-gray-500');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Инициализируем счетчик заголовка при загрузке страницы
+    const titleInput = document.getElementById('title');
+    if (titleInput && titleInput.value.length > 0) {
+        updateTitleCounter(titleInput);
+    }
     // Защита от многократной отправки формы
     const form = document.querySelector('form');
     const submitButton = document.getElementById('submit-button');
@@ -337,18 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
             noResultsMsg.remove();
         }
 
-        // Если есть точное совпадение или первое совпадение, и поле поиска не пустое
-        if (searchText && (foundExactMatch || firstMatchIndex > 0)) {
-            const indexToSelect = foundExactMatch ?
-                Array.from(options).findIndex(opt => opt.getAttribute('data-number')?.toLowerCase() === searchText) :
-                firstMatchIndex;
-
-            if (indexToSelect > 0) {
-                roomSelect.selectedIndex = indexToSelect;
-                // При изменении выбора кабинета загружаем соответствующее оборудование
-                loadEquipmentByRoom(roomSelect.value);
-            }
-        }
+        // Убрали автоматический выбор кабинета - пользователь должен выбрать вручную
     });
 
     // Слушаем изменения в выборе кабинета напрямую

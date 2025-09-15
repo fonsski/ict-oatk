@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 // Parsedown optional; if not installed we'll fallback to simple rendering
 use Parsedown;
 use HTMLPurifier;
@@ -27,10 +28,8 @@ class KnowledgeBaseController extends Controller
         // Проверка роли для всех методов
         $this->middleware(function ($request, $next) {
             if (
-                !auth()->check() ||
-                !auth()
-                    ->user()
-                    ->hasRole(["admin", "master", "technician"])
+                !Auth::check() ||
+                !Auth::user()->hasRole(["admin", "master", "technician"])
             ) {
                 abort(403, "У вас нет прав для доступа к базе знаний.");
             }
@@ -119,7 +118,7 @@ class KnowledgeBaseController extends Controller
 
         $article->content = $this->sanitizeHtml($html);
 
-        // Обрабатываем теги, убираем символы # если они есть
+        // Обрабатываем теги, убираем символы # если они есть и удаляем дубликаты
         if (isset($data["tags"])) {
             $tags = explode(",", $data["tags"]);
             $cleanTags = [];
@@ -133,6 +132,8 @@ class KnowledgeBaseController extends Controller
                     $cleanTags[] = $tag;
                 }
             }
+            // Удаляем дубликаты, сохраняя порядок
+            $cleanTags = array_unique($cleanTags);
             $article->tags = implode(", ", $cleanTags);
         } else {
             $article->tags = null;
@@ -257,7 +258,7 @@ class KnowledgeBaseController extends Controller
             $knowledge->content = "<p>" . nl2br(e($data["content"])) . "</p>";
         }
 
-        // Обрабатываем теги, убираем символы # если они есть
+        // Обрабатываем теги, убираем символы # если они есть и удаляем дубликаты
         if (isset($data["tags"])) {
             $tags = explode(",", $data["tags"]);
             $cleanTags = [];
@@ -271,6 +272,8 @@ class KnowledgeBaseController extends Controller
                     $cleanTags[] = $tag;
                 }
             }
+            // Удаляем дубликаты, сохраняя порядок
+            $cleanTags = array_unique($cleanTags);
             $knowledge->tags = implode(", ", $cleanTags);
         } else {
             $knowledge->tags = null;

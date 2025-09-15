@@ -83,7 +83,7 @@
                 <div class="mt-4 lg:mt-0 flex flex-wrap gap-2">
                     <!-- Action Buttons -->
                     @if(can_manage_ticket($ticket))
-                        @if($ticket->status === 'open' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
+                        @if($ticket->status === 'open' && !$ticket->assignedTo && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
                             <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -92,7 +92,7 @@
                             </form>
                         @endif
 
-                        @if($ticket->status === 'in_progress')
+                        @if($ticket->status === 'in_progress' && $ticket->assignedTo && Auth::id() == $ticket->assigned_to_id)
                             <form action="{{ route('tickets.resolve', $ticket) }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="whitespace-nowrap inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -101,7 +101,7 @@
                             </form>
                         @endif
 
-                            @if($ticket->status === 'resolved')
+                            @if($ticket->status === 'resolved' && $ticket->assignedTo && Auth::id() == $ticket->assigned_to_id)
                                 <form action="{{ route('tickets.close', $ticket) }}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit" class="whitespace-nowrap inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
@@ -121,7 +121,7 @@
                 <!-- Description -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Описание проблемы</h2>
-                    <div class="prose max-w-none ticket-description text-wrap text-block">
+                    <div class="prose max-w-none ticket-description text-wrap text-block whitespace-pre-wrap break-words overflow-wrap-anywhere">
                         {{ $ticket->description }}
                     </div>
                 </div>
@@ -147,7 +147,7 @@
                                                     <h3 class="text-sm font-medium text-blue-600">Система</h3>
                                                     <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                                 </div>
-                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content text-wrap text-block">
+                                                <div class="mt-1 text-sm text-gray-700 ticket-comment-content text-wrap text-block whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                                     {{ $comment->content }}
                                                 </div>
                                             </div>
@@ -167,7 +167,7 @@
                                                 <h3 class="text-sm font-medium text-gray-900">{{ $comment->user->name }}</h3>
                                                 <p class="text-sm text-gray-500">{{ $comment->created_at ? $comment->created_at->format('d.m.Y H:i') : '—' }}</p>
                                             </div>
-                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content text-wrap text-block">
+                                            <div class="mt-2 text-sm text-gray-700 ticket-comment-content text-wrap text-block whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                                 {{ $comment->content }}
                                             </div>
                                         </div>
@@ -354,11 +354,12 @@
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
                                 @if($ticket->assignedTo)
-                                <span class="text-sm text-gray-900 text-wrap">{{ $ticket->assignedTo->name }}
+                                <div class="text-sm text-gray-900 text-wrap">
+                                    <div class="font-medium">{{ $ticket->assignedTo->name }}</div>
                                     @if($ticket->assignedTo->role)
-                                    <span class="text-xs text-gray-500 text-wrap">({{ $ticket->assignedTo->role->name }})</span>
+                                    <div class="text-xs text-gray-500">{{ $ticket->assignedTo->role->name }}</div>
                                     @endif
-                                </span>
+                                </div>
                                 @else
                                 <span class="text-sm text-gray-500 text-wrap">Не назначен</span>
                                 @endif
@@ -415,7 +416,7 @@
                                     <option value="">Не назначено</option>
                                     @if(!empty($assignable))
                                         @foreach($assignable as $user)
-                                            <option value="{{ $user->id }}" @if($ticket->assigned_to_id == $user->id) selected @endif>{{ $user->name }} @if($user->role) ({{ $user->role->name }}) @endif</option>
+                                            <option value="{{ $user->id }}" @if($ticket->assigned_to_id == $user->id) selected @endif>{{ $user->name }}@if($user->role) - {{ $user->role->name }}@endif</option>
                                         @endforeach
                                     @endif
                                 </select>

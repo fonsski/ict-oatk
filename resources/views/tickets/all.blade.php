@@ -307,10 +307,11 @@
                         <thead class="bg-slate-50 border-b border-slate-200">
                             <tr>
                                 <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 18%;">Заявитель</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Статус</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 12%;">Приоритет</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 18%;">Действия</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Заявитель</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Статус</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Приоритет</th>
+                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Исполнитель</th>
+                                <th class="px-4 py-5 text-center text-sm font-semibold text-slate-900" style="width: 10%;">Действия</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -407,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
             apiEndpoint: '{{ route("all-tickets.api") }}',
             csrfToken: csrfToken,
             useWebSocket: true, // Включаем WebSocket
-            websocketUrl: 'ws://{{ config('app.websocket_host', request()->getHost()) }}:{{ config('app.websocket_port', 8080) }}',
+            websocketUrl: 'ws://{{ config("app.websocket_host", request()->getHost()) }}:{{ config("app.websocket_port", 8080) }}',
             onSuccess: function(data) {
                 console.log('LiveUpdates: Данные получены успешно');
                 
@@ -437,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function refreshTickets() {
         try {
             if (statusIndicator) {
-                statusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+                statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
             }
 
             const formData = new FormData(filtersForm);
@@ -473,7 +474,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Ошибка при обновлении заявок:', error);
-            if (statusIndicator) statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+            if (statusIndicator) {
+                statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+                // Возвращаем зеленый цвет через 30 секунд
+                setTimeout(() => {
+                    if (statusIndicator) {
+                        statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+                    }
+                }, 30000);
+            }
             if (lastUpdated) lastUpdated.textContent = 'Ошибка обновления';
 
             // Обработка ошибок аутентификации
@@ -516,6 +525,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (tbody) {
             tbody.innerHTML = tickets.map(ticket => createTicketRow(ticket)).join('');
+            
+            // Переинициализируем обработчики событий для меню действий
+            setTimeout(() => {
+                initTableDropdowns();
+            }, 100);
         }
     }
 
@@ -563,10 +577,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-4 py-3">
                     <div>
                         <a href="${ticket.url}"
-                           class="ticket-title line-clamp-2 break-words inline-block transition-all duration-300">
+                           class="ticket-title line-clamp-2 break-words inline-block transition-all duration-300"
+                           title="${safeTitle}">
                             ${ticket.id ? `#${ticket.id}: ` : ''}${safeTitle}
                         </a>
-                        <p class="ticket-description line-clamp-3 break-words">
+                        <p class="ticket-description line-clamp-3 break-words"
+                           title="${safeDescription || 'Описание отсутствует'}">
                             ${safeDescription || 'Описание отсутствует'}
                         </p>
                         <div class="ticket-meta">
@@ -588,54 +604,48 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </td>
                 <td class="px-4 py-3">
-                    <div class="text-sm min-w-0">
-                        <div class="font-medium text-slate-900 truncate mb-1 flex items-center" title="${ticket.reporter_name || '—'}">
-                            <svg class="w-4 h-4 mr-1.5 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="truncate">${ticket.reporter_name || '—'}</span>
-                        </div>
-                        <div class="text-slate-600 truncate flex items-center" title="${ticket.reporter_phone || '—'}">
-                            <svg class="w-4 h-4 mr-1.5 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                            <span class="truncate">${ticket.reporter_phone ? formatPhone(ticket.reporter_phone) : '—'}</span>
-                        </div>
+                    <div class="text-sm">
+                        <div class="font-medium text-slate-900 truncate" title="${ticket.reporter_name || '—'}">${ticket.reporter_name || '—'}</div>
+                        <div class="text-slate-600 truncate" title="${ticket.reporter_phone || '—'}">${ticket.reporter_phone ? formatPhone(ticket.reporter_phone) : '—'}</div>
                     </div>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" style="min-width: 80px; text-align: center; white-space: nowrap;">
+                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(ticket.status)}" 
+                          style="min-width: 80px; text-align: center; white-space: nowrap;"
+                          title="Статус: ${getStatusLabel(ticket.status)}">
                         ${getStatusLabel(ticket.status)}
                     </span>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}" style="min-width: 80px; text-align: center;">
+                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}" 
+                          style="min-width: 80px; text-align: center;"
+                          title="Приоритет: ${priorityLabels[ticket.priority]}">
                         ${priorityLabels[ticket.priority]}
                     </span>
                 </td>
+                <td class="px-4 py-3">
+                    ${ticket.assigned_to_name ? `
+                        <div class="text-sm">
+                            <div class="font-medium text-slate-900 truncate" title="${ticket.assigned_to_name}">${ticket.assigned_to_name}</div>
+                            ${ticket.assigned_to_role ? `<div class="text-xs text-slate-500 truncate" title="${ticket.assigned_to_role}">${ticket.assigned_to_role}</div>` : ''}
+                        </div>
+                    ` : '<span class="text-sm text-slate-500 italic">Не назначено</span>'}
+                </td>
                 <td class="px-4 py-3 whitespace-nowrap">
-                    <div class="flex items-center gap-1">
-                        <a href="${ticket.url}"
-                           class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition text-xs font-medium shadow-sm">
-                            <svg class="w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                            </svg>
-                            Просмотр
-                        </a>
-                        <div class="relative inline-block text-left ml-1" data-dropdown-id="${ticket.id}">
-                            <button type="button" class="actions-menu-button p-1.5 rounded hover:bg-slate-200 focus:outline-none border border-transparent hover:border-slate-300" aria-label="Действия" data-id="${ticket.id}">
-                                <svg class="w-4 h-4 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    <div class="flex items-center justify-center">
+                        <div class="relative z-50" data-dropdown>
+                            <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                 </svg>
                             </button>
-                            <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-200 z-50" style="min-width: 12rem; max-width: 16rem; transform: translateY(0);" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                                <div class="py-1" role="none">
-                                    <a href="${ticket.url}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-b border-gray-100" role="menuitem">Просмотр заявки</a>
-                                    ${ticket.status !== 'in_progress' ? `<button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="in_progress" role="menuitem">Взять в работу</button>` : ''}
-                                    ${ticket.status !== 'resolved' ? `<button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="resolved" role="menuitem">Отметить как решенную</button>` : ''}
-                                    ${ticket.status !== 'closed' ? `<button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="change-status" data-id="${ticket.id}" data-status="closed" role="menuitem">Закрыть заявку</button>` : ''}
-                                    <button type="button" class="single-action block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-action="assign-to" data-id="${ticket.id}" role="menuitem">Назначить исполнителя</button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
+                                <div class="py-1">
+                                    <a href="${ticket.url}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                                    ${ticket.status !== 'in_progress' && ticket.status !== 'closed' && !ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
+                                    ${ticket.status === 'in_progress' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить решённой</button>` : ''}
+                                    ${ticket.status === 'resolved' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
+                                    ${ticket.status !== 'closed' ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="assign-to" data-id="${ticket.id}">Назначить исполнителя</button>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -909,7 +919,7 @@ if (action === 'change-status' && status) {
         modal.id = 'assign-modal';
 
         // Получаем список доступных исполнителей
-        fetch('{{ route('api.users.technicians') }}')
+        fetch('{{ route("api.users.technicians") }}')
             .then(response => response.json())
             .then(data => {
                 const technicians = data.technicians || [];
@@ -1203,6 +1213,75 @@ if (action === 'change-status' && status) {
                 }
             }, 500);
         });
+    }
+
+    // Функция инициализации выпадающих меню
+    function initTableDropdowns() {
+        // Обработка выпадающих меню в таблице
+        document.querySelectorAll('[data-dropdown]').forEach(function(dropdown) {
+            const toggle = dropdown.querySelector('[data-dropdown-toggle]');
+            const menu = dropdown.querySelector('[data-dropdown-menu]');
+
+            if (toggle && menu) {
+                // Удаляем старые обработчики
+                toggle.removeEventListener('click', handleDropdownToggle);
+                
+                // Добавляем новый обработчик
+                toggle.addEventListener('click', handleDropdownToggle);
+            }
+        });
+    }
+
+    // Обработчик клика по кнопке выпадающего меню
+    function handleDropdownToggle(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const toggle = e.currentTarget;
+        const dropdown = toggle.closest('[data-dropdown]');
+        const menu = dropdown.querySelector('[data-dropdown-menu]');
+
+        // Закрыть все другие меню
+        document.querySelectorAll('[data-dropdown-menu]').forEach(function(otherMenu) {
+            if (otherMenu !== menu) {
+                otherMenu.classList.add('hidden');
+            }
+        });
+
+        document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
+            if (otherToggle !== toggle) {
+                otherToggle.classList.remove('bg-slate-100');
+            }
+        });
+
+        // Переключить текущее меню
+        menu.classList.toggle('hidden');
+        toggle.classList.toggle('bg-slate-100');
+
+        // Корректное позиционирование меню
+        const rect = toggle.getBoundingClientRect();
+        const rightSpace = window.innerWidth - rect.right;
+
+        // Сбрасываем предыдущие стили
+        menu.style.left = '';
+        menu.style.right = '';
+        menu.style.top = '';
+        menu.style.position = 'absolute';
+        menu.style.zIndex = '100';
+
+        // Проверяем, достаточно ли места справа
+        if (rightSpace < 200) {
+            menu.style.left = 'auto';
+            menu.style.right = '0';
+        } else {
+            menu.style.left = '0';
+            menu.style.right = 'auto';
+        }
+
+        // Устанавливаем позицию по вертикали
+        menu.style.top = 'calc(100% + 0.5rem)';
+        menu.style.maxHeight = '80vh';
+        menu.style.overflowY = 'auto';
     }
 
     // Инициализация LiveUpdates

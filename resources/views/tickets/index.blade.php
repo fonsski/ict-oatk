@@ -102,7 +102,7 @@
                                            class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
                                             <span class="line-clamp-2">{{ $ticket->title }}</span>
                                         </a>
-                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2">
+                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2 whitespace-pre-wrap break-words">
                                             {{ Str::limit($ticket->description, 80) }}
                                         </p>
                                     </div>

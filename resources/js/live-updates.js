@@ -328,13 +328,23 @@ class LiveUpdates {
         const indicator = document.getElementById('status-indicator');
         if (!indicator) return;
         
+        // Убираем мигание - индикатор всегда зеленый, кроме ошибок
         const statusClasses = {
-            loading: 'w-2 h-2 bg-yellow-500 rounded-full',
+            loading: 'w-2 h-2 bg-green-500 rounded-full',
             success: 'w-2 h-2 bg-green-500 rounded-full',
             error: 'w-2 h-2 bg-red-500 rounded-full'
         };
         
-        indicator.className = statusClasses[status] || statusClasses.error;
+        indicator.className = statusClasses[status] || statusClasses.success;
+        
+        // Если статус error, запускаем таймер для возврата к зеленому через 30 секунд
+        if (status === 'error') {
+            setTimeout(() => {
+                if (indicator) {
+                    indicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+                }
+            }, 30000); // 30 секунд
+        }
     }
     
     updateLastUpdated(timestamp) {

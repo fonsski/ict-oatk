@@ -348,6 +348,14 @@ class TicketController extends Controller
             abort(403);
         }
 
+        // Проверяем, что заявка имеет исполнителя
+        if (!$ticket->assigned_to_id) {
+            return Redirect::back()->with(
+                "error",
+                "Нельзя закрыть заявку без назначенного исполнителя",
+            );
+        }
+
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "closed"]);
 

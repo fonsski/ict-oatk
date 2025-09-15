@@ -245,6 +245,12 @@
     });
 
     function loadDraft() {
+        // Don't load draft if form was successfully submitted
+        @if(session('success'))
+        localStorage.removeItem(AUTOSAVE_KEY);
+        return;
+        @endif
+
         try {
             const savedDraft = localStorage.getItem(AUTOSAVE_KEY);
             if (savedDraft) {
@@ -506,6 +512,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('form').addEventListener('submit', function() {
         localStorage.removeItem(AUTOSAVE_KEY);
     });
+
+    // Clear draft if we have success message (form was submitted successfully)
+    @if(session('success'))
+    localStorage.removeItem(AUTOSAVE_KEY);
+    @endif
 });
 </script>
 @endpush

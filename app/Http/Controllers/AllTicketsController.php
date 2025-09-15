@@ -28,7 +28,7 @@ class AllTicketsController extends Controller
             abort(403);
         }
         // Базовый запрос с подгрузкой связанных моделей
-        $query = Ticket::with(["user", "location", "room", "assignedTo"]);
+        $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
 
         // Применение фильтров
         if ($request->filled("status")) {
@@ -122,7 +122,7 @@ class AllTicketsController extends Controller
         ) {
             abort(403);
         }
-        $query = Ticket::with(["user", "location", "room", "assignedTo"]);
+        $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
 
         // Применение фильтров
         if ($request->filled("status")) {
@@ -186,6 +186,12 @@ class AllTicketsController extends Controller
                 "assigned_to" => $ticket->assignedTo
                     ? $ticket->assignedTo->name
                     : null,
+                "assigned_to_name" => $ticket->assignedTo
+                    ? $ticket->assignedTo->name
+                    : null,
+                "assigned_to_role" => $ticket->assignedTo && $ticket->assignedTo->role
+                    ? $ticket->assignedTo->role->name
+                    : null,
                 "room" => $ticket->room
                     ? [
                         "number" => $ticket->room->number,
@@ -235,6 +241,14 @@ class AllTicketsController extends Controller
         ) {
             abort(403);
         }
+        // Проверяем, что заявка не закрыта
+        if ($ticket->status === "closed") {
+            return response()->json([
+                "success" => false,
+                "message" => "Нельзя назначить исполнителя на закрытую заявку",
+            ], 400);
+        }
+
         $data = $request->validate([
             "assigned_to_id" => "nullable|exists:users,id",
         ]);
@@ -399,6 +413,14 @@ class AllTicketsController extends Controller
         $data = $request->validate([
             "status" => "required|in:open,in_progress,resolved,closed",
         ]);
+
+        // Проверяем, что нельзя закрыть заявку без исполнителя
+        if ($data["status"] === "closed" && !$ticket->assigned_to_id) {
+            return response()->json([
+                "success" => false,
+                "message" => "Нельзя закрыть заявку без назначенного исполнителя",
+            ], 400);
+        }
 
         $oldStatus = $ticket->status;
         $oldAssignedId = $ticket->assigned_to_id;

@@ -156,10 +156,14 @@ class TelegramBot extends Command
     protected function checkNewTickets(): void
     {
         try {
+            $this->info('Checking for new tickets...');
             $this->notificationService->notifyNewTickets();
+            $this->info('New tickets check completed');
         } catch (\Exception $e) {
+            $this->error('Error checking new tickets: ' . $e->getMessage());
             Log::error('Error checking new tickets', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
