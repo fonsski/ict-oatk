@@ -95,10 +95,11 @@ class TicketController extends Controller
 
         $locations = $this->cacheService->getLocations();
         $assignable = $this->cacheService->getAssignableUsers();
+        $categories = $this->cacheService->getTicketCategories();
 
         return view(
             "tickets.index",
-            compact("tickets", "locations", "assignable"),
+            compact("tickets", "locations", "assignable", "categories"),
         );
     }
 

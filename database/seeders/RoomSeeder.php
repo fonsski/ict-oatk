@@ -27,7 +27,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Иванов И.И.",
-                "phone" => "+7 (495) 123-45-67",
             ],
             [
                 "number" => "102",
@@ -40,7 +39,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Петров П.П.",
-                "phone" => "+7 (495) 123-45-68",
             ],
             [
                 "number" => "103",
@@ -54,7 +52,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Сидоров С.С.",
-                "phone" => "+7 (495) 123-45-69",
             ],
 
             // Главное здание, 2 этаж
@@ -69,7 +66,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Козлов К.К.",
-                "phone" => "+7 (495) 123-45-70",
             ],
             [
                 "number" => "202",
@@ -82,7 +78,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Николаев Н.Н.",
-                "phone" => "+7 (495) 123-45-71",
             ],
             [
                 "number" => "203",
@@ -95,7 +90,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Морозова М.М.",
-                "phone" => "+7 (495) 123-45-72",
             ],
 
             // Главное здание, 3 этаж
@@ -111,7 +105,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Волков В.В.",
-                "phone" => "+7 (495) 123-45-73",
             ],
             [
                 "number" => "302",
@@ -124,7 +117,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "occupied",
                 "responsible_person" => "Директор",
-                "phone" => "+7 (495) 123-45-74",
             ],
 
             // Лабораторный корпус, 1 этаж
@@ -139,7 +131,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Лебедев Л.Л.",
-                "phone" => "+7 (495) 123-45-75",
             ],
             [
                 "number" => "Л102",
@@ -152,7 +143,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "maintenance",
                 "responsible_person" => "Кузнецов К.К.",
-                "phone" => "+7 (495) 123-45-76",
             ],
 
             // Спортивный корпус
@@ -168,7 +158,6 @@ class RoomSeeder extends Seeder
                 "is_active" => true,
                 "status" => "available",
                 "responsible_person" => "Спортсменов С.С.",
-                "phone" => "+7 (495) 123-45-77",
             ],
         ];
 

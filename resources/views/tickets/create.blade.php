@@ -3,16 +3,16 @@
 @section('title', 'Подать заявку - ICT')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mx-auto">
+<div class="container-width section-padding">
+    <div class="max-w-4xl mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">Подать заявку в техподдержку</h1>
-            <p class="text-gray-600">
+            <h1 class="text-3xl font-bold text-slate-900 mb-4">Подать заявку в техподдержку</h1>
+            <p class="text-slate-600">
                 Опишите вашу проблему подробно, и мы поможем её решить
             </p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div class="card p-8">
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-6">
                 @csrf
 

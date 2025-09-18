@@ -134,7 +134,7 @@ class RoomController extends Controller
      */
     public function show(Room $room)
     {
-        $room->load(["equipment", "tickets", "responsibleUser"]);
+        $room->load(["equipment.status", "equipment.category", "tickets", "responsibleUser"]);
 
         // Статистика кабинета
         $stats = [

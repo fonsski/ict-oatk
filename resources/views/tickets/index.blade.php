@@ -63,9 +63,9 @@
                 <label for="category" class="form-label">Категория</label>
                 <select id="category" name="category" class="form-input">
                     <option value="">Все категории</option>
-                    @foreach($categories ?? [] as $category)
-                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
+                    @foreach($categories ?? [] as $key => $category)
+                        <option value="{{ $key }}" {{ request('category') == $key ? 'selected' : '' }}>
+                            {{ $category }}
                         </option>
                         @endforeach
                     </select>
@@ -79,35 +79,40 @@
         </div>
 
     <!-- Tickets Table -->
-    <div class="card">
+    <div class="card overflow-hidden">
         @if($tickets->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-max">
+            <div class="overflow-x-auto" id="tickets-container">
+                <table class="w-full">
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Заявка</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Статус</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Приоритет</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Категория</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Дата</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Действия</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Заявка</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Статус</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Приоритет</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Категория</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Дата</th>
+                            <th class="px-4 py-4 text-center text-sm font-semibold text-slate-900">Действия</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         @foreach($tickets as $ticket)
                             <tr class="hover:bg-slate-50 transition-colors duration-200">
-                                <td class="px-6 py-4">
-                                    <div>
+                                <td class="px-4 py-4">
+                                    <div class="min-w-0">
                                         <a href="{{ route('tickets.show', $ticket) }}"
-                                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
-                                            <span class="line-clamp-2">{{ $ticket->title }}</span>
+                                           class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 block">
+                                            <span class="line-clamp-2 break-words">{{ $ticket->title }}</span>
                                         </a>
-                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2 whitespace-pre-wrap break-words">
-                                            {{ Str::limit($ticket->description, 80) }}
+                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2 break-words">
+                                            {{ Str::limit($ticket->description, 100) }}
                                         </p>
+                                        @if($ticket->room)
+                                            <div class="text-xs text-slate-500 mt-1 truncate">
+                                                🏢 {{ $ticket->room->number }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4">
                                     @php
                                         $statusColors = [
                                             'open' => 'bg-blue-100 text-blue-800',
@@ -122,29 +127,33 @@
                                             'closed' => 'Закрыта'
                                         ];
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} whitespace-nowrap">
                                         {{ $statusLabels[$ticket->status] ?? $ticket->status }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}">
+                                <td class="px-4 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }} whitespace-nowrap">
                                         {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-sm text-slate-600">
-                                        {{ $ticket->category->name ?? '—' }}
+                                <td class="px-4 py-4">
+                                    <span class="text-sm text-slate-600 truncate block">
+                                        {{ format_ticket_category($ticket->category) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4">
                                     <div class="text-sm text-slate-600">
-                                        <div>{{ $ticket->created_at->format('d.m.Y') }}</div>
+                                        <div class="font-medium">{{ $ticket->created_at->format('d.m.Y') }}</div>
                                         <div class="text-xs text-slate-500">{{ $ticket->created_at->format('H:i') }}</div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4 text-center">
                                     <a href="{{ route('tickets.show', $ticket) }}"
-                                       class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                                       class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors duration-200">
+                                        <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
                                         Просмотр
                                     </a>
                                 </td>

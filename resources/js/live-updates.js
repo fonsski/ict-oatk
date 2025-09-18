@@ -27,27 +27,21 @@ class LiveUpdates {
     }
     
     init() {
-        console.log('LiveUpdates: Инициализация');
-        
         // Проверяем наличие необходимых элементов
         if (!this.options.apiEndpoint) {
-            console.error('LiveUpdates: API endpoint не указан');
             return;
         }
         
         // Выбираем метод обновления
         if (this.options.useWebSocket && typeof WebSocketClient !== 'undefined') {
-            console.log('LiveUpdates: Используем WebSocket');
             this.initWebSocket();
         } else {
-            console.log('LiveUpdates: Используем HTTP polling');
             this.startAutoRefresh();
         }
         
         // Обработка видимости страницы
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                console.log('LiveUpdates: Страница стала видимой, обновляем данные');
                 this.refresh();
             }
         });
@@ -65,8 +59,6 @@ class LiveUpdates {
         this.websocketClient = new WebSocketClient({
             url: this.options.websocketUrl,
             onMessage: (data) => {
-                console.log('LiveUpdates: Получены данные через WebSocket', data);
-                
                 // Обрабатываем разные типы сообщений
                 if (data.type) {
                     this.handleWebSocketMessage(data);
@@ -79,19 +71,16 @@ class LiveUpdates {
                 this.updateLastUpdated(data.timestamp || data.last_updated);
             },
             onOpen: () => {
-                console.log('LiveUpdates: WebSocket подключен');
                 this.updateStatusIndicator('success');
                 // Запрашиваем первоначальные данные через HTTP
                 this.refresh();
             },
             onClose: () => {
-                console.log('LiveUpdates: WebSocket отключен');
                 this.updateStatusIndicator('error');
                 // Fallback к HTTP polling
                 this.startAutoRefresh();
             },
             onError: (error) => {
-                console.error('LiveUpdates: Ошибка WebSocket:', error);
                 this.updateStatusIndicator('error');
                 // Fallback к HTTP polling
                 this.startAutoRefresh();
@@ -135,12 +124,11 @@ class LiveUpdates {
                 this.handleSystemNotificationCreated(data.data);
                 break;
             default:
-                console.log('LiveUpdates: Неизвестный тип сообщения:', data.type);
+                // Неизвестный тип сообщения
         }
     }
     
     handleTicketCreated(ticketData) {
-        console.log('LiveUpdates: Новая заявка создана:', ticketData);
         // Показываем уведомление
         this.showNotification(ticketData.message, 'success');
         // Обновляем данные
@@ -148,7 +136,6 @@ class LiveUpdates {
     }
     
     handleTicketStatusChanged(ticketData) {
-        console.log('LiveUpdates: Статус заявки изменен:', ticketData);
         // Показываем уведомление
         this.showNotification(ticketData.message, 'info');
         // Обновляем данные
@@ -156,7 +143,6 @@ class LiveUpdates {
     }
     
     handleTicketAssigned(ticketData) {
-        console.log('LiveUpdates: Заявка назначена:', ticketData);
         // Показываем уведомление
         this.showNotification(ticketData.message, 'info');
         // Обновляем данные
@@ -164,7 +150,6 @@ class LiveUpdates {
     }
     
     handleUserCreated(userData) {
-        console.log('LiveUpdates: Новый пользователь создан:', userData);
         // Показываем уведомление
         this.showNotification(userData.message, 'success');
         // Обновляем данные
@@ -172,7 +157,6 @@ class LiveUpdates {
     }
     
     handleUserStatusChanged(userData) {
-        console.log('LiveUpdates: Статус пользователя изменен:', userData);
         // Показываем уведомление
         this.showNotification(userData.message, 'info');
         // Обновляем данные
@@ -180,7 +164,6 @@ class LiveUpdates {
     }
     
     handleTicketCommentCreated(commentData) {
-        console.log('LiveUpdates: Комментарий к заявке создан:', commentData);
         // Показываем уведомление
         this.showNotification(commentData.message, 'info');
         // Обновляем данные
@@ -188,7 +171,6 @@ class LiveUpdates {
     }
     
     handleEquipmentStatusChanged(equipmentData) {
-        console.log('LiveUpdates: Статус оборудования изменен:', equipmentData);
         // Показываем уведомление
         this.showNotification(equipmentData.message, 'info');
         // Обновляем данные
@@ -196,7 +178,6 @@ class LiveUpdates {
     }
     
     handleEquipmentLocationChanged(equipmentData) {
-        console.log('LiveUpdates: Местоположение оборудования изменено:', equipmentData);
         // Показываем уведомление
         this.showNotification(equipmentData.message, 'info');
         // Обновляем данные
@@ -204,7 +185,6 @@ class LiveUpdates {
     }
     
     handleKnowledgeArticleCreated(articleData) {
-        console.log('LiveUpdates: Создана статья в базе знаний:', articleData);
         // Показываем уведомление
         this.showNotification(articleData.message, 'success');
         // Обновляем данные
@@ -212,7 +192,6 @@ class LiveUpdates {
     }
     
     handleKnowledgeArticleUpdated(articleData) {
-        console.log('LiveUpdates: Обновлена статья в базе знаний:', articleData);
         // Показываем уведомление
         this.showNotification(articleData.message, 'info');
         // Обновляем данные
@@ -220,7 +199,6 @@ class LiveUpdates {
     }
     
     handleSystemNotificationCreated(notificationData) {
-        console.log('LiveUpdates: Создано системное уведомление:', notificationData);
         // Показываем уведомление с соответствующим цветом
         const color = notificationData.color || 'info';
         this.showNotification(notificationData.message, color);
@@ -250,7 +228,6 @@ class LiveUpdates {
     
     async refresh() {
         if (this.isRefreshing) {
-            console.log('LiveUpdates: Обновление уже выполняется, пропускаем');
             return;
         }
         
@@ -271,7 +248,6 @@ class LiveUpdates {
             
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
-                    console.warn('LiveUpdates: Ошибка аутентификации');
                     this.handleAuthError();
                     return;
                 }
@@ -294,7 +270,6 @@ class LiveUpdates {
             this.updateLastUpdated(data.last_updated);
             
         } catch (error) {
-            console.error('LiveUpdates: Ошибка при обновлении:', error);
             this.handleError(error);
         } finally {
             this.isRefreshing = false;
@@ -305,12 +280,10 @@ class LiveUpdates {
         this.retryCount++;
         
         if (this.retryCount <= this.maxRetries) {
-            console.log(`LiveUpdates: Повторная попытка ${this.retryCount}/${this.maxRetries}`);
             setTimeout(() => {
                 this.refresh();
             }, 5000 * this.retryCount); // Экспоненциальная задержка
         } else {
-            console.error('LiveUpdates: Превышено максимальное количество попыток');
             this.updateStatusIndicator('error');
         }
         
@@ -318,7 +291,6 @@ class LiveUpdates {
     }
     
     handleAuthError() {
-        console.warn('LiveUpdates: Перенаправление на страницу логина');
         setTimeout(() => {
             window.location.href = '/login';
         }, 1000);
@@ -359,8 +331,6 @@ class LiveUpdates {
             this.stopAutoRefresh();
         }
         
-        console.log(`LiveUpdates: Запуск автообновления каждые ${this.options.refreshInterval / 1000} секунд`);
-        
         // Первоначальное обновление
         this.refresh();
         
@@ -374,16 +344,15 @@ class LiveUpdates {
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
             this.refreshInterval = null;
-            console.log('LiveUpdates: Автообновление остановлено');
         }
     }
     
     defaultErrorHandler(error) {
-        console.error('LiveUpdates: Ошибка по умолчанию:', error);
+        // Обработка ошибки по умолчанию
     }
     
     defaultSuccessHandler(data) {
-        console.log('LiveUpdates: Данные обновлены успешно');
+        // Обработка успешного обновления по умолчанию
     }
 }
 

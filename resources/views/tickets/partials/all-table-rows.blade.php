@@ -1,34 +1,30 @@
 @foreach($tickets as $ticket)
     <tr class="hover:bg-slate-50 transition-all duration-300 animate-fade-in" data-ticket-id="{{ $ticket->id }}">
-        <td class="px-6 py-4">
-            <div>
+        <td class="px-4 py-4">
+            <div class="min-w-0">
                 <a href="{{ route('tickets.show', $ticket) }}"
-                   class="text-slate-900 font-medium hover:text-blue-600 transition-all duration-300 break-words inline-block"
+                   class="text-slate-900 font-medium hover:text-blue-600 transition-all duration-300 block"
                    title="{{ $ticket->title }}">
-                    <span class="line-clamp-2">{{ $ticket->title }}</span>
+                    <span class="line-clamp-1 break-words">{{ Str::limit($ticket->title, 50) }}</span>
                 </a>
-                <p class="text-sm text-slate-600 mt-1 break-words whitespace-pre-wrap line-clamp-2"
-                   title="{{ $ticket->description }}">
-                    {{ Str::limit($ticket->description, 100) }}
-                </p>
-                @if($ticket->room)
-                    <div class="text-xs text-slate-500 mt-1 truncate">
-                        🏢 {{ $ticket->room->number }}
-                    </div>
-                @elseif($ticket->location)
-                    <div class="text-xs text-slate-500 mt-1 truncate">
-                        📍 {{ $ticket->location->name }}
+                @if($ticket->category)
+                    <div class="mt-1">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                            {{ format_ticket_category($ticket->category) }}
+                        </span>
                     </div>
                 @endif
             </div>
         </td>
-        <td class="px-6 py-4">
-            <div class="text-sm">
-                <div class="font-medium text-slate-900" title="{{ $ticket->reporter_name ?: '—' }}">{{ $ticket->reporter_name ?: '—' }}</div>
-                <div class="text-slate-600" title="{{ !empty($ticket->reporter_phone) ? format_phone($ticket->reporter_phone) : '—' }}">{{ !empty($ticket->reporter_phone) ? format_phone($ticket->reporter_phone) : '—' }}</div>
+        <td class="px-4 py-4">
+            <div class="text-sm min-w-0">
+                <div class="font-medium text-slate-900 truncate" title="{{ $ticket->reporter_name ?: '—' }}">{{ $ticket->reporter_name ?: '—' }}</div>
             </div>
         </td>
-        <td class="px-6 py-4">
+        <td class="px-4 py-4">
             @php
                 $statusColors = [
                     'open' => 'bg-blue-100 text-blue-800',
@@ -43,51 +39,38 @@
                     'closed' => 'Закрыта'
                 ];
             @endphp
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} transition-all duration-300" 
-                  style="white-space: nowrap; text-align: center; max-width: 100%;"
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }} whitespace-nowrap" 
                   title="Статус: {{ $statusLabels[$ticket->status] ?? $ticket->status }}">
                 {{ $statusLabels[$ticket->status] ?? $ticket->status }}
             </span>
         </td>
-        <td class="px-6 py-4">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" 
-                  style="white-space: nowrap; text-align: center; max-width: 100%;"
+        <td class="px-4 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }} whitespace-nowrap" 
                   title="Приоритет: {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}">
                 {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
             </span>
         </td>
-        <td class="px-6 py-4">
+        <td class="px-4 py-4">
             @if($ticket->assignedTo)
-                <div class="text-sm">
+                <div class="text-sm min-w-0">
                     <div class="font-medium text-slate-900 truncate" title="{{ $ticket->assignedTo->name }}">{{ $ticket->assignedTo->name }}</div>
-                    @if($ticket->assignedTo->role)
-                        <div class="text-xs text-slate-500 truncate" title="{{ $ticket->assignedTo->role->name }}">{{ $ticket->assignedTo->role->name }}</div>
-                    @endif
                 </div>
             @else
                 <span class="text-sm text-slate-500 italic">Не назначено</span>
             @endif
         </td>
-        <td class="px-6 py-4">
-            <div class="text-sm text-slate-600">
-                <div class="font-medium">{{ $ticket->created_at->format('d.m.Y H:i') }}</div>
-                @if($ticket->updated_at != $ticket->created_at)
-                    <div class="text-xs text-slate-400">обн. {{ $ticket->updated_at->format('d.m H:i') }}</div>
-                @endif
-            </div>
-        </td>
-        <td class="px-6 py-4">
+        <td class="px-4 py-4 text-center">
             <div class="flex items-center justify-center">
-                @if(user_can_manage_tickets())
-                    <div class="relative z-50" data-dropdown>
-                        <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                            </svg>
-                        </button>
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
-                            <div class="py-1">
-                                <a href="{{ route('tickets.show', $ticket) }}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                <div class="relative z-50" data-dropdown>
+                    <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                        </svg>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
+                        <div class="py-1">
+                            <a href="{{ route('tickets.show', $ticket) }}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                            @if(user_can_manage_tickets())
                                 @if($ticket->status !== 'in_progress' && $ticket->status !== 'closed' && !$ticket->assignedTo && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
                                     <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
                                         @csrf
@@ -113,19 +96,14 @@
                                     </form>
                                 @endif
                                 @if($ticket->status !== 'closed')
-                                    <button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" onclick="assignTicket({{ $ticket->id ?? 0 }})">
+                                    <button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" onclick="assignTicket({{ $ticket->id }})">
                                         Назначить исполнителя
                                     </button>
                                 @endif
-                            </div>
+                            @endif
                         </div>
                     </div>
-                @else
-                    <a href="{{ route('tickets.show', $ticket) }}"
-                       class="text-blue-600 hover:text-blue-700 font-medium text-sm transition-all duration-300 hover:underline whitespace-nowrap">
-                        Просмотр
-                    </a>
-                @endif
+                </div>
             </div>
         </td>
     </tr>

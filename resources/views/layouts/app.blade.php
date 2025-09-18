@@ -81,7 +81,7 @@
                         @if(user_can_manage_users())
                             <!-- Admin Dropdown Menu -->
                             <div class="relative">
-                                <button type="button" id="admin-menu-button" class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs(['equipment.*', 'room.*', 'user.*', 'homepage-faq.*', 'drawing-canvas.*']) ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                <button type="button" id="admin-menu-button" class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs(['equipment.*', 'room.*', 'user.*', 'homepage-faq.*']) ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                     <span>Управление</span>
                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6,9 12,15 18,9"></polyline>
@@ -114,10 +114,6 @@
                                         <a href="{{ route('equipment.equipment-categories.index') }}"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('equipment.equipment-categories.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                                             Категории оборудования
-                                        </a>
-                                        <a href="{{ route('drawing-canvas.index') }}"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('drawing-canvas.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Инструмент рисования
                                         </a>
 
                                         @if(config('app.debug'))
@@ -274,10 +270,6 @@
                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('equipment.equipment-categories.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                 Категории оборудования
                             </a>
-                            <a href="{{ route('drawing-canvas.index') }}"
-                               class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('drawing-canvas.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Инструмент рисования
-                            </a>
                         </div>
                     @endif
 
@@ -387,12 +379,6 @@
                 const notificationsButton = document.getElementById('notifications-menu-button');
                 const mobileButton = document.getElementById('mobile-menu-button');
 
-                console.log('DOM loaded, buttons:', {
-                    userButton: !!userButton,
-                    adminButton: !!adminButton,
-                    notificationsButton: !!notificationsButton,
-                    mobileButton: !!mobileButton
-                });
 
                 // Mobile menu toggle
                 if (mobileButton) {
@@ -413,11 +399,8 @@
                         const adminDropdown = document.getElementById('admin-dropdown');
                         const notificationsDropdown = document.getElementById('notifications-dropdown');
 
-                        console.log('User button clicked, dropdown exists:', !!dropdown);
-
                         if (dropdown) {
                             dropdown.classList.toggle('hidden');
-                            console.log('User dropdown is now:', dropdown.classList.contains('hidden') ? 'hidden' : 'visible');
                         }
 
                         // Close other dropdowns
@@ -439,12 +422,9 @@
                         const userDropdown = document.getElementById('user-dropdown');
                         const adminDropdown = document.getElementById('admin-dropdown');
 
-                        console.log('Notifications button clicked, dropdown exists:', !!dropdown);
-
                         if (dropdown) {
                             const isHidden = dropdown.classList.contains('hidden');
                             dropdown.classList.toggle('hidden');
-                            console.log('Notifications dropdown is now:', dropdown.classList.contains('hidden') ? 'hidden' : 'visible');
 
                             // Load notifications when opening dropdown
                             if (isHidden && typeof loadNotifications === 'function') {
@@ -471,11 +451,8 @@
                         const userDropdown = document.getElementById('user-dropdown');
                         const notificationsDropdown = document.getElementById('notifications-dropdown');
 
-                        console.log('Admin button clicked, dropdown exists:', !!dropdown);
-
                         if (dropdown) {
                             dropdown.classList.toggle('hidden');
-                            console.log('Admin dropdown is now:', dropdown.classList.contains('hidden') ? 'hidden' : 'visible');
                         }
 
                         // Close other dropdowns
@@ -497,27 +474,20 @@
                     // Close user dropdown
                     if (userButton && userDropdown && !userButton.contains(event.target) && !userDropdown.contains(event.target)) {
                         userDropdown.classList.add('hidden');
-                        console.log('User dropdown closed by outside click');
                     }
 
                     // Close admin dropdown
                     if (adminButton && adminDropdown && !adminButton.contains(event.target) && !adminDropdown.contains(event.target)) {
                         adminDropdown.classList.add('hidden');
-                        console.log('Admin dropdown closed by outside click');
                     }
 
                     // Close notifications dropdown
                     if (notificationsButton && notificationsDropdown && !notificationsButton.contains(event.target) && !notificationsDropdown.contains(event.target)) {
                         notificationsDropdown.classList.add('hidden');
-                        console.log('Notifications dropdown closed by outside click');
                     }
                 });
 
                 // Force initialization check - this ensures all elements are found
-                console.log('Checking dropdown elements on page:');
-                console.log('- User dropdown:', !!document.getElementById('user-dropdown'));
-                console.log('- Admin dropdown:', !!document.getElementById('admin-dropdown'));
-                console.log('- Notifications dropdown:', !!document.getElementById('notifications-dropdown'));
 
                 // Mark all read button
                 const markAllReadButton = document.getElementById('mark-all-read');
@@ -595,11 +565,9 @@
         // Update notification badge with real API call
         function updateNotificationBadge() {
             if (isPolling) {
-                console.log('[Notifications] Polling already in progress, skipping...');
                 return;
             }
 
-            console.log('[Notifications] Checking for unread notifications...');
             isPolling = true;
 
             fetch('{{ route("api.notifications.unread-count") }}', {
@@ -612,33 +580,26 @@
                 credentials: 'same-origin'
             })
             .then(response => {
-                console.log('[Notifications] Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('[Notifications] Data received:', data);
                 const badge = document.getElementById('notification-badge');
                 if (badge) {
                     if (data.unread_count > 0) {
-                        console.log(`[Notifications] Showing badge with count: ${data.unread_count}`);
                         badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
                         badge.classList.remove('hidden');
                     } else {
-                        console.log('[Notifications] No unread notifications, hiding badge');
                         badge.classList.add('hidden');
                     }
-                } else {
-                    console.warn('[Notifications] Badge element not found!');
                 }
 
                 // Update last check time
                 lastNotificationCheck = data.last_updated;
             })
             .catch(error => {
-                console.error('[Notifications] Error fetching notifications:', error);
                 // В случае ошибки просто скрываем badge
                 const badge = document.getElementById('notification-badge');
                 if (badge) {
@@ -647,7 +608,6 @@
             })
             .finally(() => {
                 isPolling = false;
-                console.log('[Notifications] Polling completed');
             });
         }
 
@@ -724,10 +684,8 @@
 
         // Load notifications dropdown content
         function loadNotifications() {
-            console.log('[Notifications] Loading notifications dropdown...');
             const dropdownContent = document.getElementById('notifications-list');
             if (!dropdownContent) {
-                console.warn('[Notifications] Dropdown content element not found!');
                 return;
             }
 
@@ -743,11 +701,9 @@
                 credentials: 'same-origin'
             })
             .then(response => {
-                console.log('[Notifications] Dropdown response status:', response.status);
                 return response.json();
             })
             .then(data => {
-                console.log('[Notifications] Dropdown data:', data);
 
                 if (!data.notifications || data.notifications.length === 0) {
                     dropdownContent.innerHTML = '<div class="p-4 text-center text-gray-500">Нет уведомлений</div>';
@@ -786,7 +742,6 @@
                 });
 
                 dropdownContent.innerHTML = html;
-                console.log('[Notifications] Rendered ' + data.notifications.length + ' notifications');
 
                 // Add click handlers for notification links
                 const links = dropdownContent.querySelectorAll('[data-id]');
@@ -798,14 +753,12 @@
                 });
             })
             .catch(function(error) {
-                console.error('[Notifications] Error loading notifications:', error);
                 dropdownContent.innerHTML = '<div class="p-4 text-center text-red-500">Ошибка загрузки</div>';
             });
         }
 
         // Mark notification as read
         function markNotificationAsRead(notificationId) {
-            console.log('[Notifications] Marking as read:', notificationId);
 
             fetch(`{{ route('api.notifications.mark-as-read', ['notificationId' => '__ID__']) }}`.replace('__ID__', notificationId), {
                 method: 'POST',
@@ -824,7 +777,7 @@
                 }
             })
             .catch(error => {
-                console.error('[Notifications] Error marking as read:', error);
+                // Ошибка при отметке как прочитанное
             });
         }
 
@@ -851,24 +804,20 @@
                 }
             })
             .catch(error => {
-                console.error('Error marking all notifications as read:', error);
+                // Ошибка при отметке всех как прочитанных
             });
         }
 
         // Start polling when page loads
         function startNotificationPolling() {
-            console.log('[Notifications] Setting up polling interval (30 seconds)...');
-
             // Set up polling every 30 seconds for better performance
             notificationPollingInterval = setInterval(() => {
-                console.log('[Notifications] Polling interval triggered');
                 updateNotificationBadge();
             }, 30000);
 
             // Also check when tab becomes visible again
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden) {
-                    console.log('[Notifications] Tab became visible, checking notifications...');
                     setTimeout(updateNotificationBadge, 1000);
                 }
             });
@@ -883,10 +832,6 @@
         }
 
         // Initialize notification system
-        console.log('[Notifications] Initializing notification system...');
-        console.log('[Notifications] User can manage tickets:', @json(user_can_manage_tickets()));
-        console.log('[Notifications] Current user:', @json(auth()->user() ? auth()->user()->name : 'Guest'));
-
         // Check if notification elements exist
         const notificationsButton = document.getElementById('notifications-menu-button');
         const notificationBadge = document.getElementById('notification-badge');
@@ -894,7 +839,6 @@
 
         // Initial check after page load
         setTimeout(() => {
-            console.log('[Notifications] Running initial notification check...');
             updateNotificationBadge();
         }, 1000);
 
@@ -905,56 +849,10 @@
 
     <!-- Common JS libraries -->
     <script>
-        // Функция для загрузки Fabric.js по требованию
-        window.loadFabricJS = function(callback) {
-            // Если библиотека уже загружена, просто выполняем callback
-            if (typeof fabric !== 'undefined') {
-                console.log('Fabric.js уже загружен, версия:', fabric.version);
-                if (callback && typeof callback === 'function') {
-                    callback(true);
-                }
-                return true;
-            }
-
-            console.log('Загрузка Fabric.js...');
-
-            // Создаем и добавляем скрипт
-            var script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js';
-            script.async = true;
-
-            // Обработчик успешной загрузки
-            script.onload = function() {
-                console.log('Fabric.js успешно загружен, версия:', fabric.version);
-                if (callback && typeof callback === 'function') {
-                    callback(true);
-                }
-            };
-
-            // Обработчик ошибки загрузки
-            script.onerror = function() {
-                console.error('Не удалось загрузить Fabric.js');
-                if (callback && typeof callback === 'function') {
-                    callback(false);
-                }
-            };
-
-            document.head.appendChild(script);
-        };
-
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            // Проверяем, есть ли на странице canvas-container
-            if (document.getElementById('canvas-container')) {
-                console.log('Обнаружен canvas-container, загружаем Fabric.js');
-                window.loadFabricJS();
-            }
-        });
     </script>
 
     <!-- WebSocket Scripts -->
-    <script src="{{ asset('build/assets/websocket-client-DkAC7rby.js') }}"></script>
-    <script src="{{ asset('build/assets/live-updates-CmzvS4RK.js') }}"></script>
+    @vite(['resources/js/websocket-client.js', 'resources/js/live-updates.js'])
 
     @stack('scripts')
 </body>

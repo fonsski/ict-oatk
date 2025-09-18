@@ -9,8 +9,6 @@ export default defineConfig({
             input: [
                 "resources/css/app.css",
                 "resources/js/app.js",
-                "resources/js/canvas-handler.js",
-                "resources/js/simple-canvas.js",
                 "resources/js/live-updates.js",
                 "resources/js/websocket-client.js",
             ],

@@ -30,7 +30,6 @@ class WebSocketClient {
         }
         
         this.isConnecting = true;
-        console.log('WebSocket: Подключение к', this.options.url);
         
         // Проверяем доступность сервера
         this.testConnection();
@@ -42,7 +41,6 @@ class WebSocketClient {
             const response = await fetch(`${httpUrl}/test`);
             
             if (response.ok) {
-                console.log('WebSocket: Подключение установлено');
                 this.isConnecting = false;
                 this.isConnected = true;
                 this.reconnectAttempts = 0;
@@ -106,7 +104,6 @@ class WebSocketClient {
         this.reconnectAttempts++;
         const delay = this.options.reconnectInterval * Math.pow(1.5, this.reconnectAttempts - 1);
         
-        console.log(`WebSocket: Попытка переподключения ${this.reconnectAttempts}/${this.options.maxReconnectAttempts} через ${delay}мс`);
         
         setTimeout(() => {
             if (this.shouldReconnect) {
@@ -118,7 +115,6 @@ class WebSocketClient {
     send(message) {
         if (this.isConnected) {
             // Для HTTP polling отправка сообщений не нужна
-            console.log('WebSocket: Сообщение отправлено (polling mode):', message);
             return true;
         }
         console.warn('WebSocket: Соединение не установлено, сообщение не отправлено');
@@ -141,15 +137,15 @@ class WebSocketClient {
     }
     
     defaultMessageHandler(data) {
-        console.log('WebSocket: Получено сообщение:', data);
+        // Обработка сообщения по умолчанию
     }
     
     defaultOpenHandler(event) {
-        console.log('WebSocket: Соединение открыто');
+        // Обработка открытия соединения по умолчанию
     }
     
     defaultCloseHandler(event) {
-        console.log('WebSocket: Соединение закрыто');
+        // Обработка закрытия соединения по умолчанию
     }
     
     defaultErrorHandler(error) {

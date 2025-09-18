@@ -190,6 +190,7 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Статус</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Приоритет</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Заявитель</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Исполнитель</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Дата</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Действия</th>
                         </tr>
@@ -199,14 +200,9 @@
                             @foreach($tickets->take(10) as $ticket)
                             <tr class="hover:bg-slate-50 transition-colors duration-200">
                                 <td class="px-4 py-3">
-                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block">
-                                        <span class="line-clamp-1">{{ Str::limit($ticket->title, 40) }}</span>
+                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block" title="{{ $ticket->title }}">
+                                        <span class="line-clamp-1">{{ Str::limit($ticket->title, 50) }}</span>
                                     </a>
-                                    @if($ticket->room)
-                                        <div class="text-xs text-slate-500 mt-1">🏢 {{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</div>
-                                    @elseif($ticket->location)
-                                        <div class="text-xs text-slate-500 mt-1">📍 {{ $ticket->location->name }}</div>
-                                    @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     @php
@@ -223,41 +219,57 @@
                                             'closed' => 'Закрыта'
                                         ];
                                     @endphp
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}" title="Статус: {{ $statusLabels[$ticket->status] ?? $ticket->status }}">
                                         {{ $statusLabels[$ticket->status] ?? $ticket->status }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" title="Приоритет: {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}">
                                         {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm text-slate-900">{{ $ticket->reporter_name ?: '—' }}</div>
+                                    <div class="text-sm text-slate-900" title="{{ $ticket->reporter_name ?: '—' }}">{{ $ticket->reporter_name ?: '—' }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if($ticket->assignedTo)
+                                        <div class="text-sm text-slate-900" title="{{ $ticket->assignedTo->name }}">{{ $ticket->assignedTo->name }}</div>
+                                    @else
+                                        <span class="text-sm text-slate-500 italic" title="Исполнитель не назначен">Не назначен</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="text-sm text-slate-600">{{ $ticket->created_at->format('d.m H:i') }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center gap-2">
-                                        <a href="{{ route('tickets.show', $ticket) }}" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                                            Открыть
-                                        </a>
-                                        @if($ticket->status === 'open' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
-                                            <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="text-green-600 hover:text-green-700 font-medium text-sm ml-2">
-                                                    В работу
-                                                </button>
-                                            </form>
-                                        @endif
+                                    <div class="flex items-center justify-center">
+                                        <div class="relative z-50" data-dropdown>
+                                            <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                                </svg>
+                                            </button>
+                                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
+                                                <div class="py-1">
+                                                    <a href="{{ route('tickets.show', $ticket) }}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                                                    @if($ticket->status === 'open' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
+                                                        <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">
+                                                                Взять в работу
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">
                                     <div class="flex flex-col items-center">
                                         <svg class="w-12 h-12 text-slate-400 mb-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2m16-7H4m16 0l-2-2m2 2l-2 2M4 13l2-2m-2 2l2 2" />
@@ -380,12 +392,8 @@
     @push('scripts')
     <script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
     <script>
-    console.log('=== HOME.BLADE.PHP SCRIPT LOADING ===');
-    const canManageTickets = @json(user_can_manage_tickets());
+    const canManageTickets = {{ user_can_manage_tickets() ? 'true' : 'false' }};
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
-
-    console.log('canManageTickets:', canManageTickets);
-    console.log('csrfToken:', csrfToken);
 
     // Объявляем переменные в глобальной области видимости
     let techRefreshBtn, techStatusIndicator, techLastUpdated, techTicketsContainer;
@@ -394,25 +402,13 @@
 
     // Функция инициализации панели техника
     function initTechnicianDashboard() {
-        console.log('=== DOM CONTENT LOADED ===');
         techRefreshBtn = document.getElementById('tech-refresh-btn');
         techStatusIndicator = document.getElementById('tech-status-indicator');
         techLastUpdated = document.getElementById('tech-last-updated');
         techTicketsContainer = document.getElementById('tech-tickets-container');
 
-        console.log('Elements found:');
-        console.log('- techRefreshBtn:', techRefreshBtn);
-        console.log('- techStatusIndicator:', techStatusIndicator);
-        console.log('- techLastUpdated:', techLastUpdated);
-        console.log('- techTicketsContainer:', techTicketsContainer);
-
         async function refreshTechTickets() {
             try {
-                console.log('Начинаем обновление заявок...');
-                if (techStatusIndicator) {
-                    techStatusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
-                }
-
                 const response = await fetch('{{ route("home.technician.tickets") }}', {
                     method: 'GET',
                     headers: {
@@ -423,11 +419,9 @@
                     cache: 'no-store',
                     credentials: 'same-origin'
                 });
-                console.log('Получен ответ от API:', response.status);
 
                 if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
-                        console.warn('Ошибка аутентификации, перенаправляем на логин');
                         window.location.href = '/login';
                         return;
                     }
@@ -435,7 +429,6 @@
                 }
 
                 const data = await response.json();
-                console.log('Получены данные:', data);
 
                 if (data.error) throw new Error(data.error);
 
@@ -451,49 +444,41 @@
                     if (progressEl) progressEl.textContent = data.stats.in_progress;
                     if (resolvedEl) resolvedEl.textContent = data.stats.resolved;
                     if (closedEl) closedEl.textContent = data.stats.closed;
-
-                    console.log('Статистика обновлена:', data.stats);
                 }
 
                 if (data.tickets && Array.isArray(data.tickets)) {
-                    console.log(`Получено ${data.tickets.length} заявок от API:`, data.tickets.map(t => t.title));
                     if (data.tickets.length > 0) {
                         updateTechTicketsTable(data.tickets.slice(0, 10));
-                        console.log(`Обновлена таблица с ${data.tickets.length} заявками`);
                     } else {
-                        // Если заявок нет, показываем пустое состояние
                         updateTechTicketsTable([]);
-                        console.log('Нет активных заявок для отображения');
                     }
                 } else {
-                    console.warn('Заявки не найдены в ответе API:', data);
-                    // В случае проблемы с форматом данных, очищаем таблицу
                     updateTechTicketsTable([]);
                 }
 
                 if (techLastUpdated) techLastUpdated.textContent = `Обновлено: ${data.last_updated}`;
                 if (techStatusIndicator) techStatusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
-                console.log('Обновление завершено успешно');
 
             } catch (error) {
-                console.error('Ошибка при обновлении заявок:', error);
-                if (techStatusIndicator) techStatusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+                if (techStatusIndicator) {
+                    techStatusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+                    setTimeout(() => {
+                        if (techStatusIndicator) {
+                            techStatusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+                        }
+                    }, 30000);
+                }
                 if (techLastUpdated) techLastUpdated.textContent = 'Ошибка обновления';
 
-                // Обработка ошибок аутентификации
                 if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
-                    console.warn('Ошибка аутентификации, перенаправляем на логин');
                     setTimeout(() => {
                         window.location.href = '/login';
                     }, 1000);
-                } else {
-                    console.error('Детали ошибки:', error.message);
                 }
             }
         }
 
         function updateTechStats(stats) {
-            console.log('Обновление статистики:', stats);
             const totalEl = document.getElementById('tech-total-count');
             const openEl = document.getElementById('tech-open-count');
             const progressEl = document.getElementById('tech-progress-count');
@@ -508,10 +493,8 @@
         }
 
         function updateTechTicketsTable(tickets) {
-            console.log('Обновление таблицы заявок, получено:', tickets.length, 'заявок');
             const tbody = document.getElementById('tech-tickets-tbody');
             if (!tbody) {
-                console.warn('Элемент tech-tickets-tbody не найден');
                 return;
             }
 
@@ -542,16 +525,18 @@
                     try {
                         const row = createTechTicketRowElement(ticket);
                         tbody.appendChild(row);
-                        console.log(`Добавлена новая строка ${index + 1}: ${ticket.title}`);
                     } catch (error) {
-                        console.error(`Ошибка при создании строки для заявки ${ticket.id}:`, error, ticket);
+                        // Ошибка при создании строки
                     }
                 });
-
-                console.log(`Таблица обновлена с ${tickets.length} строками`);
+                
+                // Инициализируем выпадающие меню для новых строк
+                setTimeout(() => {
+                    if (typeof initTableDropdowns === 'function') {
+                        initTableDropdowns();
+                    }
+                }, 100);
             } catch (error) {
-                console.error('Ошибка при обновлении таблицы:', error);
-
                 // Создаем tbody с сообщением об ошибке
                 const errorTbody = document.createElement('tbody');
                 errorTbody.className = 'divide-y divide-slate-200';
@@ -566,7 +551,7 @@
             const row = document.createElement('tr');
 
             const cell = document.createElement('td');
-            cell.colSpan = 6;
+            cell.colSpan = 7;
             cell.className = 'px-4 py-8 text-center text-slate-500';
 
             const container = document.createElement('div');
@@ -606,7 +591,7 @@
             const row = document.createElement('tr');
 
             const cell = document.createElement('td');
-            cell.colSpan = 6;
+            cell.colSpan = 7;
             cell.className = 'px-4 py-8 text-center text-red-500';
 
             const title = document.createElement('p');
@@ -670,6 +655,7 @@
             const titleLink = document.createElement('a');
             titleLink.href = ticket.url || '#';
             titleLink.className = 'text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block';
+            titleLink.title = ticket.title || '';
 
             const titleSpan = document.createElement('span');
             titleSpan.className = 'line-clamp-1';
@@ -677,20 +663,6 @@
             titleLink.appendChild(titleSpan);
 
             titleDiv.appendChild(titleLink);
-
-            if (ticket.room && ticket.room.number) {
-                const roomName = ticket.room.name || ticket.room.type_name || '';
-                const roomInfo = document.createElement('div');
-                roomInfo.className = 'text-xs text-slate-500';
-                roomInfo.textContent = `🏢 ${ticket.room.number}${roomName ? ' - ' + roomName : ''}`;
-                titleDiv.appendChild(roomInfo);
-            } else if (ticket.location_name) {
-                const locationInfo = document.createElement('div');
-                locationInfo.className = 'text-xs text-slate-500';
-                locationInfo.textContent = `📍 ${ticket.location_name}`;
-                titleDiv.appendChild(locationInfo);
-            }
-
             titleCell.appendChild(titleDiv);
 
             // Ячейка статуса
@@ -700,6 +672,7 @@
             const statusSpan = document.createElement('span');
             statusSpan.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}`;
             statusSpan.textContent = statusLabels[ticket.status] || ticket.status;
+            statusSpan.title = `Статус: ${statusLabels[ticket.status] || ticket.status}`;
 
             statusCell.appendChild(statusSpan);
 
@@ -711,9 +684,11 @@
             if (ticket.priority === 'urgent') {
                 prioritySpan.className = 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-900';
                 prioritySpan.textContent = 'Срочный';
+                prioritySpan.title = 'Приоритет: Срочный';
             } else {
                 prioritySpan.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}`;
                 prioritySpan.textContent = priorityLabels[ticket.priority] || ticket.priority;
+                prioritySpan.title = `Приоритет: ${priorityLabels[ticket.priority] || ticket.priority}`;
             }
 
             priorityCell.appendChild(prioritySpan);
@@ -725,8 +700,27 @@
             const reporterDiv = document.createElement('div');
             reporterDiv.className = 'text-sm text-slate-900';
             reporterDiv.textContent = ticket.reporter_name || '—';
+            reporterDiv.title = ticket.reporter_name || '—';
 
             reporterCell.appendChild(reporterDiv);
+
+            // Ячейка исполнителя
+            const assignedCell = document.createElement('td');
+            assignedCell.className = 'px-4 py-3';
+
+            if (ticket.assigned_to && ticket.assigned_to.name) {
+                const assignedDiv = document.createElement('div');
+                assignedDiv.className = 'text-sm text-slate-900';
+                assignedDiv.textContent = ticket.assigned_to.name;
+                assignedDiv.title = ticket.assigned_to.name;
+                assignedCell.appendChild(assignedDiv);
+            } else {
+                const assignedSpan = document.createElement('span');
+                assignedSpan.className = 'text-sm text-slate-500 italic';
+                assignedSpan.textContent = 'Не назначен';
+                assignedSpan.title = 'Исполнитель не назначен';
+                assignedCell.appendChild(assignedSpan);
+            }
 
             // Ячейка даты
             const dateCell = document.createElement('td');
@@ -745,13 +739,43 @@
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'flex items-center gap-2';
 
-            const openLink = document.createElement('a');
-            openLink.href = ticket.url || '#';
-            openLink.className = 'text-blue-600 hover:text-blue-700 font-medium text-sm';
-            openLink.textContent = 'Открыть';
+            // Создаем выпадающее меню
+            const dropdown = document.createElement('div');
+            dropdown.className = 'relative z-50';
+            dropdown.setAttribute('data-dropdown', '');
 
-            actionsDiv.appendChild(openLink);
+            const toggleButton = document.createElement('button');
+            toggleButton.type = 'button';
+            toggleButton.className = 'text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100';
+            toggleButton.setAttribute('data-dropdown-toggle', '');
+            toggleButton.title = 'Действия';
 
+            const toggleIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            toggleIcon.className = 'w-5 h-5';
+            toggleIcon.setAttribute('fill', 'currentColor');
+            toggleIcon.setAttribute('viewBox', '0 0 20 20');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z');
+            toggleIcon.appendChild(path);
+            toggleButton.appendChild(toggleIcon);
+
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = 'absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in';
+            dropdownMenu.setAttribute('data-dropdown-menu', '');
+            dropdownMenu.style.minWidth = '10rem';
+            dropdownMenu.style.maxWidth = '12rem';
+
+            const menuContent = document.createElement('div');
+            menuContent.className = 'py-1';
+
+            // Ссылка на просмотр
+            const viewLink = document.createElement('a');
+            viewLink.href = ticket.url || '#';
+            viewLink.className = 'block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition';
+            viewLink.textContent = 'Просмотр заявки';
+            menuContent.appendChild(viewLink);
+
+            // Кнопка "Взять в работу" для открытых заявок
             if (ticket.status === 'open' && userRole && ['admin', 'master', 'technician'].includes(userRole)) {
                 const startForm = document.createElement('form');
                 startForm.method = 'POST';
@@ -766,13 +790,18 @@
 
                 const startButton = document.createElement('button');
                 startButton.type = 'submit';
-                startButton.className = 'text-green-600 hover:text-green-700 font-medium text-sm ml-2';
-                startButton.textContent = 'В работу';
+                startButton.className = 'block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition';
+                startButton.textContent = 'Взять в работу';
 
                 startForm.appendChild(csrfInput);
                 startForm.appendChild(startButton);
-                actionsDiv.appendChild(startForm);
+                menuContent.appendChild(startForm);
             }
+
+            dropdownMenu.appendChild(menuContent);
+            dropdown.appendChild(toggleButton);
+            dropdown.appendChild(dropdownMenu);
+            actionsDiv.appendChild(dropdown);
 
             actionsCell.appendChild(actionsDiv);
 
@@ -781,6 +810,7 @@
             row.appendChild(statusCell);
             row.appendChild(priorityCell);
             row.appendChild(reporterCell);
+            row.appendChild(assignedCell);
             row.appendChild(dateCell);
             row.appendChild(actionsCell);
 
@@ -791,69 +821,29 @@
         function setupEventListeners() {
             if (techRefreshBtn) {
                 techRefreshBtn.addEventListener('click', function() {
-                    console.log('Нажата кнопка обновления заявок');
                     if (liveUpdates) {
                         liveUpdates.refresh();
                     }
                 });
-            } else {
-                console.warn('Кнопка обновления не найдена');
             }
 
-            const testApiBtn = document.getElementById('test-api-btn');
-            if (testApiBtn) {
-                testApiBtn.addEventListener('click', function() {
-                    console.log('=== ТЕСТ API ===');
-                console.log('URL API:', '{{ route("home.technician.tickets") }}');
-                console.log('Пользователь может управлять заявками:', canManageTickets);
-                console.log('CSRF токен:', csrfToken);
-
-                fetch('{{ route("home.technician.tickets") }}')
-                    .then(response => {
-                        console.log('Статус ответа:', response.status, response.statusText);
-                        console.log('Заголовки ответа:', [...response.headers]);
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('=== ДАННЫЕ ОТ API ===');
-                        console.log('Полный ответ:', data);
-                        console.log('Количество заявок:', data.tickets ? data.tickets.length : 'не найдено');
-                        console.log('Статистика:', data.stats);
-                        console.log('Время обновления:', data.last_updated);
-                        if (data.tickets && data.tickets.length > 0) console.log('Первая заявка:', data.tickets[0]);
-                        alert('Результат теста выведен в консоль браузера (F12)');
-                    })
-                    .catch(error => {
-                        console.error('=== ОШИБКА API ===');
-                        console.error('Ошибка:', error);
-                        alert('Ошибка: ' + error.message);
-                    });
-            });
-            }
         } // End of setupEventListeners function
 
         function startTechAutoRefresh() {
-            console.log('Запуск интервала автообновления...');
             techRefreshInterval = setInterval(() => {
-                console.log('Автообновление: вызываем refreshTechTickets...');
                 refreshTechTickets();
             }, TECH_REFRESH_INTERVAL);
         }
 
         function stopTechAutoRefresh() {
             if (techRefreshInterval) {
-                console.log('Остановка автообновления...');
                 clearInterval(techRefreshInterval);
                 techRefreshInterval = null;
             }
         }
 
         if (canManageTickets) {
-            console.log('Пользователь может управлять заявками, инициализируем LiveUpdates...');
-            console.log('Проверяем доступность LiveUpdates:', typeof LiveUpdates);
-            
             if (typeof LiveUpdates === 'undefined') {
-                console.error('LiveUpdates не загружен, используем fallback');
                 // Fallback к старому методу
                 refreshTechTickets();
                 startTechAutoRefresh();
@@ -864,8 +854,6 @@
                     apiEndpoint: '{{ route("home.technician.tickets") }}',
                     csrfToken: csrfToken,
                     onSuccess: function(data) {
-                        console.log('LiveUpdates: Данные получены успешно');
-                        
                         // Обновляем статистику
                         if (data.stats) {
                             updateTechStats(data.stats);
@@ -877,7 +865,7 @@
                         }
                     },
                     onError: function(error) {
-                        console.error('LiveUpdates: Ошибка:', error);
+                        // Обработка ошибки
                     }
                 });
             }
@@ -885,20 +873,105 @@
             if (techLastUpdated) {
                 techLastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
             }
-        } else {
-            console.warn('Пользователь НЕ может управлять заявками, пропускаем автообновление');
         }
 
         // Initialize event listeners
         setupEventListeners();
     }
 
+    // Функция инициализации выпадающих меню (из all-table-rows.blade.php)
+    function initTableDropdowns() {
+        // Обработка выпадающих меню в таблице
+        document.querySelectorAll('[data-dropdown]').forEach(function(dropdown) {
+            const toggle = dropdown.querySelector('[data-dropdown-toggle]');
+            const menu = dropdown.querySelector('[data-dropdown-menu]');
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Закрыть все другие меню
+                    document.querySelectorAll('[data-dropdown-menu]').forEach(function(otherMenu) {
+                        if (otherMenu !== menu) {
+                            otherMenu.classList.add('hidden');
+                        }
+                    });
+
+                    document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
+                        if (otherToggle !== toggle) {
+                            otherToggle.classList.remove('bg-slate-100');
+                        }
+                    });
+
+                    // Переключить текущее меню
+                    menu.classList.toggle('hidden');
+                    toggle.classList.toggle('bg-slate-100');
+
+                    // Корректное позиционирование меню
+                    const rect = toggle.getBoundingClientRect();
+                    const rightSpace = window.innerWidth - rect.right;
+
+                    // Сбрасываем предыдущие стили
+                    menu.style.left = '';
+                    menu.style.right = '';
+                    menu.style.top = '';
+                    menu.style.position = 'absolute';
+                    menu.style.zIndex = '100';
+                    menu.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                    menu.style.maxHeight = '80vh';
+                    menu.style.overflowY = 'auto';
+
+                    // Проверяем, достаточно ли места справа и слева
+                    if (rightSpace < 200) {
+                        // Недостаточно места справа, располагаем слева
+                        menu.style.left = 'auto';
+                        menu.style.right = '0';
+                    } else {
+                        // Достаточно места справа
+                        menu.style.left = '0';
+                        menu.style.right = 'auto';
+                    }
+
+                    // Обеспечиваем, чтобы меню не выходило за границы экрана
+                    const menuRect = menu.getBoundingClientRect();
+                    if (menuRect.right > window.innerWidth) {
+                        menu.style.right = '0';
+                        menu.style.left = 'auto';
+                    }
+
+                    // Устанавливаем позицию по вертикали
+                    menu.style.top = 'calc(100% + 0.5rem)';
+
+                    // Убеждаемся, что меню видно
+                    // Максимальная высота и прокрутка для больших меню
+                    menu.style.maxHeight = '80vh';
+                    menu.style.overflowY = 'auto';
+                });
+            }
+        });
+    }
+
     // Инициализируем панель техника после загрузки DOM
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM полностью загружен, инициализируем техническую панель');
         if (document.getElementById('tech-tickets-container')) {
             initTechnicianDashboard();
         }
+        
+        // Инициализируем выпадающие меню
+        initTableDropdowns();
+        
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('[data-dropdown]')) {
+                document.querySelectorAll('[data-dropdown-menu]').forEach(function(menu) {
+                    menu.classList.add('hidden');
+                });
+                document.querySelectorAll('[data-dropdown-toggle]').forEach(function(toggle) {
+                    toggle.classList.remove('bg-slate-100');
+                });
+            }
+        });
     });
     </script>
     @endpush

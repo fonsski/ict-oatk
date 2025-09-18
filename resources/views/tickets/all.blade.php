@@ -3,7 +3,7 @@
 @section('title', 'Все заявки - ICT')
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-8">
+<div class="container-width section-padding">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
@@ -300,24 +300,26 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-5 mt-6 mb-4 gap-4">
             <h2 class="text-xl font-semibold text-slate-900">Заявки в системе <span class="text-slate-500 text-sm font-normal ml-2">{{ $tickets->total() }} записей</span></h2>
         </div>
-        <div id="tickets-container" style="overflow-x: auto !important;">
+        <div id="tickets-container">
             @if($tickets->count() > 0)
-                <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
-                    <table class="w-full border-collapse" style="table-layout: fixed !important; border-spacing: 0;">
-                        <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 40%;">Заявка</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Заявитель</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Статус</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 10%;">Приоритет</th>
-                                <th class="px-4 py-5 text-left text-sm font-semibold text-slate-900" style="width: 15%;">Исполнитель</th>
-                                <th class="px-4 py-5 text-center text-sm font-semibold text-slate-900" style="width: 10%;">Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200" id="tickets-tbody">
-                            @include('tickets.partials.all-table-rows', ['tickets' => $tickets])
-                        </tbody>
-                    </table>
+                <div class="card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Заявка</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Заявитель</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Статус</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Приоритет</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Исполнитель</th>
+                                    <th class="px-4 py-4 text-center text-sm font-semibold text-slate-900">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200" id="tickets-tbody">
+                                @include('tickets.partials.all-table-rows', ['tickets' => $tickets])
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             @else
                 <div class="text-center py-20 bg-white rounded-lg border border-slate-200 shadow-sm" id="empty-state">
@@ -591,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                                 </svg>
-                                ${ticket.category}
+                                ${formatTicketCategory(ticket.category)}
                             </span>` : ''}
                             ${roomInfo ? `
                             <span class="ticket-meta-item">
@@ -1080,6 +1082,18 @@ if (action === 'change-status' && status) {
             return `+${cleaned[0]} (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9, 11)}`;
         }
         return phone;
+    }
+
+    // Функция форматирования категории заявки
+    function formatTicketCategory(category) {
+        const categories = {
+            "hardware": "Оборудование",
+            "software": "Программное обеспечение",
+            "network": "Сеть и интернет",
+            "account": "Учетная запись",
+            "other": "Другое",
+        };
+        return categories[category] || category;
     }
 
     // Функция получения класса для статуса

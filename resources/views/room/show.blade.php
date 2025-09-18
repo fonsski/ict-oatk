@@ -239,7 +239,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                        {{ $equipment->type ?? '—' }}
+                                        {{ $equipment->category->name ?? '—' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -249,7 +249,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        {{ $equipment->last_maintenance_at ? $equipment->last_maintenance_at->format('d.m.Y') : 'Не проводилось' }}
+                                        {{ $equipment->last_service_date ? $equipment->last_service_date->format('d.m.Y') : 'Не проводилось' }}
                                     </td>
                                 </tr>
                             @endforeach

@@ -204,12 +204,39 @@
     #tickets-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     }
 
     #tickets-container table {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
+        table-layout: fixed;
+    }
+
+    #tickets-container th,
+    #tickets-container td {
+        padding: 1rem 0.75rem;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid #e2e8f0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    #tickets-container th {
+        background-color: #f8fafc;
+        font-weight: 600;
+        color: #1e293b;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    #tickets-container tbody tr:hover {
+        background-color: #f8fafc;
+        transition: background-color 0.2s ease;
     }
 
     #tickets-container .line-clamp-2 {
@@ -218,21 +245,82 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1.4;
+    }
+
+    #tickets-container .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.4;
+    }
+
+    /* Фиксированные ширины колонок для лучшего контроля */
+    #tickets-container th:nth-child(1),
+    #tickets-container td:nth-child(1) {
+        width: 35%;
+        min-width: 200px;
+    }
+
+    #tickets-container th:nth-child(2),
+    #tickets-container td:nth-child(2) {
+        width: 15%;
+        min-width: 120px;
+    }
+
+    #tickets-container th:nth-child(3),
+    #tickets-container td:nth-child(3) {
+        width: 10%;
+        min-width: 80px;
+    }
+
+    #tickets-container th:nth-child(4),
+    #tickets-container td:nth-child(4) {
+        width: 10%;
+        min-width: 80px;
+    }
+
+    #tickets-container th:nth-child(5),
+    #tickets-container td:nth-child(5) {
+        width: 15%;
+        min-width: 120px;
+    }
+
+    #tickets-container th:nth-child(6),
+    #tickets-container td:nth-child(6) {
+        width: 10%;
+        min-width: 80px;
+    }
+
+    #tickets-container th:nth-child(7),
+    #tickets-container td:nth-child(7) {
+        width: 5%;
+        min-width: 60px;
     }
 
     /* Адаптивные стили для мобильных устройств */
     @media (max-width: 768px) {
-        #tickets-container table {
-            min-width: 800px; /* Минимальная ширина для скролла на мобильных */
+        #tickets-container {
+            margin: 0 -1rem;
+            border-radius: 0;
         }
 
+        #tickets-container table {
+            min-width: 900px;
+        }
+
+        #tickets-container th,
         #tickets-container td {
-            vertical-align: top;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
         }
 
         #tickets-container .card {
             overflow-x: auto;
             padding: 0;
+            margin: 0;
         }
 
         .search-input {
@@ -242,6 +330,28 @@
         #filters-form .btn-primary,
         #filters-form .btn-outline {
             @apply w-full;
+        }
+
+        /* Уменьшаем размеры бейджей на мобильных */
+        #tickets-container .inline-flex {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        #tickets-container th,
+        #tickets-container td {
+            padding: 0.5rem 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        #tickets-container .line-clamp-2 {
+            -webkit-line-clamp: 1;
+        }
+
+        #tickets-container .line-clamp-3 {
+            -webkit-line-clamp: 2;
         }
     }
 }
