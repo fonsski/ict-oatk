@@ -39,16 +39,33 @@ class TelegramCommandService
         $message = "📋 <b>Справка по командам</b>\n\n";
         
         if ($this->authService->isUserAuthenticated($chatId)) {
+            $user = $this->authService->getAuthenticatedUser($chatId);
             $message .= "🔐 <b>Авторизованные команды:</b>\n";
-        $message .= "• <code>/tickets</code> - Список активных заявок\n";
-        $message .= "• <code>/all_tickets</code> - Все заявки (включая закрытые)\n";
-        $message .= "• <code>/active</code> - Активные заявки в работе\n";
-        $message .= "• <code>/stats</code> - Статистика заявок\n";
+            $message .= "• <code>/tickets</code> - Список активных заявок\n";
+            $message .= "• <code>/all_tickets</code> - Все заявки (включая закрытые)\n";
+            $message .= "• <code>/active</code> - Активные заявки в работе\n";
+            $message .= "• <code>/stats</code> - Статистика заявок\n";
             $message .= "• <code>/ticket_123</code> - Подробности заявки #123\n";
             $message .= "• <code>/start_ticket_123</code> - Взять заявку #123 в работу\n";
             $message .= "• <code>/assign_123</code> - Назначить заявку #123 себе\n";
             $message .= "• <code>/resolve_123</code> - Отметить заявку #123 как решенную\n";
+            $message .= "• <code>/close_123</code> - Закрыть заявку #123\n";
+            
+            // Добавляем команды для работы с помещениями и оборудованием
+            if ($user->isAdmin() || $user->isMaster()) {
+                $message .= "• <code>/rooms</code> - Список помещений\n";
+                $message .= "• <code>/equipment</code> - Список оборудования\n";
+                $message .= "• <code>/users</code> - Список пользователей\n";
+            }
+            
             $message .= "• <code>/logout</code> - Выйти из системы\n\n";
+            
+            // Добавляем информацию о дальнейших действиях
+            $message .= "💡 <b>Что делать дальше?</b>\n";
+            $message .= "1️⃣ Используйте <code>/tickets</code> для просмотра активных заявок\n";
+            $message .= "2️⃣ Выберите заявку и используйте <code>/ticket_ID</code> для подробностей\n";
+            $message .= "3️⃣ Взять заявку в работу: <code>/start_ticket_ID</code>\n";
+            $message .= "4️⃣ Отметить как решенную: <code>/resolve_ID</code>\n\n";
         } else {
             $message .= "🔓 <b>Команды без авторизации:</b>\n";
             $message .= "• <code>/login</code> - Авторизация в системе\n\n";
@@ -327,7 +344,7 @@ class TelegramCommandService
 
         $message = "🔍 <b>Детали заявки #{$ticket->id}</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticket->title}\n";
-        $message .= "📂 <b>Категория:</b> {$ticket->category}\n";
+        $message .= "📂 <b>Категория:</b> " . $this->getCategoryEmoji($ticket->category) . " " . $this->getHumanReadableCategory($ticket->category) . "\n";
         $message .= "📊 <b>Статус:</b> {$status}\n";
         $message .= "⚡ <b>Приоритет:</b> {$priority}\n\n";
 
@@ -595,8 +612,222 @@ class TelegramCommandService
             'low' => '🟢',
             'medium' => '🟡',
             'high' => '🟠',
-            'critical' => '🔴',
+            'urgent' => '🔴',
             default => '❓'
         };
+    }
+
+    /**
+     * Получает эмодзи для категории
+     */
+    protected function getCategoryEmoji(string $category): string
+    {
+        return match (strtolower($category)) {
+            'hardware' => '💻',
+            'software' => '💿',
+            'network' => '🌐',
+            'account' => '👤',
+            'other' => '📋',
+            default => '❓'
+        };
+    }
+
+    /**
+     * Получает человекочитаемую категорию
+     */
+    protected function getHumanReadableCategory(string $category): string
+    {
+        return match (strtolower($category)) {
+            'hardware' => 'Оборудование',
+            'software' => 'Программное обеспечение',
+            'network' => 'Сеть и интернет',
+            'account' => 'Учетная запись',
+            'other' => 'Другое',
+            default => $category
+        };
+    }
+
+    /**
+     * Обрабатывает команду закрытия заявки
+     */
+    public function handleCloseTicket(int $chatId, int $ticketId): bool
+    {
+        $user = $this->authService->getAuthenticatedUser($chatId);
+        if (!$user) {
+            return $this->sendAuthRequired($chatId);
+        }
+
+        if (!$user->canManageTickets()) {
+            $message = "❌ У вас нет прав для закрытия заявок.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $ticket = Ticket::find($ticketId);
+        if (!$ticket) {
+            $message = "❌ Заявка с ID {$ticketId} не найдена.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        if ($ticket->status === "closed") {
+            $message = "❌ Заявка уже закрыта.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        if ($ticket->status !== "resolved") {
+            $message = "❌ Только решенные заявки могут быть закрыты.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $ticket->update(['status' => 'closed']);
+
+        // Добавляем комментарий
+        $ticket->comments()->create([
+            'user_id' => $user->id,
+            'content' => "Заявка закрыта",
+            'is_system' => true
+        ]);
+
+        $message = "🔒 <b>Заявка #{$ticket->id} успешно закрыта!</b>\n\n";
+        $message .= "📋 <b>Название:</b> {$ticket->title}\n";
+        $message .= "👤 <b>Закрыта:</b> {$user->name}\n";
+        $message .= "📊 <b>Статус:</b> " . $this->getStatusEmoji('closed') . " Закрыта\n\n";
+        $message .= "✅ Заявка полностью завершена.";
+
+        return $this->telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Обрабатывает команду /rooms
+     */
+    public function handleRooms(int $chatId): bool
+    {
+        $user = $this->authService->getAuthenticatedUser($chatId);
+        if (!$user) {
+            return $this->sendAuthRequired($chatId);
+        }
+
+        if (!$user->isAdmin() && !$user->isMaster()) {
+            $message = "❌ У вас нет прав для просмотра помещений.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $rooms = \App\Models\Room::active()
+            ->with('location')
+            ->orderBy('number')
+            ->take(20)
+            ->get();
+
+        if ($rooms->isEmpty()) {
+            $message = "🏢 Помещений не найдено.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $message = "🏢 <b>Список помещений:</b>\n\n";
+
+        foreach ($rooms as $room) {
+            $message .= "🏢 <b>{$room->number}</b> - {$room->name}\n";
+            $message .= "📍 <b>Местоположение:</b> " . ($room->location ? $room->location->name : 'Не указано') . "\n";
+            $message .= "🏗️ <b>Тип:</b> {$room->type}\n";
+            if ($room->building) {
+                $message .= "🏢 <b>Здание:</b> {$room->building}\n";
+            }
+            if ($room->floor) {
+                $message .= "🏢 <b>Этаж:</b> {$room->floor}\n";
+            }
+            $message .= "\n";
+        }
+
+        $message .= "💡 Используйте <code>/equipment</code> для просмотра оборудования";
+
+        return $this->telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Обрабатывает команду /equipment
+     */
+    public function handleEquipment(int $chatId): bool
+    {
+        $user = $this->authService->getAuthenticatedUser($chatId);
+        if (!$user) {
+            return $this->sendAuthRequired($chatId);
+        }
+
+        if (!$user->isAdmin() && !$user->isMaster()) {
+            $message = "❌ У вас нет прав для просмотра оборудования.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $equipment = \App\Models\Equipment::with(['room', 'category', 'status'])
+            ->orderBy('inventory_number')
+            ->take(20)
+            ->get();
+
+        if ($equipment->isEmpty()) {
+            $message = "💻 Оборудования не найдено.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $message = "💻 <b>Список оборудования:</b>\n\n";
+
+        foreach ($equipment as $item) {
+            $message .= "💻 <b>{$item->inventory_number}</b> - {$item->name}\n";
+            $message .= "📂 <b>Категория:</b> " . ($item->category ? $item->category->name : 'Не указана') . "\n";
+            $message .= "📊 <b>Статус:</b> " . ($item->status ? $item->status->name : 'Не указан') . "\n";
+            if ($item->room) {
+                $message .= "🏢 <b>Помещение:</b> {$item->room->number} - {$item->room->name}\n";
+            }
+            if ($item->model) {
+                $message .= "🔧 <b>Модель:</b> {$item->model}\n";
+            }
+            $message .= "\n";
+        }
+
+        $message .= "💡 Используйте <code>/rooms</code> для просмотра помещений";
+
+        return $this->telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Обрабатывает команду /users
+     */
+    public function handleUsers(int $chatId): bool
+    {
+        $user = $this->authService->getAuthenticatedUser($chatId);
+        if (!$user) {
+            return $this->sendAuthRequired($chatId);
+        }
+
+        if (!$user->isAdmin() && !$user->isMaster()) {
+            $message = "❌ У вас нет прав для просмотра пользователей.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $users = \App\Models\User::with('role')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->take(20)
+            ->get();
+
+        if ($users->isEmpty()) {
+            $message = "👥 Пользователей не найдено.";
+            return $this->telegramService->sendMessage($chatId, $message);
+        }
+
+        $message = "👥 <b>Список пользователей:</b>\n\n";
+
+        foreach ($users as $userItem) {
+            $role = $userItem->role ? $userItem->role->name : 'Без роли';
+            $status = $userItem->is_active ? '✅ Активен' : '❌ Заблокирован';
+            
+            $message .= "👤 <b>{$userItem->name}</b>\n";
+            $message .= "📧 <b>Email:</b> {$userItem->email}\n";
+            $message .= "📞 <b>Телефон:</b> {$userItem->phone}\n";
+            $message .= "👔 <b>Роль:</b> {$role}\n";
+            $message .= "📊 <b>Статус:</b> {$status}\n\n";
+        }
+
+        $message .= "💡 Используйте <code>/stats</code> для просмотра статистики";
+
+        return $this->telegramService->sendMessage($chatId, $message);
     }
 }

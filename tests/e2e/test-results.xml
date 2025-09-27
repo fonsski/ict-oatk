@@ -1,0 +1,215 @@
+<testsuites id="" name="" tests="34" failures="2" skipped="32" errors="0" time="21.221043">
+<testsuite name="auth.spec.js" timestamp="2025-09-25T13:13:47.038Z" hostname="chromium" tests="13" failures="2" skipped="11" time="16.438" errors="0">
+<testcase name="Аутентификация › Главная страница доступна без авторизации" classname="auth.spec.js" time="7.104">
+<failure message="auth.spec.js:10:7 Главная страница доступна без авторизации" type="FAILURE">
+<![CDATA[  [chromium] › auth.spec.js:10:7 › Аутентификация › Главная страница доступна без авторизации ──────
+
+    Error: expect(page).toHaveTitle(expected) failed
+
+    Expected pattern: /ICT/
+    Received string:  "Laravel"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveTitle" with timeout 5000ms
+        9 × unexpected value "Laravel"
+
+
+      10 |   test('Главная страница доступна без авторизации', async ({ page }) => {
+      11 |     await page.goto('/');
+    > 12 |     await expect(page).toHaveTitle(/ICT/);
+         |                        ^
+      13 |     await expect(page.locator('text=Служба технической поддержки')).toBeVisible();
+      14 |   });
+      15 |
+        at /home/fon/projects/web/ICT/tests/e2e/auth.spec.js:12:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-Аутентификация-Главна-a9503-ца-доступна-без-авторизации-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-Аутентификация-Главна-a9503-ца-доступна-без-авторизации-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/auth-Аутентификация-Главна-a9503-ца-доступна-без-авторизации-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-Аутентификация-Главна-a9503-ца-доступна-без-авторизации-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-Аутентификация-Главна-a9503-ца-доступна-без-авторизации-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-Аутентификация-Главна-a9503-ца-доступна-без-авторизации-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Аутентификация › Страница входа отображается корректно" classname="auth.spec.js" time="3.435">
+<failure message="auth.spec.js:16:7 Страница входа отображается корректно" type="FAILURE">
+<![CDATA[  [chromium] › auth.spec.js:16:7 › Аутентификация › Страница входа отображается корректно ──────────
+
+    Error: expect(page).toHaveTitle(expected) failed
+
+    Expected pattern: /Вход/
+    Received string:  "Not Found"
+
+    Call log:
+      - Expect "toHaveTitle" with timeout 5000ms
+        6 × unexpected value "Not Found"
+
+
+      16 |   test('Страница входа отображается корректно', async ({ page }) => {
+      17 |     await page.goto('/login');
+    > 18 |     await expect(page).toHaveTitle(/Вход/);
+         |                        ^
+      19 |     await expect(page.locator('input[name="login"]')).toBeVisible();
+      20 |     await expect(page.locator('input[name="password"]')).toBeVisible();
+      21 |     await expect(page.locator('button[type="submit"]')).toBeVisible();
+        at /home/fon/projects/web/ICT/tests/e2e/auth.spec.js:18:24
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-Аутентификация-Страница-входа-отображается-корректно-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-Аутентификация-Страница-входа-отображается-корректно-chromium/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Аутентификация › Страница регистрации отображается корректно" classname="auth.spec.js" time="5.899">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Аутентификация › Вход в систему с корректными данными" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Аутентификация › Вход в систему с некорректными данными" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Аутентификация › Выход из системы" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Аутентификация › Доступ к защищенным страницам без авторизации" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Аутентификация › Регистрация нового пользователя" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Аутентификация › Восстановление пароля" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Права доступа по ролям › Пользователь может видеть только свои заявки" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Права доступа по ролям › Техник может видеть все заявки" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Права доступа по ролям › Администратор имеет доступ ко всем разделам" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Права доступа по ролям › Обычный пользователь не может получить доступ к админ-разделам" classname="auth.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="integration.spec.js" timestamp="2025-09-25T13:13:47.038Z" hostname="chromium" tests="9" failures="0" skipped="9" time="0" errors="0">
+<testcase name="Полный цикл обработки заявки › Сценарий: Пользователь создает заявку, техник обрабатывает" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Полный цикл обработки заявки › Сценарий: Администратор управляет системой" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Полный цикл обработки заявки › Сценарий: Мастер управляет оборудованием" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Полный цикл обработки заявки › Сценарий: Техник работает с заявками" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Полный цикл обработки заявки › Сценарий: Пользователь отслеживает свои заявки" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Тестирование производительности › Загрузка страниц должна быть быстрой" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Тестирование производительности › Поиск должен работать быстро" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Тестирование мобильной версии › Мобильная навигация работает корректно" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Тестирование мобильной версии › Формы адаптируются под мобильные устройства" classname="integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="tickets.spec.js" timestamp="2025-09-25T13:13:47.038Z" hostname="chromium" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Управление заявками › Создание новой заявки" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками › Просмотр списка заявок" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками › Просмотр деталей заявки" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками › Редактирование заявки" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (техник) › Просмотр всех заявок" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (техник) › Изменение статуса заявки" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (техник) › Назначение исполнителя заявке" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (техник) › Добавление комментария к заявке" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (техник) › Фильтрация заявок" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (техник) › Поиск заявок" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (администратор) › Полный цикл обработки заявки" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Управление заявками (администратор) › Массовые операции с заявками" classname="tickets.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

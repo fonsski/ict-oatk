@@ -391,6 +391,7 @@
     @if(user_can_manage_tickets())
     @push('scripts')
     <script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
+    <script src="{{ Vite::asset('resources/js/smart-updates.js') }}"></script>
     <script>
     const canManageTickets = {{ user_can_manage_tickets() ? 'true' : 'false' }};
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
@@ -492,6 +493,9 @@
             if (closedEl) closedEl.textContent = stats.closed;
         }
 
+        // Умная система обновления для заявок техника
+        let techSmartUpdates;
+
         function updateTechTicketsTable(tickets) {
             const tbody = document.getElementById('tech-tickets-tbody');
             if (!tbody) {
@@ -499,43 +503,66 @@
             }
 
             try {
-                // Очищаем текущую таблицу
-                while (tbody.firstChild) {
-                    tbody.removeChild(tbody.firstChild);
-                }
-
                 if (tickets.length === 0) {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = `
-                        <td colspan="6" class="px-6 py-10 text-center">
-                            <div class="text-gray-500">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <p class="mt-2 text-sm font-medium">Нет активных заявок</p>
-                            </div>
-                        </td>
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center">
+                                <div class="text-gray-500">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <p class="mt-2 text-sm font-medium">Нет активных заявок</p>
+                                </div>
+                            </td>
+                        </tr>
                     `;
-                    tbody.appendChild(emptyRow);
+                    if (techSmartUpdates) techSmartUpdates.clear();
                     return;
                 }
 
-                // Создаем новые строки
-                tickets.forEach((ticket, index) => {
-                    try {
-                        const row = createTechTicketRowElement(ticket);
-                        tbody.appendChild(row);
-                    } catch (error) {
-                        // Ошибка при создании строки
-                    }
-                });
+                // Проверяем доступность SmartUpdates
+                if (typeof SmartUpdates === 'undefined') {
+                    console.warn('SmartUpdates не загружен, используем fallback');
+                    // Fallback к старому методу
+                    tbody.innerHTML = tickets.map(ticket => createTechTicketRowHTML(ticket)).join('');
+                    setTimeout(() => {
+                        if (typeof initTableDropdowns === 'function') {
+                            initTableDropdowns();
+                        }
+                    }, 100);
+                    return;
+                }
+
+                // Инициализируем SmartUpdates если еще не инициализирован
+                if (!techSmartUpdates) {
+                    techSmartUpdates = new SmartUpdates({
+                        containerSelector: '#tech-tickets-tbody',
+                        itemSelector: 'tr[data-ticket-id]',
+                        itemIdAttribute: 'data-ticket-id',
+                        createItemHTML: createTechTicketRowHTML,
+                        fieldsToCheck: ['status', 'priority', 'assigned_to_name', 'title', 'description'],
+                        preserveState: true,
+                        onItemUpdate: function(ticket) {
+                            // Переинициализируем обработчики для обновленной строки
+                            setTimeout(() => {
+                                if (typeof initTableDropdowns === 'function') {
+                                    initTableDropdowns();
+                                }
+                            }, 100);
+                        },
+                        onItemAdd: function(ticket) {
+                            // Переинициализируем обработчики для новой строки
+                            setTimeout(() => {
+                                if (typeof initTableDropdowns === 'function') {
+                                    initTableDropdowns();
+                                }
+                            }, 100);
+                        }
+                    });
+                }
                 
-                // Инициализируем выпадающие меню для новых строк
-                setTimeout(() => {
-                    if (typeof initTableDropdowns === 'function') {
-                        initTableDropdowns();
-                    }
-                }, 100);
+                // Обновляем данные
+                techSmartUpdates.updateData(tickets);
             } catch (error) {
                 // Создаем tbody с сообщением об ошибке
                 const errorTbody = document.createElement('tbody');
@@ -606,6 +633,71 @@
             row.appendChild(cell);
 
             return row;
+        }
+
+        // Функция создания HTML строки для SmartUpdates
+        function createTechTicketRowHTML(ticket) {
+            const statusColors = {
+                'open': 'bg-blue-100 text-blue-800',
+                'in_progress': 'bg-yellow-100 text-yellow-800',
+                'resolved': 'bg-green-100 text-green-800',
+                'closed': 'bg-slate-100 text-slate-800'
+            };
+
+            const statusLabels = {
+                'open': 'Открыта',
+                'in_progress': 'В работе',
+                'resolved': 'Решена',
+                'closed': 'Закрыта'
+            };
+
+            const priorityColors = {
+                'low': 'bg-green-100 text-green-800',
+                'medium': 'bg-yellow-100 text-yellow-800',
+                'high': 'bg-red-100 text-red-800',
+                'urgent': 'bg-red-200 text-red-900'
+            };
+
+            const priorityLabels = {
+                'low': 'Низкий',
+                'medium': 'Средний',
+                'high': 'Высокий',
+                'urgent': 'Срочный'
+            };
+
+            const title = ticket.title || 'Без названия';
+            const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
+
+            return `
+                <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="${ticket.id}">
+                    <td class="px-4 py-3">
+                        <div>
+                            <a href="${ticket.url || '#'}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block" title="${ticket.title || ''}">
+                                <span class="line-clamp-1">${truncatedTitle}</span>
+                            </a>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}" title="Статус: ${statusLabels[ticket.status] || ticket.status}">
+                            ${statusLabels[ticket.status] || ticket.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}" title="Приоритет: ${priorityLabels[ticket.priority] || ticket.priority}">
+                            ${priorityLabels[ticket.priority] || ticket.priority}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm text-slate-900" title="${ticket.reporter_name || '—'}">${ticket.reporter_name || '—'}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm text-slate-900" title="${ticket.assigned_to_name || '—'}">${ticket.assigned_to_name || '—'}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm text-slate-500" title="${ticket.created_at || '—'}">${ticket.created_at || '—'}</div>
+                    </td>
+                </tr>
+            `;
         }
 
         function createTechTicketRowElement(ticket) {

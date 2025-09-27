@@ -68,19 +68,29 @@ class TelegramController extends Controller
      */
     protected function processMessage(int $chatId, string $text, array $message): void
     {
+        Log::info('Processing message', [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'is_command' => strpos($text, '/') === 0,
+            'in_auth_process' => $this->authService->isUserInAuthProcess($chatId)
+        ]);
+
         // Проверяем, находится ли пользователь в процессе авторизации
         if ($this->authService->isUserInAuthProcess($chatId)) {
+            Log::info('User in auth process, processing auth message', ['chat_id' => $chatId]);
             $this->processAuthMessage($chatId, $text);
             return;
         }
 
         // Обрабатываем команды
         if (strpos($text, '/') === 0) {
+            Log::info('Processing command', ['chat_id' => $chatId, 'command' => $text]);
             $this->processCommand($chatId, $text);
             return;
         }
 
         // Обычные сообщения
+        Log::info('Processing unknown message', ['chat_id' => $chatId, 'text' => $text]);
         $this->handleUnknownMessage($chatId, $text);
     }
 
@@ -91,15 +101,24 @@ class TelegramController extends Controller
     {
         $authState = $this->authService->getAuthState($chatId);
         
+        Log::info('Processing auth message', [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'auth_state' => $authState
+        ]);
+        
         if (!$authState) {
+            Log::warning('No auth state found', ['chat_id' => $chatId]);
             return;
         }
 
         switch ($authState['step']) {
             case 'phone':
+                Log::info('Processing phone step', ['chat_id' => $chatId]);
                 $this->authService->processPhone($chatId, $text);
                 break;
             case 'password':
+                Log::info('Processing password step', ['chat_id' => $chatId]);
                 $this->authService->processPassword($chatId, $text);
                 break;
         }
@@ -137,6 +156,12 @@ class TelegramController extends Controller
             return;
         }
 
+        if (preg_match('/^\/close_(\d+)$/', $command, $matches)) {
+            $ticketId = (int) $matches[1];
+            $this->commandService->handleCloseTicket($chatId, $ticketId);
+            return;
+        }
+
         // Обрабатываем простые команды
         switch ($command) {
             case '/start':
@@ -162,6 +187,15 @@ class TelegramController extends Controller
                 break;
             case '/stats':
                 $this->commandService->handleStats($chatId);
+                break;
+            case '/rooms':
+                $this->commandService->handleRooms($chatId);
+                break;
+            case '/equipment':
+                $this->commandService->handleEquipment($chatId);
+                break;
+            case '/users':
+                $this->commandService->handleUsers($chatId);
                 break;
             default:
                 $this->handleUnknownCommand($chatId, $command);

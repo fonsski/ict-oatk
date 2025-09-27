@@ -197,10 +197,11 @@ class TelegramService
     {
         $message = "🆕 <b>Новая заявка #{$ticketData['id']}</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticketData['title']}\n";
-        $message .= "📂 <b>Категория:</b> {$ticketData['category']}\n";
-        $message .= "⚡ <b>Приоритет:</b> " . $this->getPriorityEmoji($ticketData['priority']) . " " . ucfirst($ticketData['priority']) . "\n";
+        $message .= "📂 <b>Категория:</b> " . $this->getCategoryEmoji($ticketData['category']) . " " . $this->getHumanReadableCategory($ticketData['category']) . "\n";
+        $message .= "⚡ <b>Приоритет:</b> " . $this->getPriorityEmoji($ticketData['priority']) . " " . $this->getHumanReadablePriority($ticketData['priority']) . "\n";
         $message .= "👤 <b>Заявитель:</b> {$ticketData['reporter_name']}\n\n";
-        $message .= "🔍 <code>/ticket_{$ticketData['id']}</code> - Подробнее";
+        $message .= "🔍 <code>/ticket_{$ticketData['id']}</code> - Подробнее\n";
+        $message .= "▶️ <code>/start_ticket_{$ticketData['id']}</code> - Взять в работу";
 
         return $this->sendMessage($chatId, $message);
     }
@@ -242,8 +243,52 @@ class TelegramService
             'low' => '🟢',
             'medium' => '🟡',
             'high' => '🟠',
-            'critical' => '🔴',
+            'urgent' => '🔴',
             default => '❓'
+        };
+    }
+
+    /**
+     * Получает человекочитаемый приоритет
+     */
+    protected function getHumanReadablePriority(string $priority): string
+    {
+        return match (strtolower($priority)) {
+            'low' => 'Низкий',
+            'medium' => 'Средний',
+            'high' => 'Высокий',
+            'urgent' => 'Срочный',
+            default => ucfirst($priority)
+        };
+    }
+
+    /**
+     * Получает эмодзи для категории
+     */
+    protected function getCategoryEmoji(string $category): string
+    {
+        return match (strtolower($category)) {
+            'hardware' => '💻',
+            'software' => '💿',
+            'network' => '🌐',
+            'account' => '👤',
+            'other' => '📋',
+            default => '❓'
+        };
+    }
+
+    /**
+     * Получает человекочитаемую категорию
+     */
+    protected function getHumanReadableCategory(string $category): string
+    {
+        return match (strtolower($category)) {
+            'hardware' => 'Оборудование',
+            'software' => 'Программное обеспечение',
+            'network' => 'Сеть и интернет',
+            'account' => 'Учетная запись',
+            'other' => 'Другое',
+            default => $category
         };
     }
 }

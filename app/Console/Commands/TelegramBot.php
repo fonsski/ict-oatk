@@ -187,16 +187,11 @@ class TelegramBot extends Command
 
         $this->info("Received message from @{$username}: {$text}");
 
-        // Обрабатываем сообщение через TelegramController
+        // Обрабатываем сообщение напрямую
         try {
-            $controller = app(\App\Http\Controllers\TelegramController::class);
-            
-            // Создаем фейковый Request объект
-            $request = new \Illuminate\Http\Request();
-            $request->merge($update);
-            
-            // Обрабатываем сообщение
-            $controller->webhook($request);
+            $this->info("Processing message directly");
+            $this->processMessageDirectly($chatId, $text);
+            $this->info("Message processed successfully");
             
         } catch (\Exception $e) {
             $this->error('Error processing message: ' . $e->getMessage());
@@ -207,6 +202,179 @@ class TelegramBot extends Command
                 'trace' => $e->getTraceAsString()
             ]);
         }
+    }
+
+    /**
+     * Обрабатывает сообщение напрямую
+     */
+    protected function processMessageDirectly(int $chatId, string $text): void
+    {
+        $authService = app(\App\Services\TelegramAuthService::class);
+        $commandService = app(\App\Services\TelegramCommandService::class);
+        
+        Log::info('Processing message directly', [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'in_auth_process' => $authService->isUserInAuthProcess($chatId)
+        ]);
+
+        // Проверяем, находится ли пользователь в процессе авторизации
+        if ($authService->isUserInAuthProcess($chatId)) {
+            Log::info('User in auth process, processing auth message', ['chat_id' => $chatId]);
+            $this->processAuthMessageDirectly($chatId, $text, $authService);
+            return;
+        }
+
+        // Обрабатываем команды
+        if (strpos($text, '/') === 0) {
+            Log::info('Processing command', ['chat_id' => $chatId, 'command' => $text]);
+            $this->processCommandDirectly($chatId, $text, $commandService);
+            return;
+        }
+
+        // Обычные сообщения
+        Log::info('Processing unknown message', ['chat_id' => $chatId, 'text' => $text]);
+        $this->handleUnknownMessageDirectly($chatId, $text);
+    }
+
+    /**
+     * Обрабатывает сообщения в процессе авторизации
+     */
+    protected function processAuthMessageDirectly(int $chatId, string $text, $authService): void
+    {
+        $authState = $authService->getAuthState($chatId);
+        
+        Log::info('Processing auth message directly', [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'auth_state' => $authState
+        ]);
+        
+        if (!$authState) {
+            Log::warning('No auth state found', ['chat_id' => $chatId]);
+            return;
+        }
+
+        switch ($authState['step']) {
+            case 'phone':
+                Log::info('Processing phone step', ['chat_id' => $chatId]);
+                $authService->processPhone($chatId, $text);
+                break;
+            case 'password':
+                Log::info('Processing password step', ['chat_id' => $chatId]);
+                $authService->processPassword($chatId, $text);
+                break;
+        }
+    }
+
+    /**
+     * Обрабатывает команды напрямую
+     */
+    protected function processCommandDirectly(int $chatId, string $text, $commandService): void
+    {
+        $command = strtolower(trim($text));
+
+        // Обрабатываем команды с параметрами
+        if (preg_match('/^\/ticket_(\d+)$/', $command, $matches)) {
+            $ticketId = (int) $matches[1];
+            $commandService->handleTicketDetails($chatId, $ticketId);
+            return;
+        }
+
+        if (preg_match('/^\/start_ticket_(\d+)$/', $command, $matches)) {
+            $ticketId = (int) $matches[1];
+            $commandService->handleStartTicket($chatId, $ticketId);
+            return;
+        }
+
+        if (preg_match('/^\/assign_(\d+)$/', $command, $matches)) {
+            $ticketId = (int) $matches[1];
+            $commandService->handleAssignTicket($chatId, $ticketId);
+            return;
+        }
+
+        if (preg_match('/^\/resolve_(\d+)$/', $command, $matches)) {
+            $ticketId = (int) $matches[1];
+            $commandService->handleResolveTicket($chatId, $ticketId);
+            return;
+        }
+
+        if (preg_match('/^\/close_(\d+)$/', $command, $matches)) {
+            $ticketId = (int) $matches[1];
+            $commandService->handleCloseTicket($chatId, $ticketId);
+            return;
+        }
+
+        // Обрабатываем простые команды
+        switch ($command) {
+            case '/start':
+                $commandService->handleStart($chatId);
+                break;
+            case '/help':
+                $commandService->handleHelp($chatId);
+                break;
+            case '/login':
+                $authService = app(\App\Services\TelegramAuthService::class);
+                $authService->startAuth($chatId);
+                break;
+            case '/logout':
+                $authService = app(\App\Services\TelegramAuthService::class);
+                $authService->logout($chatId);
+                break;
+            case '/tickets':
+                $commandService->handleTickets($chatId);
+                break;
+            case '/all_tickets':
+                $commandService->handleAllTickets($chatId);
+                break;
+            case '/active':
+                $commandService->handleActive($chatId);
+                break;
+            case '/stats':
+                $commandService->handleStats($chatId);
+                break;
+            case '/rooms':
+                $commandService->handleRooms($chatId);
+                break;
+            case '/equipment':
+                $commandService->handleEquipment($chatId);
+                break;
+            case '/users':
+                $commandService->handleUsers($chatId);
+                break;
+            case '/reset_auth':
+                $authService = app(\App\Services\TelegramAuthService::class);
+                $authService->resetAuthBlock($chatId);
+                break;
+            default:
+                $this->handleUnknownCommandDirectly($chatId, $command);
+                break;
+        }
+    }
+
+    /**
+     * Обрабатывает неизвестные команды
+     */
+    protected function handleUnknownCommandDirectly(int $chatId, string $command): void
+    {
+        $message = "❓ <b>Неизвестная команда</b>\n\n";
+        $message .= "Команда <code>{$command}</code> не распознана.\n\n";
+        $message .= "Отправьте <code>/help</code> для получения списка доступных команд.";
+
+        $telegramService = app(\App\Services\TelegramService::class);
+        $telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Обрабатывает неизвестные сообщения
+     */
+    protected function handleUnknownMessageDirectly(int $chatId, string $text): void
+    {
+        $message = "🤔 <b>Не понимаю</b>\n\n";
+        $message .= "Отправьте <code>/help</code> для получения списка доступных команд.";
+
+        $telegramService = app(\App\Services\TelegramService::class);
+        $telegramService->sendMessage($chatId, $message);
     }
 
     /**

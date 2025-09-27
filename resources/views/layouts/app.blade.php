@@ -116,22 +116,6 @@
                                             Категории оборудования
                                         </a>
 
-                                        @if(config('app.debug'))
-                                        <div class="border-t border-gray-200 my-1"></div>
-                                        <div class="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider">Тестирование</div>
-                                        <a href="{{ route('test.debug') }}"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            🐛 Debug уведомлений
-                                        </a>
-                                        <a href="{{ route('test.notifications') }}"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            🔔 Тест уведомления
-                                        </a>
-                                        <a href="{{ route('test.ticket') }}"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            🎫 Тест заявки
-                                        </a>
-                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -539,23 +523,6 @@
                 }, duration);
             }
         };
-
-        // Show Laravel flash messages as notifications
-        @if(session('success'))
-            showNotification('{{ session('success') }}', 'success');
-        @endif
-
-        @if(session('error'))
-            showNotification('{{ session('error') }}', 'error');
-        @endif
-
-        @if(session('warning'))
-            showNotification('{{ session('warning') }}', 'warning');
-        @endif
-
-        @if(session('info'))
-            showNotification('{{ session('info') }}', 'info');
-        @endif
 
         // Global variables for notification tracking
         let lastNotificationCheck = new Date().toISOString();

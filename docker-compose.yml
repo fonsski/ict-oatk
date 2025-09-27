@@ -46,7 +46,7 @@ services:
             timeout: 10s
             retries: 3
             start_period: 30s
-        command: php artisan telegram:bot --mode=polling
+        command: php artisan telegram:simple
         logging:
             driver: "json-file"
             options:

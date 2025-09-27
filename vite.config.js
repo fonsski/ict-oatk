@@ -11,6 +11,7 @@ export default defineConfig({
                 "resources/js/app.js",
                 "resources/js/live-updates.js",
                 "resources/js/websocket-client.js",
+                "resources/js/smart-updates.js",
             ],
             refresh: [
                 ...refreshPaths,

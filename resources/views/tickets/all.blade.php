@@ -316,7 +316,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200" id="tickets-tbody">
-                                @include('tickets.partials.all-table-rows', ['tickets' => $tickets])
+                                <!-- Содержимое будет заполнено через SmartUpdates -->
                             </tbody>
                         </table>
                     </div>
@@ -371,11 +371,32 @@
 @push('scripts')
 <script src="{{ Vite::asset('resources/js/websocket-client.js') }}"></script>
 <script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
+<script src="{{ Vite::asset('resources/js/smart-updates.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let liveUpdates;
     let refreshInterval;
     const REFRESH_INTERVAL = 1000; // 1 секунда
+
+    // Инициализируем таблицу с начальными данными
+    const initialTicketsData = @json($tickets);
+    console.log('Начальные данные заявок:', initialTicketsData);
+    
+    // Извлекаем массив заявок из объекта пагинации
+    const initialTickets = initialTicketsData && initialTicketsData.data ? initialTicketsData.data : [];
+    console.log('Массив заявок:', initialTickets);
+    console.log('Количество заявок:', initialTickets.length);
+    
+    if (initialTickets && initialTickets.length > 0) {
+        console.log('Загружаем заявки в таблицу...');
+        updateTicketsTable(initialTickets);
+        // Инициализируем обработчики для начальных данных
+        setTimeout(() => {
+            initTableDropdowns();
+        }, 100);
+    } else {
+        console.log('Нет заявок для отображения');
+    }
 
     // Элементы
     const refreshBtn = document.getElementById('refresh-btn');
@@ -405,29 +426,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         
-        liveUpdates = new LiveUpdates({
-            refreshInterval: REFRESH_INTERVAL,
-            apiEndpoint: '{{ route("all-tickets.api") }}',
-            csrfToken: csrfToken,
-            useWebSocket: true, // Включаем WebSocket
-            websocketUrl: 'ws://{{ config("app.websocket_host", request()->getHost()) }}:{{ config("app.websocket_port", 8080) }}',
-            onSuccess: function(data) {
-                console.log('LiveUpdates: Данные получены успешно');
-                
-                // Обновляем статистику
-                if (data.stats) {
-                    updateStats(data.stats);
-                }
-                
-                // Обновляем таблицу заявок
-                if (data.tickets && Array.isArray(data.tickets)) {
-                    updateTicketsTable(data.tickets);
-                }
-            },
-            onError: function(error) {
-                console.error('LiveUpdates: Ошибка:', error);
+        // Временно отключаем LiveUpdates для отладки
+        console.log('LiveUpdates отключен для отладки');
+        
+        // Вместо этого используем fallback
+        setTimeout(() => {
+            const initialTickets = @json($tickets);
+            if (initialTickets && initialTickets.length > 0) {
+                updateTicketsTable(initialTickets);
             }
-        });
+        }, 100);
     }
     
     // Fallback функции для старого метода
@@ -512,31 +520,47 @@ document.addEventListener('DOMContentLoaded', function() {
         if (closedEl) closedEl.textContent = stats.closed;
     }
 
-    // Обновление таблицы заявок
+    // Умная система обновления заявок
+    let smartUpdates;
+
+    // Обновление таблицы заявок с умным механизмом
     function updateTicketsTable(tickets) {
+        console.log('updateTicketsTable вызвана с заявками:', tickets);
         const tbody = document.getElementById('tickets-tbody');
         const emptyState = document.getElementById('empty-state');
+        
+        console.log('Найден tbody:', tbody);
+        console.log('Найден emptyState:', emptyState);
 
         if (tickets.length === 0) {
+            console.log('Нет заявок, показываем пустое состояние');
             if (tbody) tbody.innerHTML = '';
             if (emptyState) emptyState.style.display = 'block';
+            if (smartUpdates) smartUpdates.clear();
             return;
         }
 
         if (emptyState) emptyState.style.display = 'none';
 
         if (tbody) {
-            tbody.innerHTML = tickets.map(ticket => createTicketRow(ticket)).join('');
-            
-            // Переинициализируем обработчики событий для меню действий
+            // Используем простой fallback без SmartUpdates
+            console.log('Используем простой fallback для отображения таблицы');
+            const html = tickets.map(ticket => createTicketRow(ticket)).join('');
+            console.log('Сгенерированный HTML:', html.substring(0, 200) + '...');
+            tbody.innerHTML = html;
             setTimeout(() => {
                 initTableDropdowns();
             }, 100);
+        } else {
+            console.error('tbody не найден!');
         }
     }
 
+
     // Создание строки таблицы
     function createTicketRow(ticket) {
+        console.log('Создаем строку для заявки:', ticket);
+        console.log('ID заявки:', ticket.id);
         const statusColors = {
             'open': 'bg-blue-100 text-blue-800',
             'in_progress': 'bg-yellow-100 text-yellow-800',
@@ -566,10 +590,14 @@ document.addEventListener('DOMContentLoaded', function() {
             'urgent': 'Срочный'
         };
 
+        // Генерируем URL для заявки
+        const ticketUrl = `/tickets/${ticket.id}`;
+        console.log('URL заявки:', ticketUrl);
+        
         // Упрощенное отображение информации о помещении для экономии места
         const roomInfo = ticket.room ? `<div class="text-xs text-slate-500 mt-1">🏢 ${ticket.room.number}</div>` :
                         (ticket.location_name ? `<div class="text-xs text-slate-500 mt-1">📍 ${ticket.location_name}</div>` : '');
-
+        
         // Escape HTML in title and description for safety
         const safeTitle = ticket.title ? ticket.title.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Без названия';
         const safeDescription = ticket.description ? ticket.description.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
@@ -578,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <tr class="hover:bg-slate-50 transition-all duration-300" data-ticket-id="${ticket.id}">
                 <td class="px-4 py-3">
                     <div>
-                        <a href="${ticket.url}"
+                        <a href="${ticketUrl}"
                            class="ticket-title line-clamp-2 break-words inline-block transition-all duration-300"
                            title="${safeTitle}">
                             ${ticket.id ? `#${ticket.id}: ` : ''}${safeTitle}
@@ -634,25 +662,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     ` : '<span class="text-sm text-slate-500 italic">Не назначено</span>'}
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap">
-                    <div class="flex items-center justify-center">
-                        <div class="relative z-50" data-dropdown>
-                            <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                                </svg>
-                            </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
-                                <div class="py-1">
-                                    <a href="${ticket.url}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
-                                    ${ticket.status !== 'in_progress' && ticket.status !== 'closed' && !ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
-                                    ${ticket.status === 'in_progress' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить решённой</button>` : ''}
-                                    ${ticket.status === 'resolved' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
-                                    ${ticket.status !== 'closed' ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition" data-action="assign-to" data-id="${ticket.id}">Назначить исполнителя</button>` : ''}
+                        <div class="flex items-center justify-end">
+                            <div class="relative inline-block">
+                                <button type="button" class="actions-btn text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-ticket-id="${ticket.id}" title="Действия">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                    </svg>
+                                </button>
+                                <div class="actions-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden" data-ticket-id="${ticket.id}">
+                                    <div class="py-1">
+                                        <a href="${ticketUrl}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                                        ${ticket.status !== 'in_progress' && ticket.status !== 'closed' && !ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
+                                        ${ticket.status === 'in_progress' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить решённой</button>` : ''}
+                                        ${ticket.status === 'resolved' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
+                                        ${ticket.status !== 'closed' ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="assign-to" data-id="${ticket.id}">Назначить исполнителя</button>` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </td>
+                    </td>
             </tr>
         `;
     }
@@ -700,71 +728,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Глобальный обработчик кликов для закрытия всех меню
     document.addEventListener('click', function(e) {
         // Закрытие всех открытых меню при клике вне них
-        if (!e.target.closest('.actions-menu-button') && !e.target.closest('.actions-menu')) {
+        if (!e.target.closest('.actions-btn') && !e.target.closest('.actions-menu')) {
             document.querySelectorAll('.actions-menu').forEach(menu => {
                 menu.classList.add('hidden');
             });
-            document.querySelectorAll('.actions-menu-button').forEach(button => {
-                button.classList.remove('bg-slate-200');
+            document.querySelectorAll('.actions-btn').forEach(button => {
+                button.classList.remove('bg-slate-100');
             });
-        }
-
-        // Открытие меню действий при клике на кнопку
-        if (e.target.closest('.actions-menu-button')) {
-            const button = e.target.closest('.actions-menu-button');
-            const ticketId = button.getAttribute('data-id');
-            const dropdownContainer = button.closest('[data-dropdown-id]');
-            const dropdown = dropdownContainer.querySelector('.actions-menu');
-
-            // Закрыть все другие открытые меню
-            document.querySelectorAll('.actions-menu').forEach(menu => {
-                if (menu !== dropdown) {
-                    menu.classList.add('hidden');
-                }
-            });
-
-            document.querySelectorAll('.actions-menu-button').forEach(btn => {
-                if (btn !== button) {
-                    btn.classList.remove('bg-slate-200');
-                }
-            });
-
-            // Переключить текущее меню
-            dropdown.classList.toggle('hidden');
-            button.classList.toggle('bg-slate-200');
-
-            // Сбрасываем стили позиционирования перед установкой новых
-            dropdown.style.left = '';
-            dropdown.style.right = '';
-            dropdown.style.top = '';
-            dropdown.style.position = 'absolute';
-            dropdown.style.zIndex = '100';
-
-            // Корректное позиционирование меню
-            const rect = button.getBoundingClientRect();
-
-            // Проверяем, достаточно ли места справа от кнопки
-            const rightSpace = window.innerWidth - rect.right;
-
-            if (rightSpace < dropdown.offsetWidth) {
-                // Недостаточно места справа, позиционируем слева от кнопки
-                dropdown.style.left = 'auto';
-                dropdown.style.right = '0';
-            } else {
-                // Достаточно места справа, позиционируем как обычно
-                dropdown.style.left = '0';
-                dropdown.style.right = 'auto';
-            }
-
-            // Устанавливаем позицию по вертикали
-            dropdown.style.top = 'calc(100% + 0.5rem)';
-
-            // Максимальная высота и прокрутка для больших меню
-            dropdown.style.maxHeight = '80vh';
-            dropdown.style.overflowY = 'auto';
-
-            e.preventDefault();
-            e.stopPropagation();
         }
 
         // Обработка одиночных действий
@@ -785,18 +755,16 @@ document.addEventListener('DOMContentLoaded', function() {
             button.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Выполняется...</span>';
 
             // Закрыть меню немедленно, чтобы пользователь видел, что клик обработан
-            const dropdown = button.closest('.actions-menu');
-            if (dropdown) {
-                dropdown.classList.add('hidden');
+            const ticketIdForMenu = button.getAttribute('data-id');
+            const menu = document.querySelector(`.actions-menu[data-ticket-id="${ticketIdForMenu}"]`);
+            if (menu) {
+                menu.classList.add('hidden');
             }
 
             // Находим и убираем подсветку с кнопки меню
-            const dropdownContainer = button.closest('[data-dropdown-id]');
-            if (dropdownContainer) {
-                const menuButton = dropdownContainer.querySelector('.actions-menu-button');
-                if (menuButton) {
-                    menuButton.classList.remove('bg-slate-200');
-                }
+            const actionBtn = document.querySelector(`.actions-btn[data-ticket-id="${ticketIdForMenu}"]`);
+            if (actionBtn) {
+                actionBtn.classList.remove('bg-slate-100');
             }
 
             // Восстанавливаем текст кнопки через небольшую задержку
@@ -1231,75 +1199,88 @@ if (action === 'change-status' && status) {
 
     // Функция инициализации выпадающих меню
     function initTableDropdowns() {
-        // Обработка выпадающих меню в таблице
-        document.querySelectorAll('[data-dropdown]').forEach(function(dropdown) {
-            const toggle = dropdown.querySelector('[data-dropdown-toggle]');
-            const menu = dropdown.querySelector('[data-dropdown-menu]');
+        console.log('Инициализируем обработчики кнопок...');
+        
+        // Удаляем все старые обработчики
+        document.querySelectorAll('.actions-btn').forEach(btn => {
+            btn.removeEventListener('click', handleActionsClick);
+        });
 
-            if (toggle && menu) {
-                // Удаляем старые обработчики
-                toggle.removeEventListener('click', handleDropdownToggle);
-                
-                // Добавляем новый обработчик
-                toggle.addEventListener('click', handleDropdownToggle);
-            }
+        // Добавляем обработчики для всех кнопок действий
+        const buttons = document.querySelectorAll('.actions-btn');
+        console.log('Найдено кнопок:', buttons.length);
+        
+        buttons.forEach(btn => {
+            btn.addEventListener('click', handleActionsClick);
+            console.log('Обработчик добавлен для кнопки:', btn.getAttribute('data-ticket-id'));
         });
     }
 
-    // Обработчик клика по кнопке выпадающего меню
-    function handleDropdownToggle(e) {
+    // Обработчик клика по кнопке действий
+    function handleActionsClick(e) {
+        console.log('Кнопка нажата!');
         e.preventDefault();
         e.stopPropagation();
 
-        const toggle = e.currentTarget;
-        const dropdown = toggle.closest('[data-dropdown]');
-        const menu = dropdown.querySelector('[data-dropdown-menu]');
+        const button = e.currentTarget;
+        const ticketId = button.getAttribute('data-ticket-id');
+        console.log('ID заявки:', ticketId);
+        
+        const menu = document.querySelector(`.actions-menu[data-ticket-id="${ticketId}"]`);
+        console.log('Найдено меню:', menu);
+
+        if (!menu) {
+            console.error('Меню не найдено для заявки:', ticketId);
+            return;
+        }
 
         // Закрыть все другие меню
-        document.querySelectorAll('[data-dropdown-menu]').forEach(function(otherMenu) {
+        document.querySelectorAll('.actions-menu').forEach(otherMenu => {
             if (otherMenu !== menu) {
                 otherMenu.classList.add('hidden');
             }
         });
 
-        document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
-            if (otherToggle !== toggle) {
-                otherToggle.classList.remove('bg-slate-100');
+        document.querySelectorAll('.actions-btn').forEach(otherBtn => {
+            if (otherBtn !== button) {
+                otherBtn.classList.remove('bg-slate-100');
             }
         });
 
         // Переключить текущее меню
+        const isHidden = menu.classList.contains('hidden');
+        console.log('Меню скрыто:', isHidden);
+        
         menu.classList.toggle('hidden');
-        toggle.classList.toggle('bg-slate-100');
+        button.classList.toggle('bg-slate-100');
+        
+        console.log('Меню после переключения скрыто:', menu.classList.contains('hidden'));
 
-        // Корректное позиционирование меню
-        const rect = toggle.getBoundingClientRect();
-        const rightSpace = window.innerWidth - rect.right;
+        // Позиционирование меню
+        if (!menu.classList.contains('hidden')) {
+            const rect = button.getBoundingClientRect();
+            const rightSpace = window.innerWidth - rect.right;
 
-        // Сбрасываем предыдущие стили
-        menu.style.left = '';
-        menu.style.right = '';
-        menu.style.top = '';
-        menu.style.position = 'absolute';
-        menu.style.zIndex = '100';
+            menu.style.position = 'absolute';
+            menu.style.zIndex = '1000';
 
-        // Проверяем, достаточно ли места справа
-        if (rightSpace < 200) {
-            menu.style.left = 'auto';
-            menu.style.right = '0';
-        } else {
-            menu.style.left = '0';
-            menu.style.right = 'auto';
+            if (rightSpace < 200) {
+                menu.style.left = 'auto';
+                menu.style.right = '0';
+            } else {
+                menu.style.left = '0';
+                menu.style.right = 'auto';
+            }
+
+            menu.style.top = 'calc(100% + 0.5rem)';
         }
-
-        // Устанавливаем позицию по вертикали
-        menu.style.top = 'calc(100% + 0.5rem)';
-        menu.style.maxHeight = '80vh';
-        menu.style.overflowY = 'auto';
     }
 
     // Инициализация LiveUpdates
     initLiveUpdates();
+
+    // Инициализация выпадающих меню при загрузке страницы
+    initTableDropdowns();
 
     // Начальная загрузка времени
     if (lastUpdated) {

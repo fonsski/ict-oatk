@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=testing
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=ict_test
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ../../:/var/www/html
+    command: >
+      sh -c "
+        composer install --no-dev --optimize-autoloader &&
+        php artisan key:generate &&
+        php artisan config:cache &&
+        php artisan route:cache &&
+        php artisan view:cache &&
+        php artisan migrate:fresh --seed &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ict_test
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.40.0-focal
+    working_dir: /tests
+    volumes:
+      - .:/tests
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - APP_URL=http://app:8000
+      - CI=true
+    depends_on:
+      app:
+        condition: service_started
+    command: >
+      sh -c "
+        npm install &&
+        npm run test:install &&
+        npm run test
+      "
+
+volumes:
+  mysql_data:

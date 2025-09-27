@@ -46,13 +46,27 @@ class TelegramAuthService
      */
     public function processPhone(int $chatId, string $phone): bool
     {
+        Log::info('Processing phone number', [
+            'chat_id' => $chatId,
+            'phone' => $phone
+        ]);
+
         $authState = $this->getAuthState($chatId);
         if (!$authState || $authState['step'] !== 'phone') {
+            Log::warning('No auth state or wrong step', [
+                'chat_id' => $chatId,
+                'auth_state' => $authState
+            ]);
             return false;
         }
 
         // Очищаем номер телефона
         $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        Log::info('Cleaned phone number', [
+            'chat_id' => $chatId,
+            'original_phone' => $phone,
+            'clean_phone' => $cleanPhone
+        ]);
 
         // Ищем пользователя
         $user = User::where(function ($query) use ($cleanPhone) {
@@ -60,6 +74,14 @@ class TelegramAuthService
                   ->orWhere('phone', 'like', "%" . substr($cleanPhone, -10) . "%")
                   ->orWhere('phone', $cleanPhone);
         })->first();
+
+        Log::info('User search result', [
+            'chat_id' => $chatId,
+            'clean_phone' => $cleanPhone,
+            'user_found' => $user ? true : false,
+            'user_id' => $user ? $user->id : null,
+            'user_name' => $user ? $user->name : null
+        ]);
 
         if (!$user) {
             $this->incrementAuthAttempts($chatId);
@@ -83,6 +105,12 @@ class TelegramAuthService
             'attempts' => 0,
             'started_at' => $authState['started_at']
         ], now()->addMinutes(15));
+
+        Log::info('Moving to password step', [
+            'chat_id' => $chatId,
+            'user_id' => $user->id,
+            'user_name' => $user->name
+        ]);
 
         $message = "✅ Пользователь найден: <b>{$user->name}</b>\n\n";
         $message .= "Введите ваш пароль:";
@@ -245,6 +273,21 @@ class TelegramAuthService
     }
 
     /**
+     * Сбрасывает блокировку авторизации (для разработки)
+     */
+    public function resetAuthBlock(int $chatId): bool
+    {
+        $this->clearAuthState($chatId);
+        $this->clearUserSession($chatId);
+        
+        $message = "🔄 <b>Блокировка авторизации сброшена</b>\n\n";
+        $message .= "Теперь вы можете попробовать авторизоваться снова.\n\n";
+        $message .= "Отправьте <code>/login</code> для начала авторизации.";
+        
+        return $this->telegramService->sendMessage($chatId, $message);
+    }
+
+    /**
      * Увеличивает количество попыток авторизации
      */
     protected function incrementAuthAttempts(int $chatId): void
@@ -256,11 +299,11 @@ class TelegramAuthService
 
         $authState['attempts'] = ($authState['attempts'] ?? 0) + 1;
 
-        // Если слишком много попыток, блокируем на 5 минут
-        if ($authState['attempts'] >= 3) {
+        // Если слишком много попыток, блокируем на 1 минуту (для тестирования)
+        if ($authState['attempts'] >= 5) {
             $this->clearAuthState($chatId);
             $message = "🚫 Слишком много неудачных попыток авторизации.\n\n";
-            $message .= "Попробуйте снова через 5 минут.";
+            $message .= "Попробуйте снова через 1 минуту.";
             $this->telegramService->sendMessage($chatId, $message);
             return;
         }
