@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\KnowledgeCategory;
+use App\Http\Requests\StoreKnowledgeCategoryRequest;
+use App\Http\Requests\UpdateKnowledgeCategoryRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -53,17 +55,9 @@ class KnowledgeCategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreKnowledgeCategoryRequest $request)
     {
-        $data = $request->validate([
-            "name" => "required|string|max:255",
-            "description" => "nullable|string|max:500",
-            "icon" => "nullable|string|max:100",
-            "color" =>
-                'required|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
-            "sort_order" => "nullable|integer|min:0",
-            "is_active" => "boolean",
-        ]);
+        $data = $request->validated();
 
         $data["slug"] = Str::slug($data["name"]);
         $data["is_active"] = $request->has("is_active");
@@ -104,17 +98,9 @@ class KnowledgeCategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, KnowledgeCategory $category)
+    public function update(UpdateKnowledgeCategoryRequest $request, KnowledgeCategory $category)
     {
-        $data = $request->validate([
-            "name" => "required|string|max:255",
-            "description" => "nullable|string|max:500",
-            "icon" => "nullable|string|max:100",
-            "color" =>
-                'required|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
-            "sort_order" => "nullable|integer|min:0",
-            "is_active" => "boolean",
-        ]);
+        $data = $request->validated();
 
         $data["slug"] = Str::slug($data["name"]);
         $data["is_active"] = $request->has("is_active");

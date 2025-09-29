@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\HomepageFAQ;
+use App\Http\Requests\StoreHomepageFAQRequest;
+use App\Http\Requests\UpdateHomepageFAQRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -56,17 +58,11 @@ class HomepageFAQController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreHomepageFAQRequest $request)
     {
         $this->checkPermission();
 
-        $data = $request->validate([
-            "title" => "required|string|max:255",
-            "excerpt" => "nullable|string|max:500",
-            "content" => "required|string",
-            "is_active" => "boolean",
-            "sort_order" => "nullable|integer|min:0",
-        ]);
+        $data = $request->validated();
 
         $faq = new HomepageFAQ();
         $faq->title = $data["title"];
@@ -117,17 +113,11 @@ class HomepageFAQController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, HomepageFAQ $homepageFaq)
+    public function update(UpdateHomepageFAQRequest $request, HomepageFAQ $homepageFaq)
     {
         $this->checkPermission();
 
-        $data = $request->validate([
-            "title" => "required|string|max:255",
-            "excerpt" => "nullable|string|max:500",
-            "content" => "required|string",
-            "is_active" => "boolean",
-            "sort_order" => "nullable|integer|min:0",
-        ]);
+        $data = $request->validated();
 
         $homepageFaq->title = $data["title"];
         $homepageFaq->slug = Str::slug($data["title"]);

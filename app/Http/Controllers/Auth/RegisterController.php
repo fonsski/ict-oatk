@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -17,31 +18,12 @@ class RegisterController extends Controller
         return view("auth.register");
     }
 
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $messages = [
-            "name.required" => "Пожалуйста, укажите ваше имя",
-            "name.max" => "Имя не должно превышать 255 символов",
-            "phone.required" => "Пожалуйста, укажите номер телефона",
-            "phone.max" => "Номер телефона не должен превышать 20 символов",
-            "phone.regex" =>
-                "Номер телефона может содержать только цифры, +, -, пробелы и скобки",
-            "password.required" => "Пожалуйста, введите пароль",
-            "password.min" => "Пароль должен содержать не менее 8 символов",
-            "password.confirmed" => "Пароли не совпадают",
-        ];
-
-        $request->validate(
-            [
-                "name" => "required|string|max:255",
-                "phone" => "required|string|max:20|regex:/^[0-9+\-\s\(\)]+$/",
-                "password" => "required|string|min:8|confirmed",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         // Проверка на пустой телефон после очистки от форматирования
-        $cleanPhoneForCheck = preg_replace("/[^0-9+]/", "", $request->phone);
+        $cleanPhoneForCheck = preg_replace("/[^0-9+]/", "", $data['phone']);
         if (empty($cleanPhoneForCheck)) {
             return back()
                 ->withErrors([
@@ -52,7 +34,7 @@ class RegisterController extends Controller
         }
 
         // Очищаем номер телефона от форматирования
-        $phone = preg_replace("/[^0-9+]/", "", $request->phone);
+        $phone = preg_replace("/[^0-9+]/", "", $data['phone']);
 
         // Нормализуем номер телефона в формат +7XXXXXXXXXX
         if (strlen($phone) >= 10) {
@@ -129,10 +111,10 @@ class RegisterController extends Controller
             }
 
             $user = User::create([
-                "name" => $request->name,
+                "name" => $data['name'],
                 "phone" => $phone,
                 "email" => $randomEmail,
-                "password" => Hash::make($request->password),
+                "password" => Hash::make($data['password']),
                 "role_id" => $userRole->id,
                 "is_active" => false,
             ]);

@@ -10,6 +10,8 @@ use App\Models\EquipmentLocationHistory;
 use App\Traits\HasLiveSearch;
 use App\Events\EquipmentStatusChanged;
 use App\Events\EquipmentLocationChanged;
+use App\Http\Requests\StoreEquipmentRequest;
+use App\Http\Requests\UpdateEquipmentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -102,7 +104,7 @@ class EquipmentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEquipmentRequest $request)
     {
         if (
             !Auth::check() ||
@@ -114,38 +116,7 @@ class EquipmentController extends Controller
             );
         }
 
-        $messages = [
-            "inventory_number.required" =>
-                "Пожалуйста, укажите инвентарный номер",
-            "inventory_number.unique" =>
-                "Оборудование с таким инвентарным номером уже существует",
-            "status_id.required" => "Пожалуйста, укажите статус оборудования",
-            "warranty_end_date.required_if" =>
-                "Укажите дату окончания гарантии",
-            "service_comment.max" =>
-                "Комментарии о проведенном обслуживании не должны превышать 500 символов",
-            "known_issues.max" =>
-                "Известные проблемы не должны превышать 500 символов",
-        ];
-
-        $data = $request->validate(
-            [
-                "name" => "nullable|string|max:255",
-                "inventory_number" =>
-                    "required|string|max:255|unique:equipment,inventory_number",
-                "category_id" => "nullable|exists:equipment_categories,id",
-                "status_id" => "required|exists:equipment_statuses,id",
-                "room_id" => "nullable|exists:rooms,id",
-                "has_warranty" => "boolean",
-                "warranty_end_date" =>
-                    "nullable|date|required_if:has_warranty,1",
-                "last_service_date" => "nullable|date",
-                "service_comment" => "nullable|string|max:500",
-                "known_issues" => "nullable|string|max:500",
-                "initial_room_id" => "nullable|exists:rooms,id",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         // Всегда используем текущий кабинет как начальный при создании оборудования
         if (!empty($data["room_id"])) {
@@ -210,7 +181,7 @@ class EquipmentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Equipment $equipment)
+    public function update(UpdateEquipmentRequest $request, Equipment $equipment)
     {
         if (
             !Auth::check() ||
@@ -222,39 +193,7 @@ class EquipmentController extends Controller
             );
         }
 
-        $messages = [
-            "inventory_number.required" =>
-                "Пожалуйста, укажите инвентарный номер",
-            "inventory_number.unique" =>
-                "Оборудование с таким инвентарным номером уже существует",
-            "status_id.required" => "Пожалуйста, укажите статус оборудования",
-            "warranty_end_date.required_if" =>
-                "Укажите дату окончания гарантии",
-            "service_comment.max" =>
-                "Комментарии о проведенном обслуживании не должны превышать 500 символов",
-            "known_issues.max" =>
-                "Известные проблемы не должны превышать 500 символов",
-        ];
-
-        $data = $request->validate(
-            [
-                "name" => "nullable|string|max:255",
-                "inventory_number" =>
-                    "required|string|max:255|unique:equipment,inventory_number," .
-                    $equipment->id,
-                "category_id" => "nullable|exists:equipment_categories,id",
-                "status_id" => "required|exists:equipment_statuses,id",
-                "room_id" => "nullable|exists:rooms,id",
-                "has_warranty" => "boolean",
-                "warranty_end_date" =>
-                    "nullable|date|required_if:has_warranty,1",
-                "last_service_date" => "nullable|date",
-                "service_comment" => "nullable|string|max:500",
-                "known_issues" => "nullable|string|max:500",
-                "initial_room_id" => "nullable|exists:rooms,id",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         // Проверяем, изменился ли кабинет и статус
         $oldRoomId = $equipment->room_id;

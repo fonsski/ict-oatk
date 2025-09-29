@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreKnowledgeCategoryRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true; // Авторизация проверяется в контроллере
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => 'required|string|min:2|max:255|unique:knowledge_categories,name',
+            'description' => 'nullable|string|min:5|max:500',
+            'icon' => 'nullable|string|min:1|max:100',
+            'color' => 'required|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
+            'sort_order' => 'nullable|integer|min:0|max:9999',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            // Название категории
+            'name.required' => 'Пожалуйста, укажите название категории',
+            'name.min' => 'Название категории должно содержать не менее 2 символов',
+            'name.max' => 'Название категории не должно превышать 255 символов',
+            'name.unique' => 'Категория с таким названием уже существует в системе',
+            
+            // Описание
+            'description.min' => 'Описание категории должно содержать не менее 5 символов',
+            'description.max' => 'Описание категории не должно превышать 500 символов',
+            
+            // Иконка
+            'icon.min' => 'Название иконки должно содержать не менее 1 символа',
+            'icon.max' => 'Название иконки не должно превышать 100 символов',
+            
+            // Цвет
+            'color.required' => 'Пожалуйста, выберите цвет категории',
+            'color.regex' => 'Цвет должен быть в формате HEX (#FFFFFF или #FFF)',
+            
+            // Порядок сортировки
+            'sort_order.integer' => 'Порядок сортировки должен быть числом',
+            'sort_order.min' => 'Порядок сортировки не может быть отрицательным',
+            'sort_order.max' => 'Порядок сортировки не должен превышать 9999',
+            
+            // Активность
+            'is_active.boolean' => 'Поле активности должно быть логическим значением',
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'название категории',
+            'description' => 'описание категории',
+            'icon' => 'иконка',
+            'color' => 'цвет категории',
+            'sort_order' => 'порядок сортировки',
+            'is_active' => 'активность',
+        ];
+    }
+}

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\EquipmentCategory;
+use App\Http\Requests\StoreEquipmentCategoryRequest;
+use App\Http\Requests\UpdateEquipmentCategoryRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -73,17 +75,14 @@ class EquipmentCategoryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(StoreEquipmentCategoryRequest $request): \Illuminate\Http\RedirectResponse
     {
         // Проверка прав доступа
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
-        $validated = $request->validate([
-            "name" => "required|string|max:255|unique:equipment_categories",
-            "description" => "nullable|string",
-        ]);
+        $validated = $request->validated();
 
         // Автоматически генерируем slug из имени
         $validated["slug"] = Str::slug($validated["name"]);
@@ -140,7 +139,7 @@ class EquipmentCategoryController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(
-        Request $request,
+        UpdateEquipmentCategoryRequest $request,
         EquipmentCategory $equipmentCategory,
     ): \Illuminate\Http\RedirectResponse {
         // Проверка прав доступа
@@ -148,17 +147,7 @@ class EquipmentCategoryController extends Controller
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
-        $validated = $request->validate([
-            "name" => [
-                "required",
-                "string",
-                "max:255",
-                Rule::unique("equipment_categories")->ignore(
-                    $equipmentCategory->id,
-                ),
-            ],
-            "description" => "nullable|string",
-        ]);
+        $validated = $request->validated();
 
         // Обновляем slug только если изменилось имя
         if ($validated["name"] !== $equipmentCategory->name) {

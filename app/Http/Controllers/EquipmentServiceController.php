@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Equipment;
 use App\Models\EquipmentServiceHistory;
+use App\Http\Requests\StoreEquipmentServiceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -63,24 +64,14 @@ class EquipmentServiceController extends Controller
     /**
      * Store a newly created service record
      */
-    public function store(Request $request, Equipment $equipment)
+    public function store(StoreEquipmentServiceRequest $request, Equipment $equipment)
     {
         // Проверка прав доступа
         if (!Auth::check() || !Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на добавление записей об обслуживании оборудования");
         }
 
-        $validatedData = $request->validate([
-            'service_date' => 'required|date',
-            'service_type' => 'required|string',
-            'description' => 'required|string|max:1000',
-            'next_service_date' => 'nullable|date',
-            'service_result' => 'required|string',
-            'problems_found' => 'nullable|string|max:1000',
-            'problems_fixed' => 'nullable|string|max:1000',
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
-        ]);
+        $validatedData = $request->validated();
 
         // Обработка прикрепленных файлов
         $attachments = [];

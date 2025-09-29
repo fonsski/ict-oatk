@@ -6,6 +6,8 @@ use App\Models\KnowledgeBase;
 use App\Models\KnowledgeCategory;
 use App\Events\KnowledgeBaseArticleCreated;
 use App\Events\KnowledgeBaseArticleUpdated;
+use App\Http\Requests\StoreKnowledgeBaseRequest;
+use App\Http\Requests\UpdateKnowledgeBaseRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -77,30 +79,9 @@ class KnowledgeBaseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreKnowledgeBaseRequest $request)
     {
-        $messages = [
-            "title.required" => "Пожалуйста, укажите заголовок статьи",
-            "title.max" => "Заголовок не должен превышать 255 символов",
-            "category_id.required" => "Пожалуйста, выберите категорию",
-            "category_id.exists" => "Выбранная категория не существует",
-            "description.max" => "Описание не должно превышать 1000 символов",
-            "content.required" => "Пожалуйста, добавьте содержимое статьи",
-            "content.max" =>
-                "Содержимое статьи не должно превышать 10000 символов",
-            "tags.max" => "Теги не должны превышать 255 символов",
-        ];
-
-        $data = $request->validate(
-            [
-                "title" => "required|string|max:255",
-                "category_id" => "required|exists:knowledge_categories,id",
-                "description" => "nullable|string|max:1000",
-                "content" => "required|string|max:10000",
-                "tags" => "nullable|string|max:255",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         $article = new KnowledgeBase();
         $article->title = $data["title"];
@@ -220,30 +201,9 @@ class KnowledgeBaseController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, KnowledgeBase $knowledge)
+    public function update(UpdateKnowledgeBaseRequest $request, KnowledgeBase $knowledge)
     {
-        $messages = [
-            "title.required" => "Пожалуйста, укажите заголовок статьи",
-            "title.max" => "Заголовок не должен превышать 255 символов",
-            "category_id.required" => "Пожалуйста, выберите категорию",
-            "category_id.exists" => "Выбранная категория не существует",
-            "description.max" => "Описание не должно превышать 1000 символов",
-            "content.required" => "Пожалуйста, добавьте содержимое статьи",
-            "content.max" =>
-                "Содержимое статьи не должно превышать 10000 символов",
-            "tags.max" => "Теги не должны превышать 255 символов",
-        ];
-
-        $data = $request->validate(
-            [
-                "title" => "required|string|max:255",
-                "category_id" => "required|exists:knowledge_categories,id",
-                "description" => "nullable|string|max:1000",
-                "content" => "required|string|max:10000",
-                "tags" => "nullable|string|max:255",
-            ],
-            $messages,
-        );
+        $data = $request->validated();
 
         $knowledge->title = $data["title"];
         $knowledge->slug = Str::slug($data["title"]);
