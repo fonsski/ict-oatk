@@ -23,12 +23,19 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|min:2|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($this->route('user')),
+            ],
             'phone' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('users')->ignore($this->user->id),
+                'regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
+                Rule::unique('users')->ignore($this->route('user')),
             ],
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'boolean',
@@ -44,9 +51,15 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name.required' => 'Пожалуйста, укажите имя пользователя',
+            'name.min' => 'Имя пользователя должно содержать не менее 2 символов',
             'name.max' => 'Имя пользователя не должно превышать 255 символов',
+            'email.required' => 'Пожалуйста, укажите email адрес',
+            'email.email' => 'Введите корректный email адрес',
+            'email.max' => 'Email не должен превышать 255 символов',
+            'email.unique' => 'Пользователь с таким email уже существует',
             'phone.required' => 'Пожалуйста, укажите номер телефона',
             'phone.max' => 'Номер телефона не должен превышать 20 символов',
+            'phone.regex' => 'Номер телефона должен быть в формате: +7 (999) 999-99-99',
             'phone.unique' => 'Пользователь с таким номером телефона уже существует',
             'role_id.required' => 'Пожалуйста, выберите роль пользователя',
             'role_id.exists' => 'Выбранная роль не существует в системе',
@@ -62,6 +75,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => 'имя пользователя',
+            'email' => 'email адрес',
             'phone' => 'номер телефона',
             'role_id' => 'роль',
             'is_active' => 'статус активности',

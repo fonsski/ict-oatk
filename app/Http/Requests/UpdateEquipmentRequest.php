@@ -28,9 +28,19 @@ class UpdateEquipmentRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
+                'min:1',
+                'max:20',
+                'regex:/^\d+$/',
+                Rule::unique('equipment', 'inventory_number')->ignore($this->route('equipment'))
+            ],
+            'accounting_number' => [
+                'sometimes',
+                'nullable',
+                'string',
                 'min:3',
-                'max:255',
-                Rule::unique('equipment', 'inventory_number')->ignore($this->route('equipment')->id)
+                'max:20',
+                'regex:/^[АБ][1-5]-(студент|преподаватель|администрация|сотрудник)-[0-9]{3}$/',
+                Rule::unique('equipment', 'accounting_number')->ignore($this->route('equipment'))
             ],
             'category_id' => 'sometimes|nullable|exists:equipment_categories,id',
             'status_id' => 'sometimes|required|exists:equipment_statuses,id',
@@ -58,9 +68,16 @@ class UpdateEquipmentRequest extends FormRequest
             
             // Инвентарный номер
             'inventory_number.required' => 'Пожалуйста, укажите инвентарный номер',
-            'inventory_number.min' => 'Инвентарный номер должен содержать не менее 3 символов',
-            'inventory_number.max' => 'Инвентарный номер не должен превышать 255 символов',
+            'inventory_number.min' => 'Инвентарный номер должен содержать не менее 1 символа',
+            'inventory_number.max' => 'Инвентарный номер не должен превышать 20 символов',
             'inventory_number.unique' => 'Оборудование с таким инвентарным номером уже существует в системе',
+            'inventory_number.regex' => 'Инвентарный номер должен содержать только цифры',
+            
+            // Учётный номер
+            'accounting_number.min' => 'Учётный номер должен содержать не менее 3 символов',
+            'accounting_number.max' => 'Учётный номер не должен превышать 20 символов',
+            'accounting_number.unique' => 'Оборудование с таким учётным номером уже существует в системе',
+            'accounting_number.regex' => 'Учётный номер должен соответствовать формату: КодЗданияЭтаж-Группа-Номер (например: А1-студент-001)',
             
             // Категория
             'category_id.exists' => 'Выбранная категория оборудования не существует в системе',

@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\StrongPassword;
+use App\Rules\RussianPhone;
 
 class RegisterRequest extends FormRequest
 {
@@ -23,8 +25,9 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:2|max:255',
-            'phone' => 'required|string|min:10|max:20|regex:/^[0-9+\-\s\(\)]+$/',
-            'password' => 'required|string|min:8|confirmed',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => ['required', 'string', 'max:20', new RussianPhone()],
+            'password' => ['required', 'string', 'confirmed', new StrongPassword()],
         ];
     }
 
@@ -41,15 +44,18 @@ class RegisterRequest extends FormRequest
             'name.min' => 'Имя должно содержать не менее 2 символов',
             'name.max' => 'Имя не должно превышать 255 символов',
             
+            // Email
+            'email.required' => 'Пожалуйста, укажите email адрес',
+            'email.email' => 'Введите корректный email адрес',
+            'email.max' => 'Email не должен превышать 255 символов',
+            'email.unique' => 'Пользователь с таким email уже существует',
+            
             // Телефон
             'phone.required' => 'Пожалуйста, укажите номер телефона',
             'phone.min' => 'Номер телефона должен содержать не менее 10 символов',
             'phone.max' => 'Номер телефона не должен превышать 20 символов',
-            'phone.regex' => 'Номер телефона может содержать только цифры, +, -, пробелы и скобки',
-            
             // Пароль
             'password.required' => 'Пожалуйста, введите пароль',
-            'password.min' => 'Пароль должен содержать не менее 8 символов',
             'password.confirmed' => 'Пароли не совпадают',
         ];
     }
@@ -63,6 +69,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'имя',
+            'email' => 'email адрес',
             'phone' => 'номер телефона',
             'password' => 'пароль',
         ];

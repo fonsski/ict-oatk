@@ -1,4 +1,11 @@
 import "./bootstrap";
+import "./form-validation";
+import "./loading-states";
+import "./notifications";
+import "./modals";
+import "./accessibility";
+import "./char-counter";
+import "./inventory-number-helper";
 
 /**
  * Инициализация маски ввода телефона для указанных полей

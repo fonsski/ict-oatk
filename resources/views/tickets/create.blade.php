@@ -12,8 +12,8 @@
             </p>
         </div>
 
-        <div class="card p-8">
-            <form action="{{ route('tickets.store') }}" method="POST" class="space-y-6">
+        <div class="card p-4 sm:p-6 lg:p-8">
+            <form action="{{ route('tickets.store') }}" method="POST" class="space-y-6 needs-validation" data-loading>
                 @csrf
 
                 @if ($errors->any())
@@ -65,14 +65,12 @@
                         required
                         maxlength="60"
                         minlength="5"
-                        onkeyup="updateTitleCounter(this)"
+                        data-char-counter
+                        data-max-length="60"
+                        data-min-length="5"
+                        data-warning-threshold="50"
+                        data-help-text="Минимум 5, максимум 60 символов"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <div class="flex justify-between mt-1">
-                        <p class="text-sm text-gray-500">
-                            Минимум 5, максимум 60 символов
-                        </p>
-                        <div id="titleCharCounter" class="text-xs text-gray-500 font-medium">0/60 символов</div>
-                    </div>
                 </div>
 
                 <!-- Категория -->
@@ -136,7 +134,8 @@
                                     <input type="text" id="room_search"
                                         placeholder="Поиск кабинета по номеру или названию..."
                                         maxlength="50"
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        class="form-input"
+                                        aria-label="Поиск кабинета">
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                         <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="11" cy="11" r="8"></circle>
@@ -210,31 +209,7 @@
 
 @push('scripts')
 <script>
-// Функция для обновления счетчика символов в заголовке
-function updateTitleCounter(input) {
-    const charCounter = document.getElementById('titleCharCounter');
-    const currentLength = input.value.length;
-    charCounter.textContent = currentLength + '/60 символов';
-
-    // Меняем цвет счетчика, если приближаемся к лимиту
-    if (currentLength > 50 && currentLength < 60) {
-        charCounter.classList.remove('text-gray-500', 'text-red-500');
-        charCounter.classList.add('text-orange-500');
-    } else if (currentLength >= 60) {
-        charCounter.classList.remove('text-gray-500', 'text-orange-500');
-        charCounter.classList.add('text-red-500');
-    } else {
-        charCounter.classList.remove('text-orange-500', 'text-red-500');
-        charCounter.classList.add('text-gray-500');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализируем счетчик заголовка при загрузке страницы
-    const titleInput = document.getElementById('title');
-    if (titleInput && titleInput.value.length > 0) {
-        updateTitleCounter(titleInput);
-    }
     // Защита от многократной отправки формы
     const form = document.querySelector('form');
     const submitButton = document.getElementById('submit-button');

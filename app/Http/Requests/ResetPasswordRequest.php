@@ -22,7 +22,7 @@ class ResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'new_password' => 'required|string|min:8|confirmed',
+            'new_password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
         ];
     }
 
@@ -36,6 +36,7 @@ class ResetPasswordRequest extends FormRequest
         return [
             'new_password.required' => 'Пожалуйста, укажите новый пароль',
             'new_password.min' => 'Новый пароль должен содержать не менее 8 символов',
+            'new_password.regex' => 'Пароль должен содержать минимум одну строчную букву, одну заглавную букву и одну цифру',
             'new_password.confirmed' => 'Пароли не совпадают',
         ];
     }

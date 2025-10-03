@@ -29,6 +29,59 @@
             overflow: auto;
             max-height: 200px;
         }
+        
+        /* Улучшения для мобильных устройств */
+        @media (max-width: 768px) {
+            .mobile-menu {
+                max-height: calc(100vh - 4rem);
+                overflow-y: auto;
+            }
+            
+            .dropdown-menu {
+                right: 0;
+                left: auto;
+                width: calc(100vw - 2rem);
+                max-width: 300px;
+            }
+            
+            .notification {
+                right: 1rem;
+                left: 1rem;
+                max-width: none;
+            }
+        }
+        
+        /* Улучшения для доступности */
+        .focus-visible:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* Анимации для плавности */
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Улучшения для таблиц на мобильных */
+        @media (max-width: 640px) {
+            .table-responsive {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+            }
+            
+            .table-responsive::-webkit-scrollbar {
+                height: 4px;
+            }
+            
+            .table-responsive::-webkit-scrollbar-track {
+                background: #f1f5f9;
+            }
+            
+            .table-responsive::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 2px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -47,7 +100,7 @@
                 </a>
 
                 <!-- Desktop Navigation -->
-                <nav class="hidden md:flex items-center space-x-6">
+                <nav class="hidden md:flex items-center space-x-6" role="navigation" aria-label="Основная навигация">
                     @auth
                         <a href="{{ route('home') }}"
                            class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
@@ -150,7 +203,7 @@
 
                         <!-- User Menu -->
                         <div class="relative">
-                            <button type="button" id="user-menu-button" class="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50">
+                            <button type="button" id="user-menu-button" class="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" aria-expanded="false" aria-haspopup="true" aria-label="Меню пользователя">
                                 <span>{{ auth()->user()->name }}</span>
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="6,9 12,15 18,9"></polyline>
@@ -194,7 +247,7 @@
         </div>
 
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200 mobile-menu" role="navigation" aria-label="Мобильная навигация">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 @auth
                 <a href="{{ route('home') }}"

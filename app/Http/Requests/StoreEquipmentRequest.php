@@ -23,7 +23,15 @@ class StoreEquipmentRequest extends FormRequest
     {
         return [
             'name' => 'nullable|string|min:2|max:255',
-            'inventory_number' => 'required|string|min:3|max:255|unique:equipment,inventory_number',
+            'inventory_number' => 'required|string|min:1|max:20|unique:equipment,inventory_number|regex:/^\d+$/',
+            'accounting_number' => [
+                'nullable',
+                'string',
+                'min:3',
+                'max:20',
+                'unique:equipment,accounting_number',
+                'regex:/^[АБ][1-5]-(студент|преподаватель|администрация|сотрудник)-[0-9]{3}$/'
+            ],
             'category_id' => 'nullable|exists:equipment_categories,id',
             'status_id' => 'required|exists:equipment_statuses,id',
             'room_id' => 'nullable|exists:rooms,id',
@@ -50,9 +58,16 @@ class StoreEquipmentRequest extends FormRequest
             
             // Инвентарный номер
             'inventory_number.required' => 'Пожалуйста, укажите инвентарный номер',
-            'inventory_number.min' => 'Инвентарный номер должен содержать не менее 3 символов',
-            'inventory_number.max' => 'Инвентарный номер не должен превышать 255 символов',
+            'inventory_number.min' => 'Инвентарный номер должен содержать не менее 1 символа',
+            'inventory_number.max' => 'Инвентарный номер не должен превышать 20 символов',
             'inventory_number.unique' => 'Оборудование с таким инвентарным номером уже существует в системе',
+            'inventory_number.regex' => 'Инвентарный номер должен содержать только цифры',
+            
+            // Учётный номер
+            'accounting_number.min' => 'Учётный номер должен содержать не менее 3 символов',
+            'accounting_number.max' => 'Учётный номер не должен превышать 20 символов',
+            'accounting_number.unique' => 'Оборудование с таким учётным номером уже существует в системе',
+            'accounting_number.regex' => 'Учётный номер должен соответствовать формату: КодЗданияЭтаж-Группа-Номер (например: А1-студент-001)',
             
             // Категория
             'category_id.exists' => 'Выбранная категория оборудования не существует в системе',

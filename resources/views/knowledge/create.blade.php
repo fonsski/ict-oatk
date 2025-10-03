@@ -57,6 +57,12 @@
                            name="title"
                            required
                            maxlength="255"
+                           minlength="5"
+                           data-char-counter
+                           data-max-length="255"
+                           data-min-length="5"
+                           data-warning-threshold="200"
+                           data-help-text="Минимум 5, максимум 255 символов"
                            value="{{ old('title') }}"
                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>

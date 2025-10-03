@@ -17,6 +17,7 @@ class Equipment extends Model
         "model",
         "serial_number",
         "inventory_number",
+        "accounting_number",
         "category_id",
         "status_id",
         "room_id",
@@ -33,6 +34,26 @@ class Equipment extends Model
         "warranty_end_date" => "date",
         "has_warranty" => "boolean",
     ];
+
+    /**
+     * Правила валидации для модели
+     */
+    public static function validationRules()
+    {
+        return [
+            'name' => 'nullable|string|min:2|max:255',
+            'inventory_number' => 'required|string|min:3|max:255|unique:equipment,inventory_number',
+            'category_id' => 'nullable|exists:equipment_categories,id',
+            'status_id' => 'required|exists:equipment_statuses,id',
+            'room_id' => 'nullable|exists:rooms,id',
+            'initial_room_id' => 'nullable|exists:rooms,id',
+            'has_warranty' => 'boolean',
+            'warranty_end_date' => 'nullable|date|after_or_equal:today|required_if:has_warranty,1',
+            'last_service_date' => 'nullable|date|before_or_equal:today',
+            'service_comment' => 'nullable|string|min:5|max:500',
+            'known_issues' => 'nullable|string|min:5|max:500',
+        ];
+    }
 
     public function status(): BelongsTo
     {

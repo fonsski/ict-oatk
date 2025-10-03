@@ -81,7 +81,7 @@
     <!-- Tickets Table -->
     <div class="card overflow-hidden">
         @if($tickets->count() > 0)
-            <div class="overflow-x-auto" id="tickets-container">
+            <div class="table-responsive" id="tickets-container">
                 <table class="w-full">
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr>

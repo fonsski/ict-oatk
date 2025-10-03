@@ -30,7 +30,7 @@ class StoreEquipmentServiceRequest extends FormRequest
             'problems_found' => 'nullable|string|min:5|max:1000',
             'problems_fixed' => 'nullable|string|min:5|max:1000',
             'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp|max:10240',
         ];
     }
 
@@ -75,7 +75,7 @@ class StoreEquipmentServiceRequest extends FormRequest
             // Вложения
             'attachments.max' => 'Можно прикрепить не более 5 файлов',
             'attachments.*.file' => 'Прикреплённый файл должен быть корректным файлом',
-            'attachments.*.mimes' => 'Поддерживаются только файлы: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG',
+            'attachments.*.mimes' => 'Поддерживаются только файлы: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG, GIF, WEBP',
             'attachments.*.max' => 'Размер файла не должен превышать 10 МБ',
         ];
     }

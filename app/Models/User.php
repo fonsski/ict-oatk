@@ -20,13 +20,28 @@ class User extends Authenticatable
     protected $fillable = [
         "name",
         "email",
-        "phone", // оставляем поле, но делаем необязательным
+        "phone",
         "telegram_id",
         "password",
         "role_id",
         "is_active",
         "last_login_at",
     ];
+
+    /**
+     * Правила валидации для модели
+     */
+    public static function validationRules()
+    {
+        return [
+            'name' => 'required|string|min:2|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => 'required|string|max:20|unique:users|regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
+            'password' => 'required|string|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+            'role_id' => 'required|exists:roles,id',
+            'is_active' => 'boolean',
+        ];
+    }
 
     /**
      * The attributes that should be hidden for serialization.

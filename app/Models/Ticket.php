@@ -28,6 +28,27 @@ class Ticket extends Model
         "equipment_id",
     ];
 
+    /**
+     * Правила валидации для модели
+     */
+    public static function validationRules()
+    {
+        return [
+            'title' => 'required|string|min:5|max:60',
+            'category' => 'required|string|in:hardware,software,network,account,other',
+            'priority' => 'required|string|in:low,medium,high,urgent',
+            'description' => 'required|string|min:10|max:5000',
+            'reporter_name' => 'nullable|string|max:255',
+            'reporter_email' => 'nullable|email|max:255',
+            'reporter_phone' => 'nullable|string|max:20|regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
+            'reporter_id' => 'nullable|string|max:50',
+            'status' => 'nullable|string|in:open,in_progress,resolved,closed',
+            'location_id' => 'nullable|exists:locations,id',
+            'room_id' => 'nullable|exists:rooms,id',
+            'equipment_id' => 'nullable|exists:equipment,id',
+        ];
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(TicketComment::class);

@@ -34,6 +34,13 @@
                        id="title"
                        name="title"
                        value="{{ old('title') }}"
+                       maxlength="100"
+                       minlength="5"
+                       data-char-counter
+                       data-max-length="100"
+                       data-min-length="5"
+                       data-warning-threshold="80"
+                       data-help-text="Минимум 5, максимум 100 символов"
                        class="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('title') border-red-300 @enderror"
                        placeholder="Введите заголовок FAQ"
                        required>
