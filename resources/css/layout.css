@@ -1,0 +1,79 @@
+/* Layout specific styles */
+.text-wrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.text-block {
+    display: block;
+    padding: 0.5rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    overflow: auto;
+    max-height: 200px;
+}
+
+/* Улучшения для мобильных устройств */
+@media (max-width: 768px) {
+    .mobile-menu {
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+    
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+        width: calc(100vw - 2rem);
+        max-width: 300px;
+    }
+    
+    .notification {
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+}
+
+/* Улучшения для доступности */
+.focus-visible:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Анимации для плавности */
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Улучшения для таблиц на мобильных */
+@media (max-width: 640px) {
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 2px;
+    }
+}
+
