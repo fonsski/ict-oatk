@@ -8,7 +8,9 @@ export default defineConfig({
         laravel({
             input: [
                 "resources/css/app.css",
+                "resources/css/layout.css",
                 "resources/js/app.js",
+                "resources/js/layout.js",
                 "resources/js/live-updates.js",
                 "resources/js/websocket-client.js",
                 "resources/js/smart-updates.js",

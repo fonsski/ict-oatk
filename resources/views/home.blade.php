@@ -506,7 +506,7 @@
                 if (tickets.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center">
+                            <td colspan="7" class="px-6 py-10 text-center">
                                 <div class="text-gray-500">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -560,7 +560,7 @@
                         }
                     });
                 }
-                
+
                 // Обновляем данные
                 techSmartUpdates.updateData(tickets);
             } catch (error) {
@@ -668,6 +668,19 @@
             const title = ticket.title || 'Без названия';
             const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
 
+            let actionsMenu = '';
+            if (ticket.status === 'open' && userRole && ['admin', 'master', 'technician'].includes(userRole)) {
+                actionsMenu = `
+                    <a href="${ticket.url || '#'}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                    <form action="/tickets/${ticket.id}/start" method="POST" class="inline" onsubmit="return confirm('Взять заявку в работу?');">
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <button type="submit" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Взять в работу</button>
+                    </form>
+                `;
+            } else {
+                actionsMenu = `<a href="${ticket.url || '#'}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>`;
+            }
+
             return `
                 <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="${ticket.id}">
                     <td class="px-4 py-3">
@@ -695,6 +708,22 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="text-sm text-slate-500" title="${ticket.created_at || '—'}">${ticket.created_at || '—'}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-center">
+                            <div class="relative z-50" data-dropdown>
+                                <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                    </svg>
+                                </button>
+                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
+                                    <div class="py-1">
+                                        ${actionsMenu}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -950,7 +979,7 @@
                         if (data.stats) {
                             updateTechStats(data.stats);
                         }
-                        
+
                         // Обновляем таблицу заявок
                         if (data.tickets && Array.isArray(data.tickets)) {
                             updateTechTicketsTable(data.tickets.slice(0, 10));
@@ -961,7 +990,7 @@
                     }
                 });
             }
-            
+
             if (techLastUpdated) {
                 techLastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
             }
@@ -1049,10 +1078,10 @@
         if (document.getElementById('tech-tickets-container')) {
             initTechnicianDashboard();
         }
-        
+
         // Инициализируем выпадающие меню
         initTableDropdowns();
-        
+
         // Закрытие меню при клике вне его
         document.addEventListener('click', function(e) {
             if (!e.target.closest('[data-dropdown]')) {

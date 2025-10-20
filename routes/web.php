@@ -63,7 +63,6 @@ Route::post("logout", [LoginController::class, "logout"])
     ->name("logout")
     ->middleware("auth");
 
-
 Route::get("login/timeout", [LoginController::class, "timeout"])->name(
     "login.timeout",
 );
@@ -354,7 +353,6 @@ Route::middleware("auth")->group(function () {
         ])->name("homepage-faq.upload-image");
     });
 
-
     // AJAX preview для markdown (только для авторизованных)
     Route::post("/knowledge/preview", [
         KnowledgeBaseController::class,
@@ -399,7 +397,20 @@ Route::middleware("auth")->group(function () {
     ])->name("api.equipment.by-room");
 
     // Маршруты для настроек
-    Route::middleware("auth")->group(function () {});
+    Route::prefix("settings")->group(function () {
+        Route::get("/", [
+            \App\Http\Controllers\SettingsController::class,
+            "index",
+        ])->name("settings.index");
+        Route::get("/change-password", [
+            \App\Http\Controllers\SettingsController::class,
+            "showChangePasswordForm",
+        ])->name("settings.change-password.form");
+        Route::post("/change-password", [
+            \App\Http\Controllers\SettingsController::class,
+            "changePassword",
+        ])->name("settings.change-password");
+    });
 
     // Маршрут для просмотра документации
     Route::get("/docs/{docName}.md", [
