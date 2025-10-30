@@ -9,7 +9,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\KnowledgeCategoryController;
-// Чота поменяли 
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HomepageFAQController;
 use App\Http\Controllers\HomeController;
