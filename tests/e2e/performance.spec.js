@@ -1,6 +1,4 @@
-/**
- * Тесты производительности системы
- */
+﻿
 
 import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers/auth-helpers.js';
@@ -66,117 +64,7 @@ test.describe('Тесты производительности', () => {
     await page.selectOption('select[name="priority"]', 'medium');
     await page.fill('textarea[name="description"]', 'Описание тестовой заявки');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/tickets/*');
-    const createTime = Date.now() - startTime;
-    
-    // Создание заявки должно происходить менее чем за 3 секунды
-    expect(createTime).toBeLessThan(3000);
-    console.log(`Время создания заявки: ${createTime}ms`);
-  });
-
-  test('Время поиска заявок', async ({ page }) => {
-    await loginAs(page, 'technician');
-    
-    const startTime = Date.now();
-    await page.goto('/all-tickets');
-    await page.fill('input[name="search"]', 'тест');
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
-    const searchTime = Date.now() - startTime;
-    
-    // Поиск должен выполняться менее чем за 2 секунды
-    expect(searchTime).toBeLessThan(2000);
-    console.log(`Время поиска заявок: ${searchTime}ms`);
-  });
-
-  test('Время загрузки списка оборудования', async ({ page }) => {
-    await loginAs(page, 'admin');
-    
-    const startTime = Date.now();
-    await page.goto('/equipment');
-    await page.waitForLoadState('networkidle');
-    const loadTime = Date.now() - startTime;
-    
-    // Список оборудования должен загружаться менее чем за 2 секунды
-    expect(loadTime).toBeLessThan(2000);
-    console.log(`Время загрузки списка оборудования: ${loadTime}ms`);
-  });
-
-  test('Время создания оборудования', async ({ page }) => {
-    await loginAs(page, 'admin');
-    
-    const startTime = Date.now();
-    await page.goto('/equipment/create');
-    await page.fill('input[name="name"]', 'Тестовое оборудование производительности');
-    await page.fill('input[name="model"]', 'Test Model');
-    await page.fill('input[name="serial_number"]', 'PERF' + Date.now());
-    await page.fill('input[name="inventory_number"]', 'INV' + Date.now());
-    await page.selectOption('select[name="status"]', 'active');
-    await page.selectOption('select[name="room_id"]', { index: 1 });
-    await page.click('button[type="submit"]');
-    await page.waitForURL('**/equipment/*');
-    const createTime = Date.now() - startTime;
-    
-    // Создание оборудования должно происходить менее чем за 3 секунды
-    expect(createTime).toBeLessThan(3000);
-    console.log(`Время создания оборудования: ${createTime}ms`);
-  });
-
-  test('Время загрузки списка пользователей', async ({ page }) => {
-    await loginAs(page, 'admin');
-    
-    const startTime = Date.now();
-    await page.goto('/user');
-    await page.waitForLoadState('networkidle');
-    const loadTime = Date.now() - startTime;
-    
-    // Список пользователей должен загружаться менее чем за 2 секунды
-    expect(loadTime).toBeLessThan(2000);
-    console.log(`Время загрузки списка пользователей: ${loadTime}ms`);
-  });
-
-  test('Время создания пользователя', async ({ page }) => {
-    await loginAs(page, 'admin');
-    
-    const startTime = Date.now();
-    await page.goto('/user/create');
-    await page.fill('input[name="name"]', 'Пользователь производительности');
-    await page.fill('input[name="phone"]', '(999) ' + Date.now().toString().slice(-7));
-    await page.fill('input[name="email"]', 'perf' + Date.now() + '@test.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.selectOption('select[name="role_id"]', { label: 'Пользователь' });
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
-    const createTime = Date.now() - startTime;
-    
-    // Создание пользователя должно происходить менее чем за 3 секунды
-    expect(createTime).toBeLessThan(3000);
-    console.log(`Время создания пользователя: ${createTime}ms`);
-  });
-
-  test('Время загрузки базы знаний', async ({ page }) => {
-    await loginAs(page, 'technician');
-    
-    const startTime = Date.now();
-    await page.goto('/knowledge');
-    await page.waitForLoadState('networkidle');
-    const loadTime = Date.now() - startTime;
-    
-    // База знаний должна загружаться менее чем за 2 секунды
-    expect(loadTime).toBeLessThan(2000);
-    console.log(`Время загрузки базы знаний: ${loadTime}ms`);
-  });
-
-  test('Время создания статьи в базе знаний', async ({ page }) => {
-    await loginAs(page, 'admin');
-    
-    const startTime = Date.now();
-    await page.goto('/knowledge/create');
-    await page.fill('input[name="title"]', 'Статья производительности');
-    await page.fill('textarea[name="content"]', 'Содержимое статьи для тестирования производительности');
-    await page.selectOption('select[name="category_id"]', { index: 1 });
-    await page.click('button[type="submit"]');
-    await page.waitForURL('**/knowledge/*');
+    await page.waitForURL('**/ticketsequipmentknowledge/*');
     const createTime = Date.now() - startTime;
     
     // Создание статьи должно происходить менее чем за 3 секунды

@@ -1,14 +1,8 @@
-/**
- * Вспомогательные функции для работы с оборудованием
- */
+﻿
 
 import { testEquipment, testRooms } from '../fixtures/test-data.js';
 
-/**
- * Создание нового оборудования
- * @param {import('@playwright/test').Page} page
- * @param {string} equipmentType - тип оборудования (computer, printer)
- */
+
 export async function createEquipment(page, equipmentType) {
   const equipment = testEquipment[equipmentType];
   
@@ -31,25 +25,12 @@ export async function createEquipment(page, equipmentType) {
   await page.click('button[type="submit"]');
   
   // Ждем перенаправления
-  await page.waitForURL('**/equipment/*');
-  await page.waitForLoadState('networkidle');
-}
-
-/**
- * Проверяем, что оборудование создано
- * @param {import('@playwright/test').Page} page
- * @param {string} name
- */
+  await page.waitForURL('**/equipment
 export async function expectEquipmentCreated(page, name) {
   await page.waitForSelector(`text=${name}`);
 }
 
-/**
- * Редактируем оборудование
- * @param {import('@playwright/test').Page} page
- * @param {string} equipmentId
- * @param {Object} updates
- */
+
 export async function updateEquipment(page, equipmentId, updates) {
   await page.goto(`/equipment/${equipmentId}/edit`);
   await page.waitForLoadState('networkidle');
@@ -70,12 +51,7 @@ export async function updateEquipment(page, equipmentId, updates) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Перемещаем оборудование
- * @param {import('@playwright/test').Page} page
- * @param {string} equipmentId
- * @param {string} newRoomId
- */
+
 export async function moveEquipment(page, equipmentId, newRoomId) {
   await page.goto(`/equipment/${equipmentId}/move`);
   await page.waitForLoadState('networkidle');
@@ -91,12 +67,7 @@ export async function moveEquipment(page, equipmentId, newRoomId) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Создание записи обслуживания
- * @param {import('@playwright/test').Page} page
- * @param {string} equipmentId
- * @param {Object} serviceData
- */
+
 export async function createServiceRecord(page, equipmentId, serviceData) {
   await page.goto(`/equipment/${equipmentId}/service/create`);
   await page.waitForLoadState('networkidle');

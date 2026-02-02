@@ -1,6 +1,4 @@
-/**
- * Настройки для разных тестовых окружений
- */
+﻿
 
 export const testEnvironments = {
   development: {

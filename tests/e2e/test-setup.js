@@ -1,6 +1,4 @@
-/**
- * Настройка тестового окружения
- */
+﻿
 
 const { test, expect } = require('@playwright/test');
 
@@ -63,17 +61,13 @@ test.describe.configure({ mode: 'serial' });
 
 // Глобальные функции для тестов
 global.testHelpers = {
-  /**
-   * Ожидание загрузки страницы
-   */
+  
   async waitForPageLoad(page, url) {
     await page.goto(url);
     await page.waitForLoadState('networkidle');
   },
   
-  /**
-   * Проверка доступности страницы
-   */
+  
   async checkPageAccessibility(page, url) {
     await page.goto(url);
     await page.waitForLoadState('networkidle');
@@ -89,18 +83,14 @@ global.testHelpers = {
     expect(errors).toHaveLength(0);
   },
   
-  /**
-   * Очистка тестовых данных
-   */
+  
   async cleanupTestData(page) {
     // Эта функция может быть реализована для очистки
     // тестовых данных после каждого теста
     console.log('Очистка тестовых данных...');
   },
   
-  /**
-   * Создание тестовых данных
-   */
+  
   async createTestData(page, dataType, data) {
     // Эта функция может быть реализована для создания
     // тестовых данных перед тестом

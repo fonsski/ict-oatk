@@ -1,6 +1,4 @@
-/**
- * Тесты обработки ошибок и граничных случаев
- */
+﻿
 
 import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers/auth-helpers.js';

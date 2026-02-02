@@ -1,14 +1,8 @@
-/**
- * Вспомогательные функции для аутентификации
- */
+﻿
 
 import { testUsers } from '../fixtures/test-data.js';
 
-/**
- * Вход в систему
- * @param {import('@playwright/test').Page} page
- * @param {string} userRole - роль пользователя (admin, master, technician, user)
- */
+
 export async function loginAs(page, userRole) {
   const user = testUsers[userRole];
   
@@ -27,10 +21,7 @@ export async function loginAs(page, userRole) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Выход из системы
- * @param {import('@playwright/test').Page} page
- */
+
 export async function logout(page) {
   // Находим кнопку выхода в меню пользователя
   await page.click('#user-menu-button');
@@ -40,28 +31,17 @@ export async function logout(page) {
   await page.waitForURL('**/login');
 }
 
-/**
- * Проверяем, что пользователь авторизован
- * @param {import('@playwright/test').Page} page
- */
+
 export async function expectAuthenticated(page) {
   await page.waitForSelector('#user-menu-button');
 }
 
-/**
- * Проверяем, что пользователь не авторизован
- * @param {import('@playwright/test').Page} page
- */
+
 export async function expectNotAuthenticated(page) {
   await page.waitForSelector('input[name="login"]');
 }
 
-/**
- * Проверяем доступ к странице по роли
- * @param {import('@playwright/test').Page} page
- * @param {string} url
- * @param {string} expectedRole
- */
+
 export async function expectAccessByRole(page, url, expectedRole) {
   await page.goto(url);
   

@@ -1,4 +1,4 @@
-// Layout JavaScript functionality
+﻿// Layout JavaScript functionality
 document.addEventListener('DOMContentLoaded', function() {
     // Получаем ссылки на кнопки
     const userButton = document.getElementById('user-menu-button');

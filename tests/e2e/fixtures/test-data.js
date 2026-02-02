@@ -1,6 +1,4 @@
-/**
- * Тестовые данные для end-to-end тестов
- */
+﻿
 
 export const testUsers = {
   admin: {

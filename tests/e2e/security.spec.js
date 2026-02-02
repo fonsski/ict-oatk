@@ -1,6 +1,4 @@
-/**
- * Тесты безопасности системы
- */
+﻿
 
 import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers/auth-helpers.js';

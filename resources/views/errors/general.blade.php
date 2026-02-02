@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', isset($title) ? $title : 'Ошибка ' . ($code ?? 'Unknown'))
 

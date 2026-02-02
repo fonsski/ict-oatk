@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Все заявки - ICT')
 
@@ -167,7 +167,7 @@
         </div>
 
         <style>
-            /* Стили для предотвращения горизонтального скролла */
+            
             #tickets-container,
             #tickets-container > div,
             #tickets-container table {
@@ -802,32 +802,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Функционал массовых действий отключен
 
     // Обработка массовых действий отключена
-    /*
-    document.querySelectorAll('.bulk-action-item').forEach(button => {
-        button.addEventListener('click', function() {
-            const action = this.getAttribute('data-action');
-            const status = this.getAttribute('data-status');
-            const selectedTickets = [];
+    
 
-            if (selectedTickets.length === 0) return;
-    */
-/*
-console.log('Action clicked:', action, 'Tickets:', selectedTickets);
-
-if (action === 'change-status' && status) {
-    // Изменение статуса для всех выбранных заявок
-    Promise.all(
-        selectedTickets.map(ticketId => changeTicketStatus(ticketId, status))
-    )
-        .then(() => {
-            // После обработки всех заявок
-            refreshTickets();
-        });
-} else if (action === 'assign-to') {
-    // Назначение исполнителя для всех выбранных заявок
-    assignMultipleTickets(selectedTickets);
-}
-*/
 // });
 
     // Функция изменения статуса заявки

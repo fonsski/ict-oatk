@@ -1,14 +1,8 @@
-/**
- * Вспомогательные функции для работы с кабинетами
- */
+﻿
 
 import { testRooms } from '../fixtures/test-data.js';
 
-/**
- * Создание нового кабинета
- * @param {import('@playwright/test').Page} page
- * @param {string} roomType - тип кабинета (room101, room205)
- */
+
 export async function createRoom(page, roomType) {
   const room = testRooms[roomType];
   
@@ -26,25 +20,12 @@ export async function createRoom(page, roomType) {
   await page.click('button[type="submit"]');
   
   // Ждем перенаправления
-  await page.waitForURL('**/room/*');
-  await page.waitForLoadState('networkidle');
-}
-
-/**
- * Проверяем, что кабинет создан
- * @param {import('@playwright/test').Page} page
- * @param {string} number
- */
+  await page.waitForURL('**/room
 export async function expectRoomCreated(page, number) {
   await page.waitForSelector(`text=${number}`);
 }
 
-/**
- * Редактируем кабинет
- * @param {import('@playwright/test').Page} page
- * @param {string} roomId
- * @param {Object} updates
- */
+
 export async function updateRoom(page, roomId, updates) {
   await page.goto(`/room/${roomId}/edit`);
   await page.waitForLoadState('networkidle');
@@ -65,12 +46,7 @@ export async function updateRoom(page, roomId, updates) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Изменяем статус кабинета
- * @param {import('@playwright/test').Page} page
- * @param {string} roomId
- * @param {string} status
- */
+
 export async function changeRoomStatus(page, roomId, status) {
   await page.goto(`/room/${roomId}`);
   await page.waitForLoadState('networkidle');

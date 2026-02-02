@@ -1,4 +1,4 @@
-/* Layout specific styles */
+﻿
 .text-wrap {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -24,7 +24,7 @@
     max-height: 200px;
 }
 
-/* Улучшения для мобильных устройств */
+
 @media (max-width: 768px) {
     .mobile-menu {
         max-height: calc(100vh - 4rem);
@@ -45,18 +45,18 @@
     }
 }
 
-/* Улучшения для доступности */
+
 .focus-visible:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
 }
 
-/* Анимации для плавности */
+
 .transition-all {
     transition: all 0.2s ease-in-out;
 }
 
-/* Улучшения для таблиц на мобильных */
+
 @media (max-width: 640px) {
     .table-responsive {
         -webkit-overflow-scrolling: touch;

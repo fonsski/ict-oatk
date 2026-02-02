@@ -1,14 +1,8 @@
-/**
- * Вспомогательные функции для работы с заявками
- */
+﻿
 
 import { testTickets } from '../fixtures/test-data.js';
 
-/**
- * Создание новой заявки
- * @param {import('@playwright/test').Page} page
- * @param {string} ticketType - тип заявки (hardware, software, network)
- */
+
 export async function createTicket(page, ticketType) {
   const ticket = testTickets[ticketType];
   
@@ -36,25 +30,12 @@ export async function createTicket(page, ticketType) {
   await page.click('button[type="submit"]');
   
   // Ждем перенаправления на страницу заявки
-  await page.waitForURL('**/tickets/*');
-  await page.waitForLoadState('networkidle');
-}
-
-/**
- * Проверяем, что заявка создана
- * @param {import('@playwright/test').Page} page
- * @param {string} title
- */
+  await page.waitForURL('**/tickets
 export async function expectTicketCreated(page, title) {
   await page.waitForSelector(`text=${title}`);
 }
 
-/**
- * Изменяем статус заявки
- * @param {import('@playwright/test').Page} page
- * @param {string} ticketId
- * @param {string} status
- */
+
 export async function changeTicketStatus(page, ticketId, status) {
   await page.goto(`/tickets/${ticketId}`);
   await page.waitForLoadState('networkidle');
@@ -79,12 +60,7 @@ export async function changeTicketStatus(page, ticketId, status) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Назначаем исполнителя заявке
- * @param {import('@playwright/test').Page} page
- * @param {string} ticketId
- * @param {string} assigneeName
- */
+
 export async function assignTicket(page, ticketId, assigneeName) {
   await page.goto(`/tickets/${ticketId}`);
   await page.waitForLoadState('networkidle');
@@ -97,12 +73,7 @@ export async function assignTicket(page, ticketId, assigneeName) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Добавляем комментарий к заявке
- * @param {import('@playwright/test').Page} page
- * @param {string} ticketId
- * @param {string} comment
- */
+
 export async function addComment(page, ticketId, comment) {
   await page.goto(`/tickets/${ticketId}`);
   await page.waitForLoadState('networkidle');
@@ -115,11 +86,7 @@ export async function addComment(page, ticketId, comment) {
   await page.waitForLoadState('networkidle');
 }
 
-/**
- * Фильтруем заявки
- * @param {import('@playwright/test').Page} page
- * @param {Object} filters
- */
+
 export async function filterTickets(page, filters) {
   await page.goto('/all-tickets');
   await page.waitForLoadState('networkidle');

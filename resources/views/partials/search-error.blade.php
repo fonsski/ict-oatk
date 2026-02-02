@@ -1,4 +1,4 @@
-<div class="text-center py-12">
+﻿<div class="text-center py-12">
     <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
         <svg class="w-8 h-8 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>

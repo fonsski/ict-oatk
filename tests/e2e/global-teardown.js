@@ -1,6 +1,4 @@
-/**
- * Глобальная очистка после тестов
- */
+﻿
 
 const { chromium } = require('@playwright/test');
 

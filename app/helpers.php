@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 if (!function_exists("format_phone")) {
     

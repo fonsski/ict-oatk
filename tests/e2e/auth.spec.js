@@ -1,6 +1,4 @@
-/**
- * Тесты аутентификации
- */
+﻿
 
 import { test, expect } from '@playwright/test';
 import { loginAs, logout, expectAuthenticated, expectNotAuthenticated } from './helpers/auth-helpers.js';

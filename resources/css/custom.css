@@ -1,4 +1,4 @@
-/* Custom overflow handling for ticket titles */
+﻿
 .ticket-title {
     overflow-wrap: break-word;
     word-wrap: break-word;
@@ -7,7 +7,7 @@
     max-width: 100%;
 }
 
-/* Line clamp fallbacks for browsers that don't support the Tailwind line-clamp classes */
+
 .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
@@ -29,7 +29,7 @@
     overflow: hidden;
 }
 
-/* Ensure truncated text with ellipsis for older browsers */
+
 .text-truncate {
     white-space: nowrap;
     overflow: hidden;
@@ -38,7 +38,7 @@
     display: inline-block;
 }
 
-/* Add shadow when content is truncated to indicate there's more */
+
 .text-truncate-indicator {
     position: relative;
 }
@@ -58,7 +58,7 @@
     pointer-events: none;
 }
 
-/* Specifically for ticket display in tables */
+
 .ticket-table-cell {
     max-width: 300px;
     min-width: 200px;
@@ -71,7 +71,7 @@
     }
 }
 
-/* Fix for tickets display in all.blade.php */
+
 #tickets-container table {
     table-layout: fixed;
     width: 100%;
@@ -99,12 +99,12 @@
     overflow-wrap: break-word;
 }
 
-/* Prevent horizontal scrolling in card containers */
+
 .card {
     overflow-x: hidden;
 }
 
-/* Улучшения для вёрстки заявок */
+
 .ticket-card {
     transition: all 0.3s ease;
     border: 1px solid #e2e8f0;
@@ -118,7 +118,7 @@
     transform: translateY(-1px);
 }
 
-/* Улучшения для бейджей статуса и приоритета */
+
 .status-badge, .priority-badge {
     display: inline-flex;
     align-items: center;
@@ -131,7 +131,7 @@
     min-width: fit-content;
 }
 
-/* Улучшения для таблиц */
+
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -170,7 +170,7 @@
     transition: background-color 0.2s ease;
 }
 
-/* Улучшения для мобильных устройств */
+
 @media (max-width: 768px) {
     .table-responsive {
         margin: 0 -1rem;
@@ -206,7 +206,7 @@
     }
 }
 
-/* Улучшения для форм */
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -233,7 +233,7 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Улучшения для кнопок */
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -270,7 +270,7 @@
     transform: translateY(-1px);
 }
 
-/* Улучшения для выпадающих меню */
+
 .dropdown-menu {
     position: absolute;
     top: 100%;
@@ -303,7 +303,7 @@
     color: #1f2937;
 }
 
-/* Анимации */
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -319,7 +319,7 @@
     animation: fadeIn 0.3s ease-out;
 }
 
-/* Улучшения для текста */
+
 .text-ellipsis {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -331,7 +331,7 @@
     overflow-wrap: break-word;
 }
 
-/* Улучшения для контейнеров */
+
 .container-fluid {
     width: 100%;
     padding-right: 1rem;

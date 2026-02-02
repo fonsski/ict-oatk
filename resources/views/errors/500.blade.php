@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Внутренняя ошибка сервера - Ошибка 500')
 

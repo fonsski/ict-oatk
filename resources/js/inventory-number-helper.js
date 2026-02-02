@@ -1,7 +1,4 @@
-/**
- * Помощник для ввода инвентарного номера
- * Автоматически предлагает варианты и проверяет формат
- */
+﻿
 
 class InventoryNumberHelper {
     constructor(inputElement) {

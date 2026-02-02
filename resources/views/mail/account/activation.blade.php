@@ -1,4 +1,4 @@
-@component('mail::message')
+﻿@component('mail::message')
 # Активация учетной записи
 
 Здравствуйте, {{ $notifiable->name ?? 'Пользователь' }}!

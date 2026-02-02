@@ -1,7 +1,4 @@
-/**
- * WebSocket Client для real-time обновлений заявок
- * Использует HTTP polling вместо WebSocket для совместимости
- */
+﻿
 class WebSocketClient {
     constructor(options = {}) {
         this.options = {

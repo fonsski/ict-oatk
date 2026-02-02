@@ -1,8 +1,4 @@
-/**
- * Live Updates для заявок
- * Обеспечивает автоматическое обновление заявок без перезагрузки страницы
- * Поддерживает как HTTP polling, так и WebSocket
- */
+﻿
 
 class LiveUpdates {
     constructor(options = {}) {

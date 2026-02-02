@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCategoryController;
@@ -19,8 +19,6 @@ use App\Http\Controllers\Auth\ActivationController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
-// Аутентификация
-
 Route::middleware("guest")->group(function () {
     Route::get("login", [LoginController::class, "showLoginForm"])->name(
         "login",
@@ -32,7 +30,6 @@ Route::middleware("guest")->group(function () {
     ])->name("register");
     Route::post("register", [RegisterController::class, "register"]);
 
-    // Маршруты для сброса пароля
     Route::get("password/reset", [
         ForgotPasswordController::class,
         "showLinkRequestForm",
@@ -67,14 +64,11 @@ Route::get("login/timeout", [LoginController::class, "timeout"])->name(
     "login.timeout",
 );
 
-// Домашняя страница
 Route::get("/", [HomeController::class, "index"])->name("home");
 
-// Статические страницы
 Route::get("/terms", [PageController::class, "terms"])->name("terms");
 Route::get("/privacy", [PageController::class, "privacy"])->name("privacy");
 
-// API для главной страницы техника
 Route::get("/home/technician/tickets", [
     HomeController::class,
     "technicianTicketsApi",
@@ -82,11 +76,8 @@ Route::get("/home/technician/tickets", [
     ->name("home.technician.tickets")
     ->middleware("auth");
 
-// Защищенные маршруты
 Route::middleware("auth")->group(function () {
-    // Маршруты для всех авторизованных пользователей
     Route::resource("/tickets", TicketController::class);
-    // Дополнительные действия для заявок
     Route::post("/tickets/{ticket}/start", [
         TicketController::class,
         "start",
@@ -108,7 +99,6 @@ Route::middleware("auth")->group(function () {
         "assign",
     ])->name("tickets.assign");
 
-    // Маршруты для всех заявок (только для admin, master, technician)
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
@@ -138,7 +128,6 @@ Route::middleware("auth")->group(function () {
             "quickStatus",
         ])->name("all-tickets.quick-status");
 
-        // API для назначения заявок и получения списка технических специалистов
         Route::post("/api/tickets/{ticket}/assign", [
             AllTicketsController::class,
             "quickAssign",
@@ -150,7 +139,6 @@ Route::middleware("auth")->group(function () {
         ])->name("api.users.technicians");
     });
 
-    // Ресурс equipment полностью доступен только для ролей admin, master и technician
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
@@ -161,7 +149,6 @@ Route::middleware("auth")->group(function () {
             "search",
         ])->name("equipment.search");
 
-        // Маршруты для истории перемещений оборудования
         Route::get("/equipment/{equipment}/location-history", [
             EquipmentController::class,
             "locationHistory",
@@ -177,7 +164,6 @@ Route::middleware("auth")->group(function () {
             "move",
         ])->name("equipment.move");
 
-        // Маршруты для обслуживания оборудования
         Route::get("/equipment/{equipment}/service", [
             EquipmentServiceController::class,
             "index",
@@ -218,7 +204,6 @@ Route::middleware("auth")->group(function () {
             [EquipmentServiceController::class, "downloadAttachment"],
         )->name("equipment.service.attachment");
 
-        // Маршруты для управления категориями оборудования
         Route::resource(
             "/equipment-categories",
             EquipmentCategoryController::class,
@@ -228,14 +213,12 @@ Route::middleware("auth")->group(function () {
         );
     });
 
-    // Управление пользователями (только для admin и master)
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master",
     ])->group(function () {
         Route::resource("/user", UserController::class);
 
-        // Дополнительные действия для пользователей
         Route::post("/user/{user}/reset-password", [
             UserController::class,
             "resetPassword",
@@ -245,7 +228,6 @@ Route::middleware("auth")->group(function () {
             "toggleStatus",
         ])->name("user.toggle-status");
 
-        // Активация/деактивация учетной записи с отправкой email
         Route::post("/user/{user}/activate", [
             ActivationController::class,
             "activate",
@@ -271,14 +253,12 @@ Route::middleware("auth")->group(function () {
         ])->name("user.statistics");
     });
 
-    // Управление кабинетами (только для admin и master)
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master",
     ])->group(function () {
         Route::resource("/room", RoomController::class);
 
-        // Дополнительные действия для кабинетов
         Route::post("/room/{room}/change-status", [
             RoomController::class,
             "changeStatus",
@@ -304,7 +284,6 @@ Route::middleware("auth")->group(function () {
         ])->name("room.get-rooms");
     });
 
-    // Маршруты для администраторов, мастеров и техников
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
@@ -314,7 +293,6 @@ Route::middleware("auth")->group(function () {
             "show",
         ]);
 
-        // Routes for knowledge categories management
         Route::resource(
             "/knowledge/categories",
             KnowledgeCategoryController::class,
@@ -329,7 +307,6 @@ Route::middleware("auth")->group(function () {
         ]);
     });
 
-    // Управление FAQ главной страницы (только для admin и master)
     Route::middleware([
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master",
@@ -351,19 +328,16 @@ Route::middleware("auth")->group(function () {
         ])->name("homepage-faq.upload-image");
     });
 
-    // AJAX preview для markdown (только для авторизованных)
     Route::post("/knowledge/preview", [
         KnowledgeBaseController::class,
         "preview",
     ])->name("knowledge.preview");
 
-    // Upload images for knowledge base articles
     Route::post("/knowledge/upload-image", [
         KnowledgeBaseController::class,
         "uploadImage",
     ])->name("knowledge.upload-image");
 
-    // API Routes for notifications
     Route::prefix("api/notifications")->group(function () {
         Route::get("/", [NotificationController::class, "index"])->name(
             "api.notifications.index",
@@ -388,13 +362,11 @@ Route::middleware("auth")->group(function () {
         ])->name("api.notifications.mark-all-as-read");
     });
 
-    // API для получения оборудования по кабинету
     Route::get("/api/equipment/by-room", [
         \App\Http\Controllers\Api\Equipment\RoomEquipmentController::class,
         "getByRoom",
     ])->name("api.equipment.by-room");
 
-    // Маршруты для настроек
     Route::prefix("settings")->group(function () {
         Route::get("/", [
             \App\Http\Controllers\SettingsController::class,
@@ -410,7 +382,6 @@ Route::middleware("auth")->group(function () {
         ])->name("settings.change-password");
     });
 
-    // Маршрут для просмотра документации
     Route::get("/docs/{docName}.md", [
         \App\Http\Controllers\SettingsController::class,
         "viewDocumentation",
@@ -430,7 +401,6 @@ Route::middleware([
     ])->name("knowledge.show");
 });
 
-// Public homepage FAQ route
 Route::get("/faq/{slug}", [HomepageFAQController::class, "show"])->name(
     "homepage-faq.show",
 );

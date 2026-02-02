@@ -1,4 +1,4 @@
-@foreach($tickets as $ticket)
+﻿@foreach($tickets as $ticket)
     <tr class="hover:bg-slate-50 transition-all duration-300 animate-fade-in" data-ticket-id="{{ $ticket->id }}">
         <td class="px-4 py-4">
             <div class="min-w-0">

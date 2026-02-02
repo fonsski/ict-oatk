@@ -1,6 +1,4 @@
-/**
- * Интеграционные тесты полных сценариев использования
- */
+﻿
 
 import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers/auth-helpers.js';

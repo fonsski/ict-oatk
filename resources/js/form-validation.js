@@ -1,7 +1,4 @@
-/**
- * Клиентская валидация форм
- * Обеспечивает валидацию на стороне клиента для улучшения UX
- */
+﻿
 
 class FormValidator {
     constructor(formSelector, options = {}) {

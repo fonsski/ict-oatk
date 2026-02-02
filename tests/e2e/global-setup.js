@@ -1,6 +1,4 @@
-/**
- * Глобальная настройка для тестов
- */
+﻿
 
 const { chromium } = require('@playwright/test');
 

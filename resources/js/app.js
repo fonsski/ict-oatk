@@ -1,4 +1,4 @@
-import "./bootstrap";
+﻿import "./bootstrap";
 import "./form-validation";
 import "./loading-states";
 import "./notifications";
@@ -7,10 +7,7 @@ import "./accessibility";
 import "./char-counter";
 import "./inventory-number-helper";
 
-/**
- * Инициализация маски ввода телефона для указанных полей
- * Эта функция добавляет маску телефона в формате +7 (XXX) XXX-XX-XX
- */
+
 window.initPhoneMasks = function () {
     // Проверяем, загружена ли библиотека IMask
     if (typeof IMask === "undefined") {
@@ -92,9 +89,7 @@ window.initPhoneMasks = function () {
     });
 };
 
-/**
- * Загружает библиотеку IMask динамически, если она не загружена
- */
+
 function loadIMaskLibrary() {
     if (window.IMask) {
         initPhoneMasks();
@@ -115,4 +110,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 // Убираем конфликтующие импорты для canvas
 // import "./canvas-handler";
-// import "./simple-canvas";
+
