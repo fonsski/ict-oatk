@@ -8,9 +8,9 @@ use Illuminate\Support\Collection;
 
 class PaginationService
 {
-    /**
+    
      * Стандартные размеры страниц для разных типов данных
-     */
+
     const PAGE_SIZES = [
         'tickets' => 10,
         'users' => 15,
@@ -26,19 +26,19 @@ class PaginationService
         'default' => 15,
     ];
 
-    /**
+    
      * Максимальный размер страницы
-     */
+
     const MAX_PAGE_SIZE = 100;
 
-    /**
+    
      * Минимальный размер страницы
-     */
+
     const MIN_PAGE_SIZE = 5;
 
-    /**
+    
      * Получить размер страницы для конкретного типа данных
-     */
+
     public function getPageSize(string $type, ?int $requestedSize = null): int
     {
         $defaultSize = self::PAGE_SIZES[$type] ?? self::PAGE_SIZES['default'];
@@ -47,16 +47,16 @@ class PaginationService
             return $defaultSize;
         }
 
-        // Ограничиваем размер страницы
+        
         return max(
             self::MIN_PAGE_SIZE,
             min(self::MAX_PAGE_SIZE, $requestedSize)
         );
     }
 
-    /**
+    
      * Создать пагинатор для коллекции
-     */
+
     public function paginateCollection(Collection $items, int $perPage, int $currentPage, string $path = null): LengthAwarePaginator
     {
         $currentPage = max(1, $currentPage);
@@ -79,9 +79,9 @@ class PaginationService
         );
     }
 
-    /**
+    
      * Получить параметры пагинации из запроса
-     */
+
     public function getPaginationParams(\Illuminate\Http\Request $request, string $type = 'default'): array
     {
         $page = max(1, (int) $request->get('page', 1));
@@ -93,18 +93,18 @@ class PaginationService
         ];
     }
 
-    /**
+    
      * Добавить параметры пагинации к URL
-     */
+
     public function appendPaginationParams(string $url, array $params = []): string
     {
         $query = http_build_query($params);
         return $url . ($query ? '?' . $query : '');
     }
 
-    /**
+    
      * Получить информацию о пагинации для представления
-     */
+
     public function getPaginationInfo($paginator): array
     {
         if (!$paginator instanceof LengthAwarePaginator) {
@@ -123,9 +123,9 @@ class PaginationService
         ];
     }
 
-    /**
+    
      * Создать простую пагинацию для небольшого количества элементов
-     */
+
     public function createSimplePagination(Collection $items, int $perPage, int $currentPage): array
     {
         $total = $items->count();
@@ -146,9 +146,9 @@ class PaginationService
         ];
     }
 
-    /**
+    
      * Получить доступные размеры страниц для селекта
-     */
+
     public function getAvailablePageSizes(): array
     {
         return [
@@ -161,9 +161,9 @@ class PaginationService
         ];
     }
 
-    /**
+    
      * Валидировать параметры пагинации
-     */
+
     public function validatePaginationParams(array $params): array
     {
         $validated = [];
@@ -182,13 +182,13 @@ class PaginationService
         return $validated;
     }
 
-    /**
+    
      * Получить настройки пагинации для конкретного пользователя
-     */
+
     public function getUserPaginationSettings(\App\Models\User $user, string $type = 'default'): array
     {
-        // В будущем можно сохранять настройки пагинации в профиле пользователя
-        // Пока возвращаем стандартные настройки
+        
+        
         return [
             'per_page' => $this->getPageSize($type),
             'show_pagination_info' => true,
@@ -196,9 +196,9 @@ class PaginationService
         ];
     }
 
-    /**
+    
      * Создать пагинацию с дополнительными метаданными
-     */
+
     public function createAdvancedPagination($query, int $perPage, int $currentPage, array $options = []): array
     {
         $paginator = $query->paginate($perPage, ['*'], 'page', $currentPage);

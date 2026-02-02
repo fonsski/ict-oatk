@@ -45,10 +45,10 @@ class Kernel extends HttpKernel
         "signed" => \Illuminate\Routing\Middleware\ValidateSignature::class,
         "throttle" => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         "verified" => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        // role middleware aliases (keep require_role for backward compatibility)
+        
         "role" => \App\Http\Middleware\CheckRole::class,
         "require_role" => \App\Http\Middleware\CheckRole::class,
-        // Security middleware aliases
+        
         "brute.force" => \App\Http\Middleware\BruteForceProtection::class,
         "xss" => \App\Http\Middleware\XssProtection::class,
         "sql.injection" => \App\Http\Middleware\SqlInjectionProtection::class,

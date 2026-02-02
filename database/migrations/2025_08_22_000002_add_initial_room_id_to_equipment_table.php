@@ -5,13 +5,13 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::table("equipment", function (Blueprint $table) {
-            // Check if room_id column exists
+            
             if (Schema::hasColumn("equipment", "room_id")) {
                 $table
                     ->foreignId("initial_room_id")
@@ -20,7 +20,7 @@ return new class extends Migration {
                     ->constrained("rooms")
                     ->nullOnDelete();
             } else {
-                // If room_id doesn't exist, add after status_id
+                
                 $table
                     ->foreignId("initial_room_id")
                     ->nullable()
@@ -31,9 +31,9 @@ return new class extends Migration {
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::table("equipment", function (Blueprint $table) {

@@ -6,19 +6,19 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEquipmentRequest extends FormRequest
 {
-    /**
+    
      * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
-        return true; // Авторизация проверяется в контроллере
+        return true; 
     }
 
-    /**
+    
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+
     public function rules(): array
     {
         return [
@@ -44,53 +44,53 @@ class StoreEquipmentRequest extends FormRequest
         ];
     }
 
-    /**
+    
      * Get custom messages for validator errors.
      *
      * @return array<string, string>
-     */
+
     public function messages(): array
     {
         return [
-            // Название оборудования
+            
             'name.min' => 'Название оборудования должно содержать не менее 2 символов',
             'name.max' => 'Название оборудования не должно превышать 255 символов',
             
-            // Инвентарный номер
+            
             'inventory_number.required' => 'Пожалуйста, укажите инвентарный номер',
             'inventory_number.min' => 'Инвентарный номер должен содержать не менее 1 символа',
             'inventory_number.max' => 'Инвентарный номер не должен превышать 20 символов',
             'inventory_number.unique' => 'Оборудование с таким инвентарным номером уже существует в системе',
             'inventory_number.regex' => 'Инвентарный номер должен содержать только цифры',
             
-            // Учётный номер
+            
             'accounting_number.min' => 'Учётный номер должен содержать не менее 3 символов',
             'accounting_number.max' => 'Учётный номер не должен превышать 20 символов',
             'accounting_number.unique' => 'Оборудование с таким учётным номером уже существует в системе',
             'accounting_number.regex' => 'Учётный номер должен соответствовать формату: КодЗданияЭтаж-Группа-Номер (например: А1-студент-001)',
             
-            // Категория
+            
             'category_id.exists' => 'Выбранная категория оборудования не существует в системе',
             
-            // Статус
+            
             'status_id.required' => 'Пожалуйста, выберите статус оборудования',
             'status_id.exists' => 'Выбранный статус оборудования не существует в системе',
             
-            // Кабинеты
+            
             'room_id.exists' => 'Выбранный текущий кабинет не существует в системе',
             'initial_room_id.exists' => 'Выбранный начальный кабинет не существует в системе',
             
-            // Гарантия
+            
             'has_warranty.boolean' => 'Поле гарантии должно быть логическим значением',
             'warranty_end_date.date' => 'Дата окончания гарантии должна быть корректной датой',
             'warranty_end_date.after_or_equal' => 'Дата окончания гарантии не может быть в прошлом',
             'warranty_end_date.required_if' => 'При наличии гарантии необходимо указать дату её окончания',
             
-            // Обслуживание
+            
             'last_service_date.date' => 'Дата последнего обслуживания должна быть корректной датой',
             'last_service_date.before_or_equal' => 'Дата последнего обслуживания не может быть в будущем',
             
-            // Комментарии
+            
             'service_comment.min' => 'Комментарий о проведённом обслуживании должен содержать не менее 5 символов',
             'service_comment.max' => 'Комментарий о проведённом обслуживании не должен превышать 500 символов',
             'known_issues.min' => 'Описание известных проблем должно содержать не менее 5 символов',
@@ -98,11 +98,11 @@ class StoreEquipmentRequest extends FormRequest
         ];
     }
 
-    /**
+    
      * Get custom attributes for validator errors.
      *
      * @return array<string, string>
-     */
+
     public function attributes(): array
     {
         return [

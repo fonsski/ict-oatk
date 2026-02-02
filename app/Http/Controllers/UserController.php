@@ -30,16 +30,16 @@ class UserController extends Controller
         $this->cacheService = $cacheService;
     }
 
-    /**
+    
      * Список всех пользователей
-     */
+
     public function index(Request $request)
     {
         $query = User::withFullUserData()
             ->withLimited('tickets', 5)
             ->orderBy("created_at", "desc");
 
-        // Фильтрация по статусу
+        
         if ($request->filled("status")) {
             if ($request->status === "active") {
                 $query->where("is_active", true);
@@ -48,12 +48,12 @@ class UserController extends Controller
             }
         }
 
-        // Фильтрация по роли
+        
         if ($request->filled("role_id")) {
             $query->where("role_id", $request->role_id);
         }
 
-        // Поиск по имени или телефону
+        
         if ($request->filled("search")) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -71,18 +71,18 @@ class UserController extends Controller
         return view("user.index", compact("users", "roles"));
     }
 
-    /**
+    
      * Форма создания пользователя
-     */
+
     public function create()
     {
         $roles = $this->cacheService->getRoles();
         return view("user.create", compact("roles"));
     }
 
-    /**
+    
      * Сохранение нового пользователя
-     */
+
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
@@ -95,10 +95,10 @@ class UserController extends Controller
             "is_active" => $data["is_active"] ?? true,
         ]);
 
-        // Отправляем событие о создании пользователя
+        
         event(new UserCreated($user, auth()->user()));
 
-        // Очищаем кеш, связанный с пользователями
+        
         $this->cacheService->clearUserRelatedCache();
 
         return redirect()
@@ -106,9 +106,9 @@ class UserController extends Controller
             ->with("success", "Пользователь успешно создан");
     }
 
-    /**
+    
      * Просмотр пользователя
-     */
+
     public function show(User $user)
     {
         $user->load([
@@ -119,7 +119,7 @@ class UserController extends Controller
             "responsibleForRooms:id,responsible_user_id,number,name,type,building,floor"
         ]);
 
-        // Статистика пользователя
+        
         $stats = [
             "total_tickets" => $user->tickets->count(),
             "open_tickets" => $user->tickets
@@ -142,18 +142,18 @@ class UserController extends Controller
         return view("user.show", compact("user", "stats"));
     }
 
-    /**
+    
      * Форма редактирования пользователя
-     */
+
     public function edit(User $user)
     {
         $roles = $this->cacheService->getRoles();
         return view("user.edit", compact("user", "roles"));
     }
 
-    /**
+    
      * Обновление пользователя
-     */
+
     public function update(UpdateUserRequest $request, User $user)
     {
         $data = $request->validated();
@@ -165,7 +165,7 @@ class UserController extends Controller
             "is_active" => $data["is_active"] ?? false,
         ]);
 
-        // Очищаем кеш, связанный с пользователями
+        
         $this->cacheService->clearUserRelatedCache();
 
         return redirect()
@@ -173,19 +173,19 @@ class UserController extends Controller
             ->with("success", "Пользователь успешно обновлен");
     }
 
-    /**
+    
      * Удаление пользователя
-     */
+
     public function destroy(User $user)
     {
-        // Проверяем, не пытается ли пользователь удалить сам себя
+        
         if ($user->id === auth()->id()) {
             return redirect()
                 ->route("user.index")
                 ->with("error", "Нельзя удалить собственную учетную запись");
         }
 
-        // Проверяем, есть ли у пользователя активные заявки
+        
         if (
             $user
                 ->tickets()
@@ -202,7 +202,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        // Очищаем кеш, связанный с пользователями
+        
         $this->cacheService->clearUserRelatedCache();
 
         return redirect()
@@ -210,9 +210,9 @@ class UserController extends Controller
             ->with("success", "Пользователь успешно удален");
     }
 
-    /**
+    
      * Сброс пароля пользователя
-     */
+
     public function resetPassword(ResetPasswordRequest $request, User $user)
     {
         $data = $request->validated();
@@ -226,12 +226,12 @@ class UserController extends Controller
             ->with("success", "Пароль пользователя успешно сброшен");
     }
 
-    /**
+    
      * Изменение статуса активности пользователя
-     */
+
     public function toggleStatus(User $user)
     {
-        // Проверяем, не пытается ли пользователь деактивировать сам себя
+        
         if ($user->id === auth()->id()) {
             return redirect()
                 ->route("user.index")
@@ -248,17 +248,17 @@ class UserController extends Controller
             "is_active" => $newStatus,
         ]);
 
-        // Отправляем событие об изменении статуса пользователя
+        
         event(new UserStatusChanged($user, $wasActive, $newStatus, auth()->user()));
 
-        // Очищаем кеш, связанный с пользователями
+        
         $this->cacheService->clearUserRelatedCache();
 
         $status = $user->is_active ? "активирована" : "деактивирована";
 
-        // Если пользователь был активирован, отправляем уведомление
+        
         if (!$wasActive && $user->is_active) {
-            // Отправляем уведомление об активации аккаунта
+            
             $user->notify(new AccountActivationNotification());
         }
 
@@ -270,9 +270,9 @@ class UserController extends Controller
             );
     }
 
-    /**
+    
      * Массовые операции с пользователями
-     */
+
     public function bulkAction(BulkUserActionRequest $request)
     {
         $data = $request->validated();
@@ -280,7 +280,7 @@ class UserController extends Controller
         $userIds = $data["user_ids"];
         $currentUserId = auth()->id();
 
-        // Убираем текущего пользователя из списка
+        
         $userIds = array_filter($userIds, function ($id) use ($currentUserId) {
             return $id != $currentUserId;
         });
@@ -295,15 +295,15 @@ class UserController extends Controller
 
         switch ($data["action"]) {
             case "activate":
-                // Активируем пользователей и отправляем им уведомления
+                
                 $users->get()->each(function ($user) {
                     if (!$user->is_active) {
-                        // Обновляем статус пользователя на активный
+                        
                         $user->update([
                             "is_active" => true,
                         ]);
 
-                        // Отправляем уведомление об активации
+                        
                         $user->notify(new AccountActivationNotification());
                     } else {
                         $user->update(["is_active" => true]);
@@ -323,7 +323,7 @@ class UserController extends Controller
                 break;
 
             case "delete":
-                // Проверяем, нет ли у пользователей активных заявок
+                
                 $usersWithActiveTickets = User::whereIn("id", $userIds)
                     ->whereHas("tickets", function ($query) {
                         $query->whereIn("status", ["open", "in_progress"]);
@@ -341,7 +341,7 @@ class UserController extends Controller
                         );
                 }
 
-                // Дополнительная проверка: пользователи не могут быть назначены исполнителями активных заявок
+                
                 $usersAssignedToActiveTickets = User::whereIn("id", $userIds)
                     ->whereHas("assignedTickets", function ($query) {
                         $query->whereIn("status", ["open", "in_progress"]);
@@ -367,9 +367,9 @@ class UserController extends Controller
         return redirect()->route("user.index")->with("success", $message);
     }
 
-    /**
+    
      * Экспорт пользователей в CSV
-     */
+
     public function export(Request $request)
     {
         $users = User::with("role")->get();
@@ -382,9 +382,9 @@ class UserController extends Controller
         ];
 
         $callback = function () use ($users) {
-            $file = fopen("php://output", "w");
+            $file = fopen("php:
 
-            // Заголовки CSV
+            
             fputcsv($file, [
                 "ID",
                 "Имя",
@@ -395,7 +395,7 @@ class UserController extends Controller
                 "Последний вход",
             ]);
 
-            // Данные пользователей
+            
             foreach ($users as $user) {
                 fputcsv($file, [
                     $user->id,
@@ -416,9 +416,9 @@ class UserController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    /**
+    
      * Статистика пользователей
-     */
+
     public function statistics()
     {
         $stats = [

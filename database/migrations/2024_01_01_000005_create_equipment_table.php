@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateEquipmentTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('equipment', function (Blueprint $table) {
@@ -24,9 +24,9 @@ class CreateEquipmentTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('equipment');

@@ -7,36 +7,36 @@ use Illuminate\Console\Command;
 
 class CacheManagementCommand extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'cache:manage 
                             {action : Action to perform (warm|clear|stats|clear-all)}
                             {--type= : Type of cache to clear (roles|locations|rooms|equipment_categories|active_equipment|assignable_users|ticket_categories|ticket_priorities|ticket_statuses)}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Manage application cache (warm up, clear, show stats)';
 
     protected CacheService $cacheService;
 
-    /**
+    
      * Create a new command instance.
-     */
+
     public function __construct(CacheService $cacheService)
     {
         parent::__construct();
         $this->cacheService = $cacheService;
     }
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $action = $this->argument('action');
@@ -62,9 +62,9 @@ class CacheManagementCommand extends Command
         return 0;
     }
 
-    /**
+    
      * Warm up cache
-     */
+
     private function warmUpCache(): void
     {
         $this->info('Warming up cache...');
@@ -77,9 +77,9 @@ class CacheManagementCommand extends Command
         }
     }
 
-    /**
+    
      * Clear specific cache type
-     */
+
     private function clearCache(): void
     {
         $type = $this->option('type');
@@ -100,9 +100,9 @@ class CacheManagementCommand extends Command
         }
     }
 
-    /**
+    
      * Clear all cache
-     */
+
     private function clearAllCache(): void
     {
         $this->info('Clearing all cache...');
@@ -115,9 +115,9 @@ class CacheManagementCommand extends Command
         }
     }
 
-    /**
+    
      * Show cache statistics
-     */
+
     private function showCacheStats(): void
     {
         $this->info('Cache Statistics:');

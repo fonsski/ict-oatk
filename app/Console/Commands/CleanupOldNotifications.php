@@ -7,23 +7,23 @@ use Illuminate\Support\Facades\DB;
 
 class CleanupOldNotifications extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'notifications:cleanup {--days=30 : Number of days to keep notifications}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Clean up old notifications from the database';
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $days = $this->option('days');

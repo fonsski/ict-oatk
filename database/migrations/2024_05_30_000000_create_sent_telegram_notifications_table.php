@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('sent_telegram_notifications', function (Blueprint $table) {
@@ -24,14 +24,14 @@ return new class extends Migration
                   ->on('tickets')
                   ->onDelete('cascade');
 
-            // Убедимся, что мы не отправим одно и то же уведомление дважды
+            
             $table->unique(['ticket_id', 'notification_type']);
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('sent_telegram_notifications');

@@ -5,15 +5,15 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
+    
      * Run the migrations.
      *
      * @return void
-     */
+
     public function up(): void
     {
         Schema::table("equipment", function (Blueprint $table) {
-            // Check if equipment_categories table exists
+            
             if (Schema::hasTable("equipment_categories")) {
                 $table
                     ->foreignId("category_id")
@@ -25,11 +25,11 @@ return new class extends Migration {
         });
     }
 
-    /**
+    
      * Reverse the migrations.
      *
      * @return void
-     */
+
     public function down(): void
     {
         Schema::table("equipment", function (Blueprint $table) {

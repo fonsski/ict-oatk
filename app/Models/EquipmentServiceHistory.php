@@ -25,25 +25,25 @@ class EquipmentServiceHistory extends Model
         "attachments" => "array",
     ];
 
-    /**
+    
      * Связь с оборудованием
-     */
+
     public function equipment()
     {
         return $this->belongsTo(Equipment::class);
     }
 
-    /**
+    
      * Связь с пользователем, выполнившим обслуживание
-     */
+
     public function performedBy()
     {
         return $this->belongsTo(User::class, "performed_by_user_id");
     }
 
-    /**
+    
      * Получение читаемого имени типа обслуживания
-     */
+
     public function getServiceTypeNameAttribute()
     {
         $types = [
@@ -59,9 +59,9 @@ class EquipmentServiceHistory extends Model
         return $types[$this->service_type] ?? $this->service_type;
     }
 
-    /**
+    
      * Получение читаемого имени результата обслуживания
-     */
+
     public function getServiceResultNameAttribute()
     {
         $results = [
@@ -74,9 +74,9 @@ class EquipmentServiceHistory extends Model
         return $results[$this->service_result] ?? $this->service_result;
     }
 
-    /**
+    
      * Scope для последнего обслуживания
-     */
+
     public function scopeLatest($query)
     {
         return $query->orderBy("service_date", "desc");

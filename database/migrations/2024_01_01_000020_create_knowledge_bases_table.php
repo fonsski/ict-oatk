@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateKnowledgeBasesTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('knowledge_bases', function (Blueprint $table) {
@@ -18,9 +18,9 @@ class CreateKnowledgeBasesTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('knowledge_bases');

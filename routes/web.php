@@ -82,8 +82,6 @@ Route::get("/home/technician/tickets", [
     ->name("home.technician.tickets")
     ->middleware("auth");
 
-// Общедоступные маршруты (index/show will be registered after protected routes to avoid route collisions)
-
 // Защищенные маршруты
 Route::middleware("auth")->group(function () {
     // Маршруты для всех авторизованных пользователей

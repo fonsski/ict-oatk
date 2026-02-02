@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
+    
      * Check if index exists on table
-     */
+
     private function indexExists(string $table, string $index): bool
     {
         try {
@@ -20,9 +20,9 @@ return new class extends Migration
         }
     }
 
-    /**
+    
      * Check if column exists on table
-     */
+
     private function columnExists(string $table, string $column): bool
     {
         try {
@@ -33,12 +33,12 @@ return new class extends Migration
         }
     }
 
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
-        // Индексы для таблицы users (только если поля существуют)
+        
         if (Schema::hasTable('users')) {
             Schema::table('users', function (Blueprint $table) {
                 if ($this->columnExists('users', 'name') && !$this->indexExists('users', 'users_name_index')) {
@@ -59,7 +59,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы tickets (только если поля существуют)
+        
         if (Schema::hasTable('tickets')) {
             Schema::table('tickets', function (Blueprint $table) {
                 if ($this->columnExists('tickets', 'status') && !$this->indexExists('tickets', 'tickets_status_index')) {
@@ -112,7 +112,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы ticket_comments
+        
         if (Schema::hasTable('ticket_comments')) {
             Schema::table('ticket_comments', function (Blueprint $table) {
                 if ($this->columnExists('ticket_comments', 'ticket_id') && !$this->indexExists('ticket_comments', 'ticket_comments_ticket_id_index')) {
@@ -129,7 +129,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы equipment
+        
         if (Schema::hasTable('equipment')) {
             Schema::table('equipment', function (Blueprint $table) {
                 if ($this->columnExists('equipment', 'name') && !$this->indexExists('equipment', 'equipment_name_index')) {
@@ -158,7 +158,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы rooms
+        
         if (Schema::hasTable('rooms')) {
             Schema::table('rooms', function (Blueprint $table) {
                 if ($this->columnExists('rooms', 'number') && !$this->indexExists('rooms', 'rooms_number_index')) {
@@ -187,7 +187,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы locations
+        
         if (Schema::hasTable('locations')) {
             Schema::table('locations', function (Blueprint $table) {
                 if ($this->columnExists('locations', 'name') && !$this->indexExists('locations', 'locations_name_index')) {
@@ -196,7 +196,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы equipment_categories
+        
         if (Schema::hasTable('equipment_categories')) {
             Schema::table('equipment_categories', function (Blueprint $table) {
                 if ($this->columnExists('equipment_categories', 'name') && !$this->indexExists('equipment_categories', 'equipment_categories_name_index')) {
@@ -205,7 +205,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы roles
+        
         if (Schema::hasTable('roles')) {
             Schema::table('roles', function (Blueprint $table) {
                 if ($this->columnExists('roles', 'slug') && !$this->indexExists('roles', 'roles_slug_index')) {
@@ -214,7 +214,7 @@ return new class extends Migration
             });
         }
 
-        // Индексы для таблицы notifications
+        
         if (Schema::hasTable('notifications')) {
             Schema::table('notifications', function (Blueprint $table) {
                 if ($this->columnExists('notifications', 'notifiable_id') && !$this->indexExists('notifications', 'notifications_notifiable_id_index')) {
@@ -232,12 +232,12 @@ return new class extends Migration
         }
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
-        // Удаляем индексы только если они существуют
+        
         if (Schema::hasTable('users')) {
             Schema::table('users', function (Blueprint $table) {
                 if ($this->indexExists('users', 'users_name_index')) {
@@ -296,8 +296,8 @@ return new class extends Migration
             });
         }
 
-        // Удаляем остальные индексы аналогично...
-        // (для краткости не показываю весь код)
+        
+        
     }
 };
 

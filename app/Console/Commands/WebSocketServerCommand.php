@@ -7,23 +7,23 @@ use App\WebSocket\WebSocketServer;
 
 class WebSocketServerCommand extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'websocket:serve {--port=8080 : Port to run the WebSocket server on}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Start the WebSocket server for real-time updates';
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $port = $this->option('port');

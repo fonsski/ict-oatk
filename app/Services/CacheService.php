@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Log;
 
 class CacheService
 {
-    /**
+    
      * Ключи кеша
-     */
+
     const CACHE_KEYS = [
         'roles' => 'roles_list',
         'locations' => 'locations_list',
@@ -27,24 +27,24 @@ class CacheService
         'ticket_statuses' => 'ticket_statuses_list',
     ];
 
-    /**
+    
      * Время жизни кеша (в секундах)
-     */
+
     const CACHE_TTL = [
-        'roles' => 3600, // 1 час
-        'locations' => 3600, // 1 час
-        'rooms' => 1800, // 30 минут
-        'equipment_categories' => 3600, // 1 час
-        'active_equipment' => 1800, // 30 минут
-        'assignable_users' => 1800, // 30 минут
-        'ticket_categories' => 7200, // 2 часа
-        'ticket_priorities' => 7200, // 2 часа
-        'ticket_statuses' => 7200, // 2 часа
+        'roles' => 3600, 
+        'locations' => 3600, 
+        'rooms' => 1800, 
+        'equipment_categories' => 3600, 
+        'active_equipment' => 1800, 
+        'assignable_users' => 1800, 
+        'ticket_categories' => 7200, 
+        'ticket_priorities' => 7200, 
+        'ticket_statuses' => 7200, 
     ];
 
-    /**
+    
      * Получить список ролей
-     */
+
     public function getRoles()
     {
         return Cache::remember(
@@ -58,9 +58,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список местоположений
-     */
+
     public function getLocations()
     {
         return Cache::remember(
@@ -74,9 +74,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список активных кабинетов
-     */
+
     public function getActiveRooms()
     {
         return Cache::remember(
@@ -91,9 +91,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список категорий оборудования
-     */
+
     public function getEquipmentCategories()
     {
         return Cache::remember(
@@ -107,9 +107,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список активного оборудования
-     */
+
     public function getActiveEquipment()
     {
         return Cache::remember(
@@ -125,9 +125,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список пользователей, которым можно назначать заявки
-     */
+
     public function getAssignableUsers()
     {
         return Cache::remember(
@@ -145,9 +145,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список категорий заявок
-     */
+
     public function getTicketCategories()
     {
         return Cache::remember(
@@ -165,9 +165,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список приоритетов заявок
-     */
+
     public function getTicketPriorities()
     {
         return Cache::remember(
@@ -184,9 +184,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Получить список статусов заявок
-     */
+
     public function getTicketStatuses()
     {
         return Cache::remember(
@@ -203,9 +203,9 @@ class CacheService
         );
     }
 
-    /**
+    
      * Очистить кеш для конкретного типа данных
-     */
+
     public function clearCache(string $type): void
     {
         if (isset(self::CACHE_KEYS[$type])) {
@@ -214,9 +214,9 @@ class CacheService
         }
     }
 
-    /**
+    
      * Очистить весь кеш приложения
-     */
+
     public function clearAllCache(): void
     {
         foreach (self::CACHE_KEYS as $key) {
@@ -225,18 +225,18 @@ class CacheService
         Log::info('All application cache cleared');
     }
 
-    /**
+    
      * Очистить кеш, связанный с пользователями
-     */
+
     public function clearUserRelatedCache(): void
     {
         $this->clearCache('assignable_users');
         Log::info('User-related cache cleared');
     }
 
-    /**
+    
      * Очистить кеш, связанный с заявками
-     */
+
     public function clearTicketRelatedCache(): void
     {
         $this->clearCache('ticket_categories');
@@ -245,9 +245,9 @@ class CacheService
         Log::info('Ticket-related cache cleared');
     }
 
-    /**
+    
      * Очистить кеш, связанный с оборудованием
-     */
+
     public function clearEquipmentRelatedCache(): void
     {
         $this->clearCache('equipment_categories');
@@ -256,9 +256,9 @@ class CacheService
         Log::info('Equipment-related cache cleared');
     }
 
-    /**
+    
      * Очистить кеш, связанный с местоположениями
-     */
+
     public function clearLocationRelatedCache(): void
     {
         $this->clearCache('locations');
@@ -266,9 +266,9 @@ class CacheService
         Log::info('Location-related cache cleared');
     }
 
-    /**
+    
      * Получить статистику кеша
-     */
+
     public function getCacheStats(): array
     {
         $stats = [];
@@ -284,9 +284,9 @@ class CacheService
         return $stats;
     }
 
-    /**
+    
      * Предварительно загрузить все кеши
-     */
+
     public function warmUpCache(): void
     {
         try {

@@ -11,17 +11,17 @@ class LogUserStatusChanged implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    /**
+    
      * Create the event listener.
-     */
+
     public function __construct()
     {
-        //
+        
     }
 
-    /**
+    
      * Handle the event.
-     */
+
     public function handle(UserStatusChanged $event): void
     {
         $user = $event->user;

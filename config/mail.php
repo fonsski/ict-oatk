@@ -1,7 +1,7 @@
 <?php
 
 return [
-    /*
+    
     |--------------------------------------------------------------------------
     | Default Mailer
     |--------------------------------------------------------------------------
@@ -11,11 +11,11 @@ return [
     | the message. All additional mailers can be configured within the
     | "mailers" array. Examples of each type of mailer are provided.
     |
-    */
+
 
     "default" => env("MAIL_MAILER", "smtp"),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Mailer Configurations
     |--------------------------------------------------------------------------
@@ -32,7 +32,7 @@ return [
     |            "postmark", "resend", "log", "array",
     |            "failover", "roundrobin"
     |
-    */
+
 
     "mailers" => [
         "smtp" => [
@@ -47,7 +47,7 @@ return [
             "local_domain" => env(
                 "MAIL_EHLO_DOMAIN",
                 parse_url(
-                    (string) env("APP_URL", "http://localhost"),
+                    (string) env("APP_URL", "http:
                     PHP_URL_HOST,
                 ),
             ),
@@ -59,10 +59,10 @@ return [
 
         "postmark" => [
             "transport" => "postmark",
-            // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
-            // 'client' => [
-            //     'timeout' => 5,
-            // ],
+            
+            
+            
+            
         ],
 
         "resend" => [
@@ -95,10 +95,10 @@ return [
             "retry_after" => 60,
         ],
 
-        // Удален раздел Gmail, используйте стандартный SMTP драйвер
+        
     ],
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Global "From" Address
     |--------------------------------------------------------------------------
@@ -107,7 +107,7 @@ return [
     | the same address. Here you may specify a name and address that is
     | used globally for all emails that are sent by your application.
     |
-    */
+
 
     "from" => [
         "address" => env("MAIL_FROM_ADDRESS", "hello@example.com"),

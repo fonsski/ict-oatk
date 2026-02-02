@@ -13,17 +13,17 @@ use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordController extends Controller
 {
-    /**
+    
      * Показать форму для запроса сброса пароля
-     */
+
     public function showLinkRequestForm()
     {
         return view("auth.passwords.request");
     }
 
-    /**
+    
      * Отправить ссылку для сброса пароля
-     */
+
     public function sendResetCode(Request $request)
     {
         $request->validate([
@@ -40,10 +40,10 @@ class ForgotPasswordController extends Controller
             ]);
         }
 
-        // Генерируем код сброса пароля
-        $resetCode = mt_rand(100000, 999999); // 6-значный код
+        
+        $resetCode = mt_rand(100000, 999999); 
 
-        // Сохраняем код и время создания в сессии
+        
         $request->session()->put("password_reset_code", [
             "code" => $resetCode,
             "email" => $request->email,
@@ -52,10 +52,10 @@ class ForgotPasswordController extends Controller
         ]);
 
         try {
-            // Отправляем уведомление с кодом сброса пароля
+            
             $user->notify(new PasswordResetNotification($resetCode));
 
-            // Логируем успешную отправку
+            
             Log::info(
                 "Код сброса пароля отправлен для пользователя {$user->id}: {$resetCode}",
                 [
@@ -63,7 +63,7 @@ class ForgotPasswordController extends Controller
                 ],
             );
         } catch (\Exception $e) {
-            // Логируем ошибку отправки
+            
             Log::error(
                 "Ошибка отправки кода сброса пароля для пользователя {$user->id}",
                 [
@@ -74,15 +74,15 @@ class ForgotPasswordController extends Controller
             );
         }
 
-        // Показываем пользователю страницу для ввода кода
+        
         return redirect()
             ->route("password.code")
             ->with("status", "Код подтверждения отправлен на ваш email.");
     }
 
-    /**
+    
      * Показать форму для ввода кода сброса пароля
-     */
+
     public function showResetCodeForm()
     {
         if (!session()->has("password_reset_code")) {
@@ -92,9 +92,9 @@ class ForgotPasswordController extends Controller
         return view("auth.passwords.code");
     }
 
-    /**
+    
      * Проверить код сброса пароля
-     */
+
     public function validateResetCode(Request $request)
     {
         $request->validate([
@@ -112,7 +112,7 @@ class ForgotPasswordController extends Controller
                 ]);
         }
 
-        // Проверяем, не истек ли срок действия кода (30 минут)
+        
         $expiry = now()->subMinutes(30);
         if ($expiry->gt($resetData["created_at"])) {
             session()->forget("password_reset_code");
@@ -124,20 +124,20 @@ class ForgotPasswordController extends Controller
                 ]);
         }
 
-        // Проверяем код
+        
         if ($request->code != $resetData["code"]) {
             return back()->withErrors([
                 "code" => "Неверный код подтверждения.",
             ]);
         }
 
-        // Перенаправляем на форму создания нового пароля
+        
         return redirect()->route("password.reset");
     }
 
-    /**
+    
      * Показать форму для создания нового пароля
-     */
+
     public function showResetForm()
     {
         if (!session()->has("password_reset_code")) {
@@ -147,9 +147,9 @@ class ForgotPasswordController extends Controller
         return view("auth.passwords.reset");
     }
 
-    /**
+    
      * Сбросить пароль
-     */
+
     public function reset(Request $request)
     {
         $request->validate([
@@ -167,7 +167,7 @@ class ForgotPasswordController extends Controller
                 ]);
         }
 
-        // Находим пользователя
+        
         $user = User::find($resetData["user_id"]);
 
         if (!$user) {
@@ -177,7 +177,7 @@ class ForgotPasswordController extends Controller
                 ->withErrors(["general" => "Пользователь не найден."]);
         }
 
-        // Проверяем совпадение email
+        
         if ($user->email !== $resetData["email"]) {
             session()->forget("password_reset_code");
             Log::warning("Попытка сброса пароля с несовпадающим email", [
@@ -192,20 +192,20 @@ class ForgotPasswordController extends Controller
                 ]);
         }
 
-        // Обновляем пароль
+        
         $user->password = Hash::make($request->password);
         $user->save();
 
-        // Логируем успешный сброс пароля
+        
         Log::info("Пароль успешно сброшен для пользователя", [
             "user_id" => $user->id,
             "email" => $user->email,
         ]);
 
-        // Очищаем данные сброса пароля
+        
         session()->forget("password_reset_code");
 
-        // Автоматически входим пользователя
+        
         auth()->login($user);
 
         return redirect()

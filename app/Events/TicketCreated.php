@@ -15,9 +15,9 @@ class TicketCreated
     public Ticket $ticket;
     public ?User $user;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(Ticket $ticket, ?User $user = null)
     {
         $this->ticket = $ticket;

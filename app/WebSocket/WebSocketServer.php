@@ -19,9 +19,9 @@ class WebSocketServer
         $this->loop = Loop::get();
     }
 
-    /**
+    
      * Handle client connection
-     */
+
     public function handleConnection($conn)
     {
         $clientId = uniqid();
@@ -31,7 +31,7 @@ class WebSocketServer
 
         $conn->on('data', function ($data) use ($clientId) {
             echo "Received data from client $clientId: $data\n";
-            // Echo back to sender
+            
             if (isset($this->clients[$clientId])) {
                 $this->clients[$clientId]->write($data);
             }
@@ -48,9 +48,9 @@ class WebSocketServer
         });
     }
 
-    /**
+    
      * Broadcast message to all connected clients
-     */
+
     public function broadcast($message)
     {
         $messageStr = is_string($message) ? $message : json_encode($message);
@@ -66,30 +66,30 @@ class WebSocketServer
         }
     }
 
-    /**
+    
      * Broadcast message to specific user (if user tracking is implemented)
-     */
+
     public function broadcastToUser($userId, $message)
     {
         $messageStr = is_string($message) ? $message : json_encode($message);
         echo "Broadcasting message to user $userId: $messageStr\n";
         
-        // For now, broadcast to all clients
-        // In a real implementation, you would track user sessions
+        
+        
         $this->broadcast($message);
     }
 
-    /**
+    
      * Get connected clients count
-     */
+
     public function getConnectedClientsCount()
     {
         return count($this->clients);
     }
 
-    /**
+    
      * Get server status
-     */
+
     public function getStatus()
     {
         return [
@@ -99,9 +99,9 @@ class WebSocketServer
         ];
     }
 
-    /**
+    
      * Start the WebSocket server
-     */
+
     public static function start($port = 8080)
     {
         $loop = Loop::get();
@@ -111,7 +111,7 @@ class WebSocketServer
         $wsInstance->startTime = time();
         self::$instance = $wsInstance;
 
-        // Создаем HTTP сервер для broadcast endpoint
+        
         $httpServer = new HttpServer($loop, function (ServerRequestInterface $request) {
             $path = $request->getUri()->getPath();
             $method = $request->getMethod();
@@ -121,7 +121,7 @@ class WebSocketServer
                 $data = json_decode($body, true);
                 
                 if ($data && isset($data['message'])) {
-                    // Broadcast сообщение всем подключенным клиентам
+                    
                     $wsInstance = self::getInstance();
                     if ($wsInstance) {
                         $wsInstance->broadcast(json_encode($data['message']));
@@ -138,7 +138,7 @@ class WebSocketServer
             }
             
             if ($path === '/messages' && $method === 'GET') {
-                // Возвращаем пустой массив сообщений (в реальной реализации здесь была бы очередь сообщений)
+                
                 return new Response(200, ['Content-Type' => 'application/json'], json_encode(['messages' => []]));
             }
             
@@ -157,28 +157,28 @@ class WebSocketServer
             return new Response(404, ['Content-Type' => 'application/json'], json_encode(['error' => 'Not found']));
         });
 
-        // Обработка соединений
+        
         $socket->on('connection', function ($conn) use ($wsInstance) {
             $wsInstance->handleConnection($conn);
         });
 
-        // Запускаем HTTP сервер
+        
         $httpServer->listen($socket);
 
         echo "WebSocket server started on port $port\n";
         echo "HTTP endpoints available:\n";
-        echo "  - Broadcast: http://localhost:$port/broadcast\n";
-        echo "  - Test: http://localhost:$port/test\n";
-        echo "  - Status: http://localhost:$port/status\n";
-        echo "  - Clients: http://localhost:$port/clients\n";
-        echo "  - Messages: http://localhost:$port/messages\n";
+        echo "  - Broadcast: http:
+        echo "  - Test: http:
+        echo "  - Status: http:
+        echo "  - Clients: http:
+        echo "  - Messages: http:
         
         $loop->run();
     }
 
-    /**
+    
      * Get singleton instance for broadcast
-     */
+
     private static $instance;
     
     public static function getInstance()

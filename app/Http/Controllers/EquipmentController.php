@@ -18,44 +18,44 @@ use Illuminate\Support\Facades\Auth;
 class EquipmentController extends Controller
 {
     use HasLiveSearch;
-    /**
+    
      * Display a listing of the resource.
-     */
+
     public function index(Request $request)
     {
         $query = Equipment::with(["status", "room"]);
 
-        // Filters
+        
         if ($request->filled("status_id")) {
             $query->where("status_id", $request->input("status_id"));
         }
 
-        // Filter by category
+        
         if ($request->filled("category_id")) {
             $query->where("category_id", $request->input("category_id"));
         }
 
-        // Добавляем фильтр по гарантии
+        
         if ($request->filled("warranty")) {
             $warrantyFilter = $request->input("warranty");
 
             if ($warrantyFilter === "active") {
-                // Активная гарантия
+                
                 $query
                     ->where("has_warranty", true)
                     ->whereDate("warranty_end_date", ">=", now());
             } elseif ($warrantyFilter === "expired") {
-                // Истекшая гарантия
+                
                 $query
                     ->where("has_warranty", true)
                     ->whereDate("warranty_end_date", "<", now());
             } elseif ($warrantyFilter === "none") {
-                // Без гарантии
+                
                 $query->where("has_warranty", false);
             }
         }
 
-        // Search with dynamic field
+        
         $search = $request->input("search");
         $searchBy = $request->input("search_by", "inventory_number");
         if ($search) {
@@ -82,9 +82,9 @@ class EquipmentController extends Controller
         );
     }
 
-    /**
+    
      * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         if (!Auth::check() || !Auth::user()->canManageEquipment()) {
@@ -101,9 +101,9 @@ class EquipmentController extends Controller
         );
     }
 
-    /**
+    
      * Store a newly created resource in storage.
-     */
+
     public function store(StoreEquipmentRequest $request)
     {
         if (
@@ -118,21 +118,21 @@ class EquipmentController extends Controller
 
         $data = $request->validated();
 
-        // Всегда используем текущий кабинет как начальный при создании оборудования
+        
         if (!empty($data["room_id"])) {
             $data["initial_room_id"] = $data["room_id"];
         }
 
         $equipment = Equipment::create($data);
 
-        // Записываем начальное размещение, если указан кабинет
+        
         if (!empty($equipment->room_id)) {
             $equipment->recordInitialLocation(
                 $equipment->room_id,
                 "Первоначальное размещение при создании оборудования",
             );
         } elseif (!empty($equipment->initial_room_id)) {
-            // Если room_id пустой, но initial_room_id указан, используем его
+            
             $equipment->recordInitialLocation(
                 $equipment->initial_room_id,
                 "Первоначальное размещение при создании оборудования",
@@ -144,9 +144,9 @@ class EquipmentController extends Controller
             ->with("success", "Оборудование добавлено");
     }
 
-    /**
+    
      * Display the specified resource.
-     */
+
     public function show(Equipment $equipment)
     {
         $equipment->load([
@@ -159,9 +159,9 @@ class EquipmentController extends Controller
         return view("equipment.show", compact("equipment"));
     }
 
-    /**
+    
      * Show the form for editing the specified resource.
-     */
+
     public function edit(Equipment $equipment)
     {
         if (!Auth::check() || !Auth::user()->canManageEquipment()) {
@@ -178,9 +178,9 @@ class EquipmentController extends Controller
         );
     }
 
-    /**
+    
      * Update the specified resource in storage.
-     */
+
     public function update(UpdateEquipmentRequest $request, Equipment $equipment)
     {
         if (
@@ -195,16 +195,16 @@ class EquipmentController extends Controller
 
         $data = $request->validated();
 
-        // Проверяем, изменился ли кабинет и статус
+        
         $oldRoomId = $equipment->room_id;
         $newRoomId = $data["room_id"] ?? null;
         $oldStatusId = $equipment->status_id;
         $newStatusId = $data["status_id"] ?? null;
 
-        // Обновляем оборудование
+        
         $equipment->update($data);
 
-        // Если статус изменился, отправляем событие
+        
         if ($oldStatusId !== $newStatusId) {
             $oldStatus = EquipmentStatus::find($oldStatusId);
             $newStatus = EquipmentStatus::find($newStatusId);
@@ -216,7 +216,7 @@ class EquipmentController extends Controller
             ));
         }
 
-        // Если кабинет изменился, записываем историю перемещения и отправляем событие
+        
         if ($oldRoomId !== $newRoomId) {
             $equipment->recordLocationChange(
                 $oldRoomId,
@@ -237,9 +237,9 @@ class EquipmentController extends Controller
             ->with("success", "Оборудование обновлено");
     }
 
-    /**
+    
      * Remove the specified resource from storage.
-     */
+
     public function destroy(Equipment $equipment)
     {
         if (
@@ -258,9 +258,9 @@ class EquipmentController extends Controller
             ->with("success", "Оборудование удалено");
     }
 
-    /**
+    
      * Get search configuration for equipment
-     */
+
     protected function getSearchConfig(): array
     {
         return [
@@ -274,9 +274,9 @@ class EquipmentController extends Controller
         ];
     }
 
-    /**
+    
      * Отображение истории перемещений оборудования
-     */
+
     public function locationHistory(Equipment $equipment)
     {
         $equipment->load([
@@ -295,9 +295,9 @@ class EquipmentController extends Controller
         );
     }
 
-    /**
+    
      * Форма для перемещения оборудования
-     */
+
     public function moveForm(Equipment $equipment)
     {
         if (!Auth::check() || !Auth::user()->canManageEquipment()) {
@@ -309,9 +309,9 @@ class EquipmentController extends Controller
         return view("equipment.move", compact("equipment", "rooms"));
     }
 
-    /**
+    
      * Обработка перемещения оборудования
-     */
+
     public function move(Request $request, Equipment $equipment)
     {
         if (
@@ -329,7 +329,7 @@ class EquipmentController extends Controller
             "comment" => "nullable|string|max:255",
         ]);
 
-        // Перемещаем оборудование
+        
         $equipment->moveToRoom(
             $data["room_id"],
             $data["comment"] ?? "Перемещение оборудования",
@@ -340,15 +340,15 @@ class EquipmentController extends Controller
             ->with("success", "Оборудование успешно перемещено");
     }
 
-    /**
+    
      * API endpoint for live search
-     */
+
     public function search(Request $request)
     {
         return $this->buildSearchResponse(function () use ($request) {
             $query = Equipment::query();
 
-            // Handle dynamic search field
+            
             $searchBy = $request->input("search_by", "inventory_number");
             $search = $request->input("search");
 
@@ -370,32 +370,32 @@ class EquipmentController extends Controller
                 }
             }
 
-            // Добавляем фильтр по статусу
+            
             if ($request->filled("status_id")) {
                 $query->where("status_id", $request->input("status_id"));
             }
 
-            // Добавляем фильтр по категории
+            
             if ($request->filled("category_id")) {
                 $query->where("category_id", $request->input("category_id"));
             }
 
-            // Добавляем фильтр по гарантии
+            
             if ($request->filled("warranty")) {
                 $warrantyFilter = $request->input("warranty");
 
                 if ($warrantyFilter === "active") {
-                    // Активная гарантия
+                    
                     $query
                         ->where("has_warranty", true)
                         ->whereDate("warranty_end_date", ">=", now());
                 } elseif ($warrantyFilter === "expired") {
-                    // Истекшая гарантия
+                    
                     $query
                         ->where("has_warranty", true)
                         ->whereDate("warranty_end_date", "<", now());
                 } elseif ($warrantyFilter === "none") {
-                    // Без гарантии
+                    
                     $query->where("has_warranty", false);
                 }
             }

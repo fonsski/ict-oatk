@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    /**
+    
      * Получение списка технических специалистов для назначения заявок
      *
      * @return \Illuminate\Http\JsonResponse
-     */
+
     public function technicians()
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -29,7 +29,7 @@ class UserController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // Получение пользователей с ролями admin, master, technician
+        
         $technicians = User::whereHas('role', function ($query) {
                 $query->whereIn('slug', ['admin', 'master', 'technician']);
             })

@@ -10,7 +10,7 @@ class UpdateTicketsReporterAndAssignment extends Migration
     public function up(): void
     {
         Schema::table('tickets', function (Blueprint $table) {
-            // Добавляем новые поля reporter_*, assigned_to_id (без указания позиции столбца)
+            
             if (!Schema::hasColumn('tickets', 'reporter_name')) {
                 $table->string('reporter_name')->nullable();
             }

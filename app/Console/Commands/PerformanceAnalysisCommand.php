@@ -8,26 +8,26 @@ use Illuminate\Support\Facades\Schema;
 
 class PerformanceAnalysisCommand extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'performance:analyze 
                             {--table= : Analyze specific table}
                             {--show-queries : Show slow queries}
                             {--show-indexes : Show table indexes}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Analyze database performance and suggest optimizations';
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $this->info('Database Performance Analysis');
@@ -51,9 +51,9 @@ class PerformanceAnalysisCommand extends Command
         $this->info('Performance analysis completed!');
     }
 
-    /**
+    
      * Analyze all tables
-     */
+
     private function analyzeAllTables(): void
     {
         $tables = [
@@ -73,9 +73,9 @@ class PerformanceAnalysisCommand extends Command
         }
     }
 
-    /**
+    
      * Analyze specific table
-     */
+
     private function analyzeTable(string $table): void
     {
         if (!Schema::hasTable($table)) {
@@ -86,7 +86,7 @@ class PerformanceAnalysisCommand extends Command
         $this->info("Analyzing table: {$table}");
         $this->line('');
 
-        // Get table statistics
+        
         $stats = $this->getTableStats($table);
         
         $this->table(
@@ -99,15 +99,15 @@ class PerformanceAnalysisCommand extends Command
             ]
         );
 
-        // Check for missing indexes
+        
         $this->checkMissingIndexes($table);
 
         $this->line('');
     }
 
-    /**
+    
      * Get table statistics
-     */
+
     private function getTableStats(string $table): array
     {
         $result = DB::select("
@@ -129,9 +129,9 @@ class PerformanceAnalysisCommand extends Command
         ];
     }
 
-    /**
+    
      * Check for missing indexes
-     */
+
     private function checkMissingIndexes(string $table): void
     {
         $this->info('Checking for missing indexes...');
@@ -163,9 +163,9 @@ class PerformanceAnalysisCommand extends Command
         }
     }
 
-    /**
+    
      * Get user table index suggestions
-     */
+
     private function getUserIndexSuggestions(): array
     {
         return [
@@ -176,9 +176,9 @@ class PerformanceAnalysisCommand extends Command
         ];
     }
 
-    /**
+    
      * Get ticket table index suggestions
-     */
+
     private function getTicketIndexSuggestions(): array
     {
         return [
@@ -192,9 +192,9 @@ class PerformanceAnalysisCommand extends Command
         ];
     }
 
-    /**
+    
      * Get ticket comment index suggestions
-     */
+
     private function getTicketCommentIndexSuggestions(): array
     {
         return [
@@ -204,9 +204,9 @@ class PerformanceAnalysisCommand extends Command
         ];
     }
 
-    /**
+    
      * Get equipment index suggestions
-     */
+
     private function getEquipmentIndexSuggestions(): array
     {
         return [
@@ -218,9 +218,9 @@ class PerformanceAnalysisCommand extends Command
         ];
     }
 
-    /**
+    
      * Get room index suggestions
-     */
+
     private function getRoomIndexSuggestions(): array
     {
         return [
@@ -232,9 +232,9 @@ class PerformanceAnalysisCommand extends Command
         ];
     }
 
-    /**
+    
      * Show table indexes
-     */
+
     private function showTableIndexes(): void
     {
         $this->info('Table Indexes:');
@@ -280,9 +280,9 @@ class PerformanceAnalysisCommand extends Command
         }
     }
 
-    /**
+    
      * Show slow queries
-     */
+
     private function showSlowQueries(): void
     {
         $this->info('Slow Queries Analysis:');
@@ -323,9 +323,9 @@ class PerformanceAnalysisCommand extends Command
         }
     }
 
-    /**
+    
      * Format bytes to human readable format
-     */
+
     private function formatBytes($bytes): string
     {
         if ($bytes >= 1073741824) {

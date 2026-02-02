@@ -2,7 +2,7 @@
 
 return [
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Default Queue Connection Name
     |--------------------------------------------------------------------------
@@ -11,11 +11,11 @@ return [
     | API, giving you convenient access to each backend using identical
     | syntax for each. The default queue connection is defined below.
     |
-    */
+
 
     'default' => env('QUEUE_CONNECTION', 'database'),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
@@ -26,7 +26,7 @@ return [
     |
     | Drivers: "sync", "database", "beanstalkd", "sqs", "redis", "null"
     |
-    */
+
 
     'connections' => [
 
@@ -56,7 +56,7 @@ return [
             'driver' => 'sqs',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'prefix' => env('SQS_PREFIX', 'https://sqs.us-east-1.amazonaws.com/your-account-id'),
+            'prefix' => env('SQS_PREFIX', 'https:
             'queue' => env('SQS_QUEUE', 'default'),
             'suffix' => env('SQS_SUFFIX'),
             'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
@@ -74,7 +74,7 @@ return [
 
     ],
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Job Batching
     |--------------------------------------------------------------------------
@@ -83,14 +83,14 @@ return [
     | batching information. These options can be updated to any database
     | connection and table which has been defined by your application.
     |
-    */
+
 
     'batching' => [
         'database' => env('DB_CONNECTION', 'sqlite'),
         'table' => 'job_batches',
     ],
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Failed Queue Jobs
     |--------------------------------------------------------------------------
@@ -101,7 +101,7 @@ return [
     |
     | Supported drivers: "database-uuids", "dynamodb", "file", "null"
     |
-    */
+
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),

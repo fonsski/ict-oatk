@@ -31,11 +31,11 @@ class LoginController extends Controller
             $messages,
         );
 
-        // Форматируем номер телефона для поиска (удаляем пробелы, скобки и дефисы)
+        
         $login = $request->login;
         $cleanPhone = preg_replace("/[^0-9+]/", "", $login);
 
-        // Check if user exists
+        
         $user = User::where("phone", $cleanPhone)
             ->orWhere("phone", $request->login)
             ->orWhere("phone", preg_replace("/^\+/", "", $cleanPhone))
@@ -55,12 +55,12 @@ class LoginController extends Controller
             ]);
         }
 
-        // Проверяем, активен ли пользователь, если поле is_active существует
+        
         if (
             array_key_exists("is_active", $user->getAttributes()) &&
             !$user->is_active
         ) {
-            // Для администратора (телефон +79953940601) автоматически активируем учетную запись
+            
             if (
                 $user->phone === "+79953940601" ||
                 $cleanPhone === "+79953940601"
@@ -83,24 +83,24 @@ class LoginController extends Controller
             }
         }
 
-        // Используем учетные данные для аутентификации
+        
 
-        // Используем телефон из базы данных для аутентификации
+        
         $credentials = [
             "phone" => $user->phone,
             "password" => $request->password,
         ];
 
         if (Auth::attempt($credentials)) {
-            // Успешная аутентификация
+            
             $request->session()->regenerate();
 
-            // Обновляем время последнего входа
+            
             if (method_exists($user, "updateLastLogin")) {
                 $user->updateLastLogin();
             }
 
-            // Логирование успешного входа
+            
             Log::info("Успешный вход пользователя", [
                 "user_id" => $user->id,
                 "phone" => $user->phone,
@@ -110,7 +110,7 @@ class LoginController extends Controller
             return redirect()->intended("/");
         }
 
-        // Логирование неудачной попытки входа
+        
         Log::warning("Неудачная попытка входа", [
             "phone" => $user->phone,
             "ip" => $request->ip(),
@@ -127,14 +127,14 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        // Получаем ID пользователя до выхода из системы
+        
         $userId = Auth::id();
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Логируем выход пользователя
+        
         if ($userId) {
             Log::info("Пользователь вышел из системы", [
                 "user_id" => $userId,
@@ -142,15 +142,15 @@ class LoginController extends Controller
             ]);
         }
 
-        // Используем route() вместо redirect("/") для правильного формирования URL
+        
         return redirect()
             ->route("home")
             ->with("status", "Вы успешно вышли из системы");
     }
 
-    /**
+    
      * Перенаправление после превышения максимального времени неактивности сессии
-     */
+
     public function timeout()
     {
         return redirect()

@@ -11,17 +11,17 @@ class LogTicketCommentCreated implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    /**
+    
      * Create the event listener.
-     */
+
     public function __construct()
     {
-        //
+        
     }
 
-    /**
+    
      * Handle the event.
-     */
+
     public function handle(TicketCommentCreated $event): void
     {
         $comment = $event->comment;

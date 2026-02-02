@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateEquipmentServiceHistoriesTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('equipment_service_histories', function (Blueprint $table) {
@@ -17,9 +17,9 @@ class CreateEquipmentServiceHistoriesTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('equipment_service_histories');

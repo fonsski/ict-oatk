@@ -10,11 +10,11 @@ use Illuminate\Validation\Rule;
 
 class RoomController extends Controller
 {
-    // Middleware настраивается в маршрутах
+    
 
-    /**
+    
      * Список всех кабинетов
-     */
+
     public function index(Request $request)
     {
         $query = Room::with(["equipment"])
@@ -22,27 +22,27 @@ class RoomController extends Controller
             ->orderBy("floor", "asc")
             ->orderBy("number", "asc");
 
-        // Фильтрация по статусу
+        
         if ($request->filled("status")) {
             $query->withStatus($request->status);
         }
 
-        // Фильтрация по типу
+        
         if ($request->filled("type")) {
             $query->ofType($request->type);
         }
 
-        // Фильтрация по зданию
+        
         if ($request->filled("building")) {
             $query->inBuilding($request->building);
         }
 
-        // Фильтрация по этажу
+        
         if ($request->filled("floor")) {
             $query->onFloor($request->floor);
         }
 
-        // Фильтрация по активности
+        
         if ($request->filled("active")) {
             if ($request->active === "true") {
                 $query->active();
@@ -51,14 +51,14 @@ class RoomController extends Controller
             }
         }
 
-        // Поиск по номеру, названию или описанию
+        
         if ($request->filled("search")) {
             $query->search($request->search);
         }
 
         $rooms = $query->paginate(15);
 
-        // Получаем уникальные значения для фильтров
+        
         $buildings = Room::distinct()->pluck("building")->filter()->sort();
         $floors = Room::distinct()->pluck("floor")->filter()->sort();
         $types = Room::TYPES;
@@ -70,9 +70,9 @@ class RoomController extends Controller
         );
     }
 
-    /**
+    
      * Форма создания кабинета
-     */
+
     public function create()
     {
         $types = Room::TYPES;
@@ -82,9 +82,9 @@ class RoomController extends Controller
         return view("room.create", compact("types", "statuses", "buildings"));
     }
 
-    /**
+    
      * Сохранение нового кабинета
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -129,14 +129,14 @@ class RoomController extends Controller
             ->with("success", "Кабинет успешно создан");
     }
 
-    /**
+    
      * Просмотр кабинета
-     */
+
     public function show(Room $room)
     {
         $room->load(["equipment.status", "equipment.category", "tickets", "responsibleUser"]);
 
-        // Статистика кабинета
+        
         $stats = [
             "total_equipment" => $room->equipment->count(),
             "active_equipment" => $room->equipment
@@ -153,15 +153,15 @@ class RoomController extends Controller
                 ->count(),
         ];
 
-        // Получаем список пользователей для выбора ответственного
+        
         $users = \App\Models\User::active()->orderBy("name")->get();
 
         return view("room.show", compact("room", "stats", "users"));
     }
 
-    /**
+    
      * Форма редактирования кабинета
-     */
+
     public function edit(Room $room)
     {
         $types = Room::TYPES;
@@ -175,9 +175,9 @@ class RoomController extends Controller
         );
     }
 
-    /**
+    
      * Обновление кабинета
-     */
+
     public function update(Request $request, Room $room)
     {
         $validator = Validator::make($request->all(), [
@@ -229,12 +229,12 @@ class RoomController extends Controller
             ->with("success", "Кабинет успешно обновлен");
     }
 
-    /**
+    
      * Удаление кабинета
-     */
+
     public function destroy(Room $room)
     {
-        // Проверяем, есть ли у кабинета активное оборудование
+        
         if (
             $room
                 ->equipment()
@@ -249,7 +249,7 @@ class RoomController extends Controller
                 );
         }
 
-        // Проверяем, есть ли у кабинета активные заявки
+        
         if (
             $room
                 ->tickets()
@@ -268,9 +268,9 @@ class RoomController extends Controller
             ->with("success", "Кабинет успешно удален");
     }
 
-    /**
+    
      * Изменение статуса кабинета
-     */
+
     public function changeStatus(Request $request, Room $room)
     {
         $validator = Validator::make($request->all(), [
@@ -293,9 +293,9 @@ class RoomController extends Controller
             );
     }
 
-    /**
+    
      * Изменение активности кабинета
-     */
+
     public function toggleActive(Room $room)
     {
         if ($room->is_active) {
@@ -309,9 +309,9 @@ class RoomController extends Controller
         return redirect()->back()->with("success", $message);
     }
 
-    /**
+    
      * Массовые операции с кабинетами
-     */
+
     public function bulkAction(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -347,7 +347,7 @@ class RoomController extends Controller
                 break;
 
             case "delete":
-                // Проверяем, нет ли у кабинетов активного оборудования или заявок
+                
                 $roomsWithEquipment = Room::whereIn("id", $roomIds)
                     ->whereHas("equipment", function ($query) {
                         $query->whereRelation("status", "slug", "working");
@@ -388,9 +388,9 @@ class RoomController extends Controller
         return redirect()->route("room.index")->with("success", $message);
     }
 
-    /**
+    
      * Экспорт кабинетов в CSV
-     */
+
     public function export(Request $request)
     {
         $rooms = Room::with("equipment")->get();
@@ -403,9 +403,9 @@ class RoomController extends Controller
         ];
 
         $callback = function () use ($rooms) {
-            $file = fopen("php://output", "w");
+            $file = fopen("php:
 
-            // Заголовки CSV
+            
             fputcsv($file, [
                 "ID",
                 "Номер",
@@ -421,7 +421,7 @@ class RoomController extends Controller
                 "Дата создания",
             ]);
 
-            // Данные кабинетов
+            
             foreach ($rooms as $room) {
                 fputcsv($file, [
                     $room->id,
@@ -445,9 +445,9 @@ class RoomController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    /**
+    
      * Статистика кабинетов
-     */
+
     public function statistics()
     {
         $stats = [
@@ -474,9 +474,9 @@ class RoomController extends Controller
         return view("room.statistics", compact("stats"));
     }
 
-    /**
+    
      * Получение списка кабинетов для AJAX
-     */
+
     public function getRooms(Request $request)
     {
         $query = Room::active()->available();

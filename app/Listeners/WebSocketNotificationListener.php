@@ -22,17 +22,17 @@ class WebSocketNotificationListener implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    /**
+    
      * Create the event listener.
-     */
+
     public function __construct()
     {
-        //
+        
     }
 
-    /**
+    
      * Handle the event.
-     */
+
     public function handle($event): void
     {
         try {
@@ -46,9 +46,9 @@ class WebSocketNotificationListener implements ShouldQueue
         }
     }
 
-    /**
+    
      * Prepare message for WebSocket based on event type
-     */
+
     private function prepareMessage($event): ?array
     {
         switch (get_class($event)) {
@@ -63,7 +63,7 @@ class WebSocketNotificationListener implements ShouldQueue
                         'category' => $event->ticket->category,
                         'reporter_name' => $event->ticket->reporter_name,
                         'created_at' => $event->ticket->created_at->toISOString(),
-                        'message' => "Создана новая заявка #{$event->ticket->id}: {$event->ticket->title}"
+                        'message' => "Создана новая заявка 
                     ],
                     'timestamp' => now()->toISOString()
                 ];
@@ -78,7 +78,7 @@ class WebSocketNotificationListener implements ShouldQueue
                         'new_status' => $event->newStatus,
                         'changed_by' => $event->user ? $event->user->name : 'Система',
                         'changed_at' => now()->toISOString(),
-                        'message' => "Статус заявки #{$event->ticket->id} изменен с '{$event->oldStatus}' на '{$event->newStatus}'"
+                        'message' => "Статус заявки 
                     ],
                     'timestamp' => now()->toISOString()
                 ];
@@ -92,7 +92,7 @@ class WebSocketNotificationListener implements ShouldQueue
                         'assigned_to' => $event->assignedUser->name,
                         'assigned_by' => $event->assignedBy ? $event->assignedBy->name : 'Система',
                         'assigned_at' => now()->toISOString(),
-                        'message' => "Заявка #{$event->ticket->id} назначена на {$event->assignedUser->name}"
+                        'message' => "Заявка 
                     ],
                     'timestamp' => now()->toISOString()
                 ];
@@ -104,12 +104,12 @@ class WebSocketNotificationListener implements ShouldQueue
                     'data' => [
                         'comment_id' => $event->comment->id,
                         'ticket_id' => $event->comment->ticket_id,
-                        'ticket_title' => $event->comment->ticket->title ?? 'Заявка #' . $event->comment->ticket_id,
+                        'ticket_title' => $event->comment->ticket->title ?? 'Заявка 
                         'user_name' => $event->user ? $event->user->name : 'Система',
                         'content' => $event->comment->content,
                         'is_system' => $event->comment->is_system,
                         'created_at' => $event->comment->created_at->toISOString(),
-                        'message' => "Добавлен {$commentType} к заявке #{$event->comment->ticket_id}"
+                        'message' => "Добавлен {$commentType} к заявке 
                     ],
                     'timestamp' => now()->toISOString()
                 ];
@@ -163,8 +163,8 @@ class WebSocketNotificationListener implements ShouldQueue
                 ];
 
             case EquipmentLocationChanged::class:
-                $oldRoom = $event->oldRoomId ? "кабинет #{$event->oldRoomId}" : "не указан";
-                $newRoom = $event->newRoomId ? "кабинет #{$event->newRoomId}" : "не указан";
+                $oldRoom = $event->oldRoomId ? "кабинет 
+                $newRoom = $event->newRoomId ? "кабинет 
                 return [
                     'type' => 'equipment_location_changed',
                     'data' => [
@@ -233,25 +233,25 @@ class WebSocketNotificationListener implements ShouldQueue
         }
     }
 
-    /**
+    
      * Send message to WebSocket server
-     */
+
     private function sendToWebSocket(array $message): void
     {
         try {
-            // Определяем хост в зависимости от окружения
+            
             if (app()->environment('local') && env('LARAVEL_SAIL')) {
-                // В Docker окружении используем имя сервиса
+                
                 $host = config('app.websocket_docker_host', 'websocket-server');
             } else {
-                // В обычном окружении используем localhost
+                
                 $host = config('app.websocket_host', 'localhost');
             }
             
             $port = config('app.websocket_port', 8080);
             
-            // Отправляем HTTP запрос к WebSocket серверу для broadcast
-            $response = Http::timeout(5)->post("http://{$host}:{$port}/broadcast", [
+            
+            $response = Http::timeout(5)->post("http:
                 'message' => $message
             ]);
 

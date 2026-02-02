@@ -5,12 +5,12 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
-        // Проверяем наличие колонки telegram_id в таблице users
+        
         if (
             Schema::hasTable("users") &&
             !Schema::hasColumn("users", "telegram_id")
@@ -21,9 +21,9 @@ return new class extends Migration {
         }
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         if (

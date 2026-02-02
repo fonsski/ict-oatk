@@ -12,21 +12,21 @@ use Illuminate\Validation\Rule;
 
 class EquipmentCategoryController extends Controller
 {
-    /**
+    
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
-     */
+
     public function index(Request $request): \Illuminate\Contracts\View\View
     {
-        // Проверка прав доступа
+        
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
         $query = EquipmentCategory::query();
 
-        // Поиск по имени или описанию
+        
         if ($request->has("search") && !empty($request->get("search"))) {
             $query->where(function ($q) use ($request) {
                 $search = $request->get("search");
@@ -38,7 +38,7 @@ class EquipmentCategoryController extends Controller
             });
         }
 
-        // Сортировка
+        
         $sortField = $request->get("sort", "name");
         $sortDirection = $request->get("direction", "asc");
 
@@ -54,14 +54,14 @@ class EquipmentCategoryController extends Controller
         return view("equipment.categories.index", compact("categories"));
     }
 
-    /**
+    
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
-     */
+
     public function create(): \Illuminate\Contracts\View\View
     {
-        // Проверка прав доступа
+        
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
@@ -69,22 +69,22 @@ class EquipmentCategoryController extends Controller
         return view("equipment.categories.create");
     }
 
-    /**
+    
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
-     */
+
     public function store(StoreEquipmentCategoryRequest $request): \Illuminate\Http\RedirectResponse
     {
-        // Проверка прав доступа
+        
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
         $validated = $request->validated();
 
-        // Автоматически генерируем slug из имени
+        
         $validated["slug"] = Str::slug($validated["name"]);
 
         $category = EquipmentCategory::create($validated);
@@ -94,12 +94,12 @@ class EquipmentCategoryController extends Controller
             ->with("success", "Категория успешно создана");
     }
 
-    /**
+    
      * Display the specified resource.
      *
      * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
-     */
+
     public function show(
         EquipmentCategory $equipmentCategory,
     ): \Illuminate\Contracts\View\View {
@@ -114,16 +114,16 @@ class EquipmentCategoryController extends Controller
         );
     }
 
-    /**
+    
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
-     */
+
     public function edit(
         EquipmentCategory $equipmentCategory,
     ): \Illuminate\Contracts\View\View {
-        // Проверка прав доступа
+        
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
@@ -131,25 +131,25 @@ class EquipmentCategoryController extends Controller
         return view("equipment.categories.edit", compact("equipmentCategory"));
     }
 
-    /**
+    
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
-     */
+
     public function update(
         UpdateEquipmentCategoryRequest $request,
         EquipmentCategory $equipmentCategory,
     ): \Illuminate\Http\RedirectResponse {
-        // Проверка прав доступа
+        
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
         $validated = $request->validated();
 
-        // Обновляем slug только если изменилось имя
+        
         if ($validated["name"] !== $equipmentCategory->name) {
             $validated["slug"] = Str::slug($validated["name"]);
         }
@@ -161,21 +161,21 @@ class EquipmentCategoryController extends Controller
             ->with("success", "Категория успешно обновлена");
     }
 
-    /**
+    
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\EquipmentCategory  $equipmentCategory
      * @return \Illuminate\Http\Response
-     */
+
     public function destroy(
         EquipmentCategory $equipmentCategory,
     ): \Illuminate\Http\RedirectResponse {
-        // Проверка прав доступа
+        
         if (!Auth::user()->canManageEquipment()) {
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
-        // Проверяем, есть ли оборудование в этой категории
+        
         if ($equipmentCategory->equipment()->count() > 0) {
             return redirect()
                 ->route("equipment.equipment-categories.index")

@@ -12,25 +12,25 @@ use Symfony\Component\HttpFoundation\Response;
 
 class BruteForceProtection
 {
-    /**
+    
      * Maximum number of failed attempts before temporarily blocking the IP.
      *
      * @var int
-     */
+
     protected $maxAttempts = 5;
 
-    /**
+    
      * Number of minutes to lock the user out.
      *
      * @var int
-     */
+
     protected $decayMinutes = 15;
 
-    /**
+    
      * Routes that should be protected by this middleware.
      *
      * @var array
-     */
+
     protected $protectedRoutes = [
         "login",
         "password/reset",
@@ -38,20 +38,20 @@ class BruteForceProtection
         "user.reset-password",
     ];
 
-    /**
+    
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
      * @return mixed
-     */
+
     public function handle(Request $request, Closure $next): Response
     {
-        // Only apply to protected routes
+        
         if ($this->shouldProtectRoute($request)) {
             $key = $this->resolveRequestSignature($request);
 
-            // Check if the IP is already banned
+            
             if ($this->ipIsBanned($request)) {
                 Log::warning("Blocked attempt from banned IP", [
                     "ip" => $request->ip(),
@@ -62,13 +62,13 @@ class BruteForceProtection
                 return $this->buildResponse($request);
             }
 
-            // Track failed attempts
+            
             if ($request->isMethod("post")) {
                 $executed = RateLimiter::attempt(
                     $key,
                     $this->maxAttempts,
                     function () {
-                        // This callback runs when the attempt is successful
+                        
                     },
                     $this->decayMinutes * 60,
                 );
@@ -78,7 +78,7 @@ class BruteForceProtection
                     return $this->buildResponse($request);
                 }
 
-                // If login was successful, clear the attempts
+                
                 if ($this->wasSuccessful($request)) {
                     RateLimiter::clear($key);
                 }
@@ -88,12 +88,12 @@ class BruteForceProtection
         return $next($request);
     }
 
-    /**
+    
      * Determine if the request should be protected by this middleware.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return bool
-     */
+
     protected function shouldProtectRoute(Request $request): bool
     {
         $routeName = $request->route() ? $request->route()->getName() : "";
@@ -110,39 +110,39 @@ class BruteForceProtection
         return false;
     }
 
-    /**
+    
      * Resolve the request signature.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return string
-     */
+
     protected function resolveRequestSignature(Request $request): string
     {
-        // Use both IP and route name to create a unique signature
+        
         return sha1($request->ip() . "|" . $request->route()->getName());
     }
 
-    /**
+    
      * Check if an IP is banned.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return bool
-     */
+
     protected function ipIsBanned(Request $request): bool
     {
         return Cache::has("ban_ip_" . $request->ip());
     }
 
-    /**
+    
      * Ban an IP temporarily.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return void
-     */
+
     protected function banIp(Request $request): void
     {
         $ip = $request->ip();
-        $banDuration = $this->decayMinutes * 2; // Ban for twice the decay time
+        $banDuration = $this->decayMinutes * 2; 
 
         Cache::put("ban_ip_" . $ip, true, $banDuration * 60);
 
@@ -153,39 +153,39 @@ class BruteForceProtection
         ]);
     }
 
-    /**
+    
      * Determine if the authentication attempt was successful.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return bool
-     */
+
     protected function wasSuccessful(Request $request): bool
     {
-        // For login routes, check the authentication
+        
         if (Str::contains($request->route()->getName(), "login")) {
             return auth()->check();
         }
 
-        // For password reset, check if there are no validation errors
+        
         if (Str::contains($request->route()->getName(), "password")) {
             return session()->has("status") && !session()->has("errors");
         }
 
-        // For registration, check if user was created successfully
+        
         if (Str::contains($request->route()->getName(), "register")) {
             return session()->has("success") && !session()->has("errors");
         }
 
-        // Default to false for other routes
+        
         return false;
     }
 
-    /**
+    
      * Build the response for rate limitation.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
-     */
+
     protected function buildResponse(Request $request): Response
     {
         if ($request->expectsJson()) {

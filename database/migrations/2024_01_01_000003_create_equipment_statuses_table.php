@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class CreateEquipmentStatusesTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('equipment_statuses', function (Blueprint $table) {
@@ -19,7 +19,7 @@ class CreateEquipmentStatusesTable extends Migration
             $table->timestamps();
         });
 
-        // Добавляем базовые статусы
+        
         DB::table('equipment_statuses')->insert([
             ['name' => 'Исправно', 'slug' => 'working', 'created_at' => now()],
             ['name' => 'На обслуживании', 'slug' => 'in_service', 'created_at' => now()],
@@ -27,9 +27,9 @@ class CreateEquipmentStatusesTable extends Migration
         ]);
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('equipment_statuses');

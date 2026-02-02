@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 class AddNameToEquipmentTable extends Migration
 {
-    /**
+    
      * Run the migrations.
      *
      * @return void
-     */
+
     public function up()
     {
         if (!Schema::hasColumn('equipment', 'name')) {
@@ -20,11 +20,11 @@ class AddNameToEquipmentTable extends Migration
         }
     }
 
-    /**
+    
      * Reverse the migrations.
      *
      * @return void
-     */
+
     public function down()
     {
         if (Schema::hasColumn('equipment', 'name')) {

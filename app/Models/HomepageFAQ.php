@@ -50,26 +50,26 @@ class HomepageFAQ extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
-    // Scope для активных FAQ
+    
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    // Scope для сортировки
+    
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('created_at', 'desc');
     }
 
-    // Получить отрывок текста
+    
     public function getExcerptAttribute($value)
     {
         if (!empty($value)) {
             return $value;
         }
 
-        // Если excerpt пустой, создаем его из content
+        
         if (!empty($this->content)) {
             return Str::limit(strip_tags($this->content), 150);
         }
@@ -77,7 +77,7 @@ class HomepageFAQ extends Model
         return '';
     }
 
-    // URL для просмотра FAQ
+    
     public function getUrlAttribute()
     {
         return route('homepage-faq.show', $this->slug);

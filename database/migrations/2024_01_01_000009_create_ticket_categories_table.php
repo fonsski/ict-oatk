@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateTicketCategoriesTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('ticket_categories', function (Blueprint $table) {
@@ -17,9 +17,9 @@ class CreateTicketCategoriesTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('ticket_categories');

@@ -12,48 +12,48 @@ class AccountActivationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    /**
+    
      * Create a new notification instance.
      *
      * @return void
-     */
+
     public function __construct()
     {
-        // Конструктор без параметров
+        
     }
 
-    /**
+    
      * Определяем маршрут для уведомления через SMS
      *
      * @param  mixed  $notifiable
      * @return string
-     */
+
     public function routeNotificationForSms($notifiable)
     {
         return $notifiable->phone;
     }
 
-    /**
+    
      * Get the notification's delivery channels.
      *
      * @param  mixed  $notifiable
      * @return array
-     */
+
     public function via($notifiable)
     {
-        // В будущем можно добавить "sms" для отправки через SMS
+        
         return ["mail"];
     }
 
-    /**
+    
      * Get the mail representation of the notification.
      *
      * @param  mixed  $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
-     */
+
     public function toMail($notifiable)
     {
-        // Логируем отправку для отладки
+        
         Log::info("Отправка сообщения об активации учетной записи", [
             "phone" => $notifiable->phone,
             "user_id" => $notifiable->id,
@@ -77,12 +77,12 @@ class AccountActivationNotification extends Notification implements ShouldQueue
             ->markdown("mail.account.activation");
     }
 
-    /**
+    
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
      * @return array
-     */
+
     public function toArray($notifiable)
     {
         return [

@@ -16,9 +16,9 @@ class UserStatusChanged
     public bool $newStatus;
     public ?User $changedBy;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(User $user, bool $oldStatus, bool $newStatus, ?User $changedBy = null)
     {
         $this->user = $user;

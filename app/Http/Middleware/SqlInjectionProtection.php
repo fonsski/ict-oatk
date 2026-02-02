@@ -10,11 +10,11 @@ use Illuminate\Support\Str;
 
 class SqlInjectionProtection
 {
-    /**
+    
      * Common SQL injection patterns to check for
      *
      * @var array
-     */
+
     protected $patterns = [
         "/\bUNION\b/i",
         "/\bSELECT\b\s+.*?\bFROM\b/i",
@@ -26,7 +26,7 @@ class SqlInjectionProtection
         "/\bEXEC\b\s*\(/i",
         "/--/",
         '/;\s*$/',
-        "/\/\*.*?\*\//", // SQL comments
+        "/\/\*.*?\*\
         "/SLEEP\(\s*\d+\s*\)/i",
         "/BENCHMARK\(\s*\d+\s*,/i",
         "/WAITFOR\s+DELAY\s+/i",
@@ -43,16 +43,16 @@ class SqlInjectionProtection
         "/convert\(/i",
     ];
 
-    /**
+    
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
      * @return mixed
-     */
+
     public function handle(Request $request, Closure $next): Response
     {
-        // Пропускаем проверку для некоторых путей, например API документации или статических ресурсов
+        
         $path = $request->path();
         $excludedPaths = [
             "api/docs",
@@ -63,7 +63,7 @@ class SqlInjectionProtection
             "js",
             "knowledge/upload-image",
             "homepage-faq/upload-image",
-            "api/notifications", // Исключаем API уведомлений
+            "api/notifications", 
         ];
         foreach ($excludedPaths as $excludedPath) {
             if (Str::startsWith($path, $excludedPath)) {
@@ -71,19 +71,19 @@ class SqlInjectionProtection
             }
         }
 
-        // Check GET parameters
+        
         foreach ($request->query() as $key => $value) {
             $this->checkForSqlInjection($key, $value, $request);
         }
 
-        // Check POST parameters (skip for file uploads)
+        
         if (!$request->hasFile("image") && !$request->hasFile("file")) {
             foreach ($request->post() as $key => $value) {
                 $this->checkForSqlInjection($key, $value, $request);
             }
         }
 
-        // Check JSON parameters if content type is application/json
+        
         if ($request->isJson()) {
             $data = $request->json()->all();
             $this->recursiveCheck($data, $request);
@@ -92,13 +92,13 @@ class SqlInjectionProtection
         return $next($request);
     }
 
-    /**
+    
      * Recursively check arrays for SQL injection patterns
      *
      * @param array $data
      * @param \Illuminate\Http\Request $request
      * @return void
-     */
+
     protected function recursiveCheck(array $data, Request $request): void
     {
         foreach ($data as $key => $value) {
@@ -110,7 +110,7 @@ class SqlInjectionProtection
         }
     }
 
-    /**
+    
      * Check if a given string contains SQL injection patterns
      *
      * @param string $key
@@ -118,7 +118,7 @@ class SqlInjectionProtection
      * @param \Illuminate\Http\Request $request
      * @return void
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException
-     */
+
     protected function checkForSqlInjection(
         $key,
         $value,
@@ -128,14 +128,14 @@ class SqlInjectionProtection
             return;
         }
 
-        // Skip if this is a JSON, file upload field, or image upload
+        
         if (
             Str::startsWith($key, "_token") ||
             Str::startsWith($key, "_method") ||
             $key === "image" ||
             $key === "file" ||
-            $key === "content" || // Пропускаем поле content для статей базы знаний
-            $key === "description" // Пропускаем поле description
+            $key === "content" || 
+            $key === "description" 
         ) {
             return;
         }
@@ -146,7 +146,7 @@ class SqlInjectionProtection
                 $userAgent = $request->userAgent();
                 $path = $request->fullUrl();
 
-                // Log the attempt
+                
                 \Log::warning("SQL Injection attempt detected", [
                     "ip" => $ip,
                     "user_agent" => $userAgent,
@@ -157,14 +157,14 @@ class SqlInjectionProtection
                     "user_id" => Auth::id() ?? "guest",
                 ]);
 
-                // Увеличиваем счетчик подозрительных запросов для данного IP
+                
                 $cacheKey = "sql_injection_attempts:" . $ip;
                 $attempts = \Cache::get($cacheKey, 0) + 1;
-                \Cache::put($cacheKey, $attempts, 60 * 24); // хранить 24 часа
+                \Cache::put($cacheKey, $attempts, 60 * 24); 
 
-                // Если слишком много попыток, добавляем IP в черный список
+                
                 if ($attempts >= 5) {
-                    \Cache::put("blacklisted_ip:" . $ip, true, 60 * 24 * 7); // блокируем на неделю
+                    \Cache::put("blacklisted_ip:" . $ip, true, 60 * 24 * 7); 
                     \Log::alert(
                         "IP добавлен в черный список из-за множественных попыток SQL инъекции",
                         [
@@ -174,15 +174,15 @@ class SqlInjectionProtection
                     );
                 }
 
-                // Блокируем подозрительные запросы
+                
                 if (Auth::check()) {
-                    // Для авторизованных пользователей логируем и блокируем
+                    
                     abort(
                         403,
                         "Подозрительный запрос заблокирован системой безопасности.",
                     );
                 } else {
-                    // Для неавторизованных пользователей перенаправляем на главную
+                    
                     abort(403, "Доступ запрещен.");
                 }
             }

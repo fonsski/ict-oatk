@@ -9,7 +9,7 @@ class UpdateRolesTable extends Migration
 {
     public function up(): void
     {
-        // Добавляем базовые роли
+        
         DB::table('roles')->insert([
             [
                 'name' => 'Администратор',

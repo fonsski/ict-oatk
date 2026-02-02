@@ -7,14 +7,14 @@ use Illuminate\Http\JsonResponse;
 
 trait HasLiveSearch
 {
-    /**
+    
      * Render search results as JSON response
      *
      * @param mixed $items
      * @param string $partialView
      * @param array $extraData
      * @return JsonResponse
-     */
+
     protected function renderSearchResponse($items, string $partialView, array $extraData = []): JsonResponse
     {
         $data = [
@@ -22,7 +22,7 @@ trait HasLiveSearch
             'html' => view($partialView, array_merge(['items' => $items], $extraData))->render(),
         ];
 
-        // Add pagination info if items support it
+        
         if (method_exists($items, 'currentPage')) {
             $data['pagination'] = [
                 'current_page' => $items->currentPage(),
@@ -36,7 +36,7 @@ trait HasLiveSearch
         return response()->json($data);
     }
 
-    /**
+    
      * Apply search filters to query
      *
      * @param mixed $query
@@ -44,7 +44,7 @@ trait HasLiveSearch
      * @param array $searchFields
      * @param string $searchParam
      * @return mixed
-     */
+
     protected function applySearchFilters($query, Request $request, array $searchFields = [], string $searchParam = 'search')
     {
         if ($request->filled($searchParam)) {
@@ -53,13 +53,13 @@ trait HasLiveSearch
             $query->where(function ($q) use ($searchFields, $searchTerm) {
                 foreach ($searchFields as $field) {
                     if (str_contains($field, '.')) {
-                        // Handle relationship searches
+                        
                         [$relation, $relationField] = explode('.', $field, 2);
                         $q->orWhereHas($relation, function ($relationQuery) use ($relationField, $searchTerm) {
                             $relationQuery->where($relationField, 'like', "%{$searchTerm}%");
                         });
                     } else {
-                        // Handle direct field searches
+                        
                         $q->orWhere($field, 'like', "%{$searchTerm}%");
                     }
                 }
@@ -69,14 +69,14 @@ trait HasLiveSearch
         return $query;
     }
 
-    /**
+    
      * Apply common filters to query
      *
      * @param mixed $query
      * @param Request $request
      * @param array $filters
      * @return mixed
-     */
+
     protected function applyCommonFilters($query, Request $request, array $filters = [])
     {
         foreach ($filters as $param => $field) {
@@ -84,7 +84,7 @@ trait HasLiveSearch
                 $value = $request->input($param);
 
                 if (is_array($field)) {
-                    // Handle complex filters
+                    
                     if (isset($field['type']) && $field['type'] === 'relationship') {
                         $query->whereHas($field['relation'], function ($q) use ($field, $value) {
                             $q->where($field['field'], $value);
@@ -93,7 +93,7 @@ trait HasLiveSearch
                         $query->where($field['field'], (bool) $value);
                     }
                 } else {
-                    // Simple field filter
+                    
                     $query->where($field, $value);
                 }
             }
@@ -102,60 +102,60 @@ trait HasLiveSearch
         return $query;
     }
 
-    /**
+    
      * Get search configuration for a specific model
      *
      * @return array
-     */
+
     protected function getSearchConfig(): array
     {
         return [
-            'fields' => [], // Fields to search in
-            'filters' => [], // Available filters
-            'relations' => [], // Relations to eager load
-            'per_page' => 15, // Items per page
+            'fields' => [], 
+            'filters' => [], 
+            'relations' => [], 
+            'per_page' => 15, 
         ];
     }
 
-    /**
+    
      * Handle live search request
      *
      * @param Request $request
      * @param mixed $baseQuery
      * @param string $partialView
      * @return JsonResponse
-     */
+
     protected function handleLiveSearch(Request $request, $baseQuery, string $partialView): JsonResponse
     {
         $config = $this->getSearchConfig();
 
-        // Apply eager loading
+        
         if (!empty($config['relations'])) {
             $baseQuery = $baseQuery->with($config['relations']);
         }
 
-        // Apply search filters
+        
         if (!empty($config['fields'])) {
             $baseQuery = $this->applySearchFilters($baseQuery, $request, $config['fields']);
         }
 
-        // Apply common filters
+        
         if (!empty($config['filters'])) {
             $baseQuery = $this->applyCommonFilters($baseQuery, $request, $config['filters']);
         }
 
-        // Get paginated results
+        
         $items = $baseQuery->latest()->paginate($config['per_page'])->withQueryString();
 
         return $this->renderSearchResponse($items, $partialView, []);
     }
 
-    /**
+    
      * Build search response with error handling
      *
      * @param callable $searchCallback
      * @return JsonResponse
-     */
+
     protected function buildSearchResponse(callable $searchCallback): JsonResponse
     {
         try {
@@ -169,12 +169,12 @@ trait HasLiveSearch
         }
     }
 
-    /**
+    
      * Handle empty search results
      *
      * @param string $message
      * @return JsonResponse
-     */
+
     protected function emptySearchResponse(string $message = 'Ничего не найдено'): JsonResponse
     {
         return response()->json([
@@ -190,22 +190,22 @@ trait HasLiveSearch
         ]);
     }
 
-    /**
+    
      * Sanitize search input
      *
      * @param string $input
      * @return string
-     */
+
     protected function sanitizeSearchInput(string $input): string
     {
-        // Remove special characters that might cause issues
+        
         $input = trim($input);
         $input = preg_replace('/[<>"\']/', '', $input);
 
         return $input;
     }
 
-    /**
+    
      * Get search suggestions based on input
      *
      * @param Request $request
@@ -213,7 +213,7 @@ trait HasLiveSearch
      * @param array $suggestionFields
      * @param int $limit
      * @return JsonResponse
-     */
+
     protected function getSearchSuggestions(Request $request, $baseQuery, array $suggestionFields, int $limit = 5): JsonResponse
     {
         if (!$request->filled('q') || strlen($request->input('q')) < 2) {
@@ -233,7 +233,7 @@ trait HasLiveSearch
             $suggestions = array_merge($suggestions, $results);
         }
 
-        // Remove duplicates and limit results
+        
         $suggestions = array_unique($suggestions);
         $suggestions = array_slice($suggestions, 0, $limit);
 

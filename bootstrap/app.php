@@ -12,10 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: "/up",
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Регистрация обработчиков для HTTP-ошибок
+        
         $exceptions->renderable(function (
             \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e,
         ) {
@@ -53,7 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->view("errors.500", [], 500);
             }
 
-            // Fallback для других HTTP-ошибок
+            
             return response()->view(
                 "errors.general",
                 [
@@ -68,7 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        // Регистрация обработчика для всех остальных исключений
+        
         $exceptions->renderable(function (\Throwable $e) {
             if (app()->environment("production")) {
                 return response()->view(

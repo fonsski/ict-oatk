@@ -17,9 +17,9 @@ class EquipmentLocationChanged
     public ?int $newRoomId;
     public ?User $user;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(Equipment $equipment, ?int $oldRoomId, ?int $newRoomId, ?User $user = null)
     {
         $this->equipment = $equipment;

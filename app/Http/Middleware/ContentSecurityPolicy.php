@@ -8,13 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ContentSecurityPolicy
 {
-    /**
+    
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
      * @return mixed
-     */
+
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
@@ -22,21 +22,21 @@ class ContentSecurityPolicy
         $cspDirectives = [
             "default-src" => "'self'",
             "script-src" =>
-                "'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net", // Only trusted CDNs
+                "'self' https:
             "style-src" =>
-                "'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com",
-            "img-src" => "'self' data: https:", // Allow inline images and secure external images
+                "'self' https:
+            "img-src" => "'self' data: https:", 
             "font-src" =>
-                "'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-            "connect-src" => "'self' https://api.example.com", // Add your API domains here
-            "frame-src" => "'self'", // Allow iframes from the same origin
-            "object-src" => "'none'", // Block <object>, <embed>, and <applet> elements
-            "base-uri" => "'self'", // Restricts use of <base> tag
-            "form-action" => "'self'", // Forms can only submit to same origin
-            "frame-ancestors" => "'none'", // Prevent clickjacking
-            "upgrade-insecure-requests" => "", // Force HTTPS
-            "block-all-mixed-content" => "", // Block mixed content
-            "require-trusted-types-for" => "'script'", // Helps prevent DOM XSS
+                "'self' https:
+            "connect-src" => "'self' https:
+            "frame-src" => "'self'", 
+            "object-src" => "'none'", 
+            "base-uri" => "'self'", 
+            "form-action" => "'self'", 
+            "frame-ancestors" => "'none'", 
+            "upgrade-insecure-requests" => "", 
+            "block-all-mixed-content" => "", 
+            "require-trusted-types-for" => "'script'", 
         ];
 
         $cspHeader = "";
@@ -50,7 +50,7 @@ class ContentSecurityPolicy
 
         $response->headers->set("Content-Security-Policy", trim($cspHeader));
 
-        // Set additional security headers
+        
         $response->headers->set("X-Content-Type-Options", "nosniff");
         $response->headers->set("X-XSS-Protection", "1; mode=block");
         $response->headers->set("X-Frame-Options", "DENY");
@@ -63,7 +63,7 @@ class ContentSecurityPolicy
             "camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(), usb=(), screen-wake-lock=(), ambient-light-sensor=()",
         );
 
-        // Add Strict-Transport-Security header for HTTPS
+        
         if (!app()->environment("local")) {
             $response->headers->set(
                 "Strict-Transport-Security",
@@ -71,7 +71,7 @@ class ContentSecurityPolicy
             );
         }
 
-        // Clear potentially sensitive headers
+        
         $response->headers->remove("Server");
         $response->headers->remove("X-Powered-By");
 

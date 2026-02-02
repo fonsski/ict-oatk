@@ -8,13 +8,13 @@ use App\Models\Room;
 
 class RoomSeeder extends Seeder
 {
-    /**
+    
      * Run the database seeder.
-     */
+
     public function run(): void
     {
         $rooms = [
-            // Главное здание, 1 этаж
+            
             [
                 "number" => "101",
                 "name" => "Компьютерный класс №1",
@@ -54,7 +54,7 @@ class RoomSeeder extends Seeder
                 "responsible_person" => "Сидоров С.С.",
             ],
 
-            // Главное здание, 2 этаж
+            
             [
                 "number" => "201",
                 "name" => "Компьютерный класс №2",
@@ -92,7 +92,7 @@ class RoomSeeder extends Seeder
                 "responsible_person" => "Морозова М.М.",
             ],
 
-            // Главное здание, 3 этаж
+            
             [
                 "number" => "301",
                 "name" => "Конференц-зал",
@@ -119,7 +119,7 @@ class RoomSeeder extends Seeder
                 "responsible_person" => "Директор",
             ],
 
-            // Лабораторный корпус, 1 этаж
+            
             [
                 "number" => "Л101",
                 "name" => "Лаборатория химии",
@@ -145,7 +145,7 @@ class RoomSeeder extends Seeder
                 "responsible_person" => "Кузнецов К.К.",
             ],
 
-            // Спортивный корпус
+            
             [
                 "number" => "С001",
                 "name" => "Спортивный зал",

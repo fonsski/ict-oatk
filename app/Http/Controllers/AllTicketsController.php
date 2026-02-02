@@ -11,12 +11,12 @@ use App\Models\User;
 
 class AllTicketsController extends Controller
 {
-    /**
+    
      * Отображение всех заявок в системе
-     */
+
     public function index(Request $request)
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -27,10 +27,10 @@ class AllTicketsController extends Controller
         ) {
             abort(403);
         }
-        // Базовый запрос с подгрузкой связанных моделей
+        
         $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
 
-        // Применение фильтров
+        
         if ($request->filled("status")) {
             $query->where("status", $request->get("status"));
         }
@@ -65,10 +65,10 @@ class AllTicketsController extends Controller
             });
         }
 
-        // Сортировка по дате создания (новые сверху)
+        
         $tickets = $query->latest()->paginate(15)->withQueryString();
 
-        // Получение данных для фильтров
+        
         $locations = Cache::remember("locations_list", 3600, function () {
             return Location::select("id", "name")->orderBy("name")->get();
         });
@@ -79,14 +79,14 @@ class AllTicketsController extends Controller
             ->select("id", "name")
             ->get();
 
-        // Получение категорий из уникальных значений
+        
         $categories = Ticket::select("category")
             ->distinct()
             ->whereNotNull("category")
             ->pluck("category")
             ->sort();
 
-        // Получение кабинетов
+        
         $rooms = Cache::remember("rooms_list", 3600, function () {
             return \App\Models\Room::active()
                 ->select("id", "number", "name", "type", "building", "floor")
@@ -106,12 +106,12 @@ class AllTicketsController extends Controller
         );
     }
 
-    /**
+    
      * API для получения заявок (для динамического обновления)
-     */
+
     public function api(Request $request)
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -124,7 +124,7 @@ class AllTicketsController extends Controller
         }
         $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
 
-        // Применение фильтров
+        
         if ($request->filled("status")) {
             $query->where("status", $request->get("status"));
         }
@@ -159,17 +159,17 @@ class AllTicketsController extends Controller
             });
         }
 
-        // Получение заявок с ограничением количества
+        
         $query = $query->latest();
 
         if ($request->filled("limit")) {
-            $limit = min((int) $request->get("limit"), 100); // Максимум 100 заявок
+            $limit = min((int) $request->get("limit"), 100); 
             $tickets = $query->take($limit)->get();
         } else {
             $tickets = $query->get();
         }
 
-        // Подготовка данных для JSON
+        
         $ticketsData = $tickets->map(function ($ticket) {
             return [
                 "id" => $ticket->id,
@@ -209,7 +209,7 @@ class AllTicketsController extends Controller
             ];
         });
 
-        // Статистика
+        
         $stats = [
             "total" => $tickets->count(),
             "open" => $tickets->where("status", "open")->count(),
@@ -225,12 +225,12 @@ class AllTicketsController extends Controller
         ]);
     }
 
-    /**
+    
      * Быстрое назначение заявки
-     */
+
     public function quickAssign(Request $request, Ticket $ticket)
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -241,7 +241,7 @@ class AllTicketsController extends Controller
         ) {
             abort(403);
         }
-        // Проверяем, что заявка не закрыта
+        
         if ($ticket->status === "closed") {
             return response()->json([
                 "success" => false,
@@ -256,7 +256,7 @@ class AllTicketsController extends Controller
         $oldAssignedToId = $ticket->assigned_to_id;
         $ticket->update(["assigned_to_id" => $data["assigned_to_id"] ?? null]);
 
-        // Добавление системного комментария о назначении
+        
         if ($oldAssignedToId != $ticket->assigned_to_id) {
             $user = Auth::user();
             $assignedName = $ticket->assignedTo
@@ -281,12 +281,12 @@ class AllTicketsController extends Controller
         ]);
     }
 
-    /**
+    
      * Быстрое изменение статуса заявки
-     */
+
     public function quickStatus(Request $request, Ticket $ticket)
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -304,7 +304,7 @@ class AllTicketsController extends Controller
         $oldStatus = $ticket->status;
         $oldAssignedId = $ticket->assigned_to_id;
         
-        // Если статус меняется на "in_progress" и исполнитель не назначен, назначаем текущего пользователя
+        
         if ($data["status"] === "in_progress" && !$ticket->assigned_to_id) {
             $ticket->update([
                 "status" => $data["status"],
@@ -321,12 +321,12 @@ class AllTicketsController extends Controller
         ]);
     }
 
-    /**
+    
      * API для получения только статистики заявок
-     */
+
     public function stats(Request $request)
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -339,7 +339,7 @@ class AllTicketsController extends Controller
         }
         $query = Ticket::query();
 
-        // Применение фильтров
+        
         if ($request->filled("status")) {
             $query->where("status", $request->get("status"));
         }
@@ -376,7 +376,7 @@ class AllTicketsController extends Controller
 
         $tickets = $query->get();
 
-        // Статистика
+        
         $stats = [
             "total" => $tickets->count(),
             "open" => $tickets->where("status", "open")->count(),
@@ -393,12 +393,12 @@ class AllTicketsController extends Controller
         ]);
     }
 
-    /**
+    
      * API для обновления статуса заявки
-     */
+
     public function updateStatus(Request $request, Ticket $ticket)
     {
-        // Проверка аутентификации и роли
+        
         if (
             !Auth::check() ||
             !in_array(optional(Auth::user()->role)->slug, [
@@ -414,7 +414,7 @@ class AllTicketsController extends Controller
             "status" => "required|in:open,in_progress,resolved,closed",
         ]);
 
-        // Проверяем, что нельзя закрыть заявку без исполнителя
+        
         if ($data["status"] === "closed" && !$ticket->assigned_to_id) {
             return response()->json([
                 "success" => false,
@@ -425,7 +425,7 @@ class AllTicketsController extends Controller
         $oldStatus = $ticket->status;
         $oldAssignedId = $ticket->assigned_to_id;
         
-        // Если статус меняется на "in_progress" и исполнитель не назначен, назначаем текущего пользователя
+        
         if ($data["status"] === "in_progress" && !$ticket->assigned_to_id) {
             $ticket->update([
                 "status" => $data["status"],
@@ -435,7 +435,7 @@ class AllTicketsController extends Controller
             $ticket->update(["status" => $data["status"]]);
         }
 
-        // Добавление системного комментария о смене статуса
+        
         $user = Auth::user();
         $statusLabels = [
             "open" => "Открыта",
@@ -444,7 +444,7 @@ class AllTicketsController extends Controller
             "closed" => "Закрыта",
         ];
 
-        // Формируем комментарий
+        
         $commentContent = "Статус заявки изменен на «{$statusLabels[$data["status"]]}»";
         if ($data["status"] === "in_progress" && $oldAssignedId !== Auth::id()) {
             $commentContent .= " и назначена на " . $user->name;

@@ -11,17 +11,17 @@ class LogKnowledgeBaseArticleUpdated implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    /**
+    
      * Create the event listener.
-     */
+
     public function __construct()
     {
-        //
+        
     }
 
-    /**
+    
      * Handle the event.
-     */
+
     public function handle(KnowledgeBaseArticleUpdated $event): void
     {
         $article = $event->article;

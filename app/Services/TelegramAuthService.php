@@ -17,18 +17,18 @@ class TelegramAuthService
         $this->telegramService = $telegramService;
     }
 
-    /**
+    
      * Начинает процесс авторизации
-     */
+
     public function startAuth(int $chatId): bool
     {
-        // Проверяем, не находится ли пользователь уже в процессе авторизации
+        
         if ($this->isUserInAuthProcess($chatId)) {
             Log::info('User already in auth process', ['chat_id' => $chatId]);
             return false;
         }
 
-        // Сохраняем состояние авторизации
+        
         Cache::put("telegram_auth_{$chatId}", [
             'step' => 'phone',
             'attempts' => 0,
@@ -41,9 +41,9 @@ class TelegramAuthService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    /**
+    
      * Обрабатывает ввод номера телефона
-     */
+
     public function processPhone(int $chatId, string $phone): bool
     {
         Log::info('Processing phone number', [
@@ -60,7 +60,7 @@ class TelegramAuthService
             return false;
         }
 
-        // Очищаем номер телефона
+        
         $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
         Log::info('Cleaned phone number', [
             'chat_id' => $chatId,
@@ -68,7 +68,7 @@ class TelegramAuthService
             'clean_phone' => $cleanPhone
         ]);
 
-        // Ищем пользователя
+        
         $user = User::where(function ($query) use ($cleanPhone) {
             $query->where('phone', 'like', "%{$cleanPhone}%")
                   ->orWhere('phone', 'like', "%" . substr($cleanPhone, -10) . "%")
@@ -97,7 +97,7 @@ class TelegramAuthService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        // Переходим к вводу пароля
+        
         Cache::put("telegram_auth_{$chatId}", [
             'step' => 'password',
             'phone' => $cleanPhone,
@@ -118,9 +118,9 @@ class TelegramAuthService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    /**
+    
      * Обрабатывает ввод пароля
-     */
+
     public function processPassword(int $chatId, string $password): bool
     {
         $authState = $this->getAuthState($chatId);
@@ -135,7 +135,7 @@ class TelegramAuthService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        // Проверяем пароль
+        
         if (!Hash::check($password, $user->password)) {
             $this->incrementAuthAttempts($chatId);
             $message = "❌ Неверный пароль.\n\n";
@@ -143,33 +143,33 @@ class TelegramAuthService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        // Авторизация успешна
+        
         $this->completeAuth($chatId, $user);
         return true;
     }
 
-    /**
+    
      * Завершает авторизацию
-     */
+
     protected function completeAuth(int $chatId, User $user): void
     {
-        // Авторизуем пользователя
+        
         Auth::login($user);
 
-        // Сохраняем Telegram ID
+        
         $user->update(['telegram_id' => $chatId]);
 
-        // Сохраняем данные пользователя в кеше
+        
         Cache::put("telegram_user_{$chatId}", [
             'user_id' => $user->id,
             'authenticated_at' => now(),
             'last_activity' => now()
         ], now()->addDays(30));
 
-        // Очищаем состояние авторизации
+        
         $this->clearAuthState($chatId);
 
-        // Отправляем приветственное сообщение
+        
         $message = "🎉 <b>Авторизация успешна!</b>\n\n";
         $message .= "👋 Здравствуйте, <b>{$user->name}</b>!\n\n";
         $message .= "Вы успешно авторизовались в системе управления заявками.\n\n";
@@ -180,7 +180,7 @@ class TelegramAuthService
 
         $this->telegramService->sendMessage($chatId, $message);
 
-        // Обновляем время последнего входа
+        
         $user->updateLastLogin();
 
         Log::info('User authenticated successfully', [
@@ -190,9 +190,9 @@ class TelegramAuthService
         ]);
     }
 
-    /**
+    
      * Проверяет авторизацию пользователя
-     */
+
     public function isUserAuthenticated(int $chatId): bool
     {
         $userData = Cache::get("telegram_user_{$chatId}");
@@ -201,23 +201,23 @@ class TelegramAuthService
             return false;
         }
 
-        // Проверяем, не истекла ли сессия (более 7 дней без активности)
+        
         $lastActivity = $userData['last_activity'] ?? $userData['authenticated_at'];
         if (now()->diffInDays($lastActivity) > 7) {
             $this->clearUserSession($chatId);
             return false;
         }
 
-        // Обновляем время последней активности
+        
         $userData['last_activity'] = now();
         Cache::put("telegram_user_{$chatId}", $userData, now()->addDays(30));
 
         return true;
     }
 
-    /**
+    
      * Получает данные авторизованного пользователя
-     */
+
     public function getAuthenticatedUser(int $chatId): ?User
     {
         if (!$this->isUserAuthenticated($chatId)) {
@@ -228,9 +228,9 @@ class TelegramAuthService
         return User::find($userData['user_id']);
     }
 
-    /**
+    
      * Завершает сессию пользователя
-     */
+
     public function logout(int $chatId): bool
     {
         $this->clearUserSession($chatId);
@@ -240,41 +240,41 @@ class TelegramAuthService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    /**
+    
      * Проверяет, находится ли пользователь в процессе авторизации
-     */
+
     public function isUserInAuthProcess(int $chatId): bool
     {
         return Cache::has("telegram_auth_{$chatId}");
     }
 
-    /**
+    
      * Получает состояние авторизации
-     */
+
     public function getAuthState(int $chatId): ?array
     {
         return Cache::get("telegram_auth_{$chatId}");
     }
 
-    /**
+    
      * Очищает состояние авторизации
-     */
+
     protected function clearAuthState(int $chatId): void
     {
         Cache::forget("telegram_auth_{$chatId}");
     }
 
-    /**
+    
      * Очищает сессию пользователя
-     */
+
     protected function clearUserSession(int $chatId): void
     {
         Cache::forget("telegram_user_{$chatId}");
     }
 
-    /**
+    
      * Сбрасывает блокировку авторизации (для разработки)
-     */
+
     public function resetAuthBlock(int $chatId): bool
     {
         $this->clearAuthState($chatId);
@@ -287,9 +287,9 @@ class TelegramAuthService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    /**
+    
      * Увеличивает количество попыток авторизации
-     */
+
     protected function incrementAuthAttempts(int $chatId): void
     {
         $authState = $this->getAuthState($chatId);
@@ -299,7 +299,7 @@ class TelegramAuthService
 
         $authState['attempts'] = ($authState['attempts'] ?? 0) + 1;
 
-        // Если слишком много попыток, блокируем на 1 минуту (для тестирования)
+        
         if ($authState['attempts'] >= 5) {
             $this->clearAuthState($chatId);
             $message = "🚫 Слишком много неудачных попыток авторизации.\n\n";

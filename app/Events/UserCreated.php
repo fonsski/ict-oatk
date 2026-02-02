@@ -14,9 +14,9 @@ class UserCreated
     public User $user;
     public ?User $createdBy;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(User $user, ?User $createdBy = null)
     {
         $this->user = $user;

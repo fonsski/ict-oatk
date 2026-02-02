@@ -6,22 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 class AddPhoneToUsersTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('phone')->nullable()->after('email');
 
-            // Добавляем индекс на поле phone
+            
             $table->index('phone');
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {

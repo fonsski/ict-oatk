@@ -35,12 +35,12 @@ class TicketController extends Controller
         $this->notificationService = $notificationService;
         $this->cacheService = $cacheService;
     }
-    /**
+    
      * Display a listing of the resource.
-     */
+
     public function index(Request $request)
     {
-        // Список заявок с фильтрами и пагинацией
+        
         $query = Ticket::withFullTicketData();
 
         if ($request->filled("status")) {
@@ -72,13 +72,13 @@ class TicketController extends Controller
             });
         }
 
-        // Фильтрация заявок в зависимости от роли пользователя
+        
         $user = Auth::user();
         if ($user && $user->role) {
             if (in_array($user->role->slug, ["admin", "master"])) {
-                // Администраторы и мастера видят все заявки
+                
             } elseif ($user->role->slug === "technician") {
-                // Технические специалисты видят свои заявки и назначенные на них
+                
                 $query->where(function ($q) use ($user) {
                     $q->where("user_id", $user->id)->orWhere(
                         "assigned_to_id",
@@ -86,7 +86,7 @@ class TicketController extends Controller
                     );
                 });
             } else {
-                // Обычные пользователи видят только свои заявки
+                
                 $query->where("user_id", $user->id);
             }
         }
@@ -103,15 +103,15 @@ class TicketController extends Controller
         );
     }
 
-    /**
+    
      * Show the form for creating a new resource.
-     */
+
     public function create()
     {
-        // Форма создания заявки
+        
         $rooms = $this->cacheService->getActiveRooms();
 
-        // Получаем комнату, за которую ответственен текущий пользователь
+        
         $userResponsibleRoom = null;
         $user = Auth::user();
         if ($user) {
@@ -126,17 +126,17 @@ class TicketController extends Controller
         return view("tickets.create", compact("rooms", "userResponsibleRoom"));
     }
 
-    /**
+    
      * Store a newly created resource in storage.
-     */
+
     public function store(StoreTicketRequest $request)
     {
         $data = $request->validated();
 
-        // Всегда используем данные авторизованного пользователя
+        
         $user = Auth::user();
         if ($user) {
-            // Всегда используем данные авторизованного пользователя независимо от ввода
+            
             $data["reporter_name"] = $user->name;
             $data["reporter_phone"] = $user->phone;
         }
@@ -144,10 +144,10 @@ class TicketController extends Controller
         $data["user_id"] = $user ? $user->id : null;
         $ticket = Ticket::create($data);
 
-        // Отправляем событие о создании заявки
+        
         event(new TicketCreated($ticket, $user));
 
-        // Отправляем уведомление о новой заявке
+        
         $this->notificationService->notifyNewTicket($ticket);
 
         return Redirect::route("tickets.show", $ticket)->with(
@@ -156,14 +156,14 @@ class TicketController extends Controller
         );
     }
 
-    /**
+    
      * Display the specified resource.
-     */
+
     public function show(Ticket $ticket)
     {
-        // Просмотр отдельной заявки
+        
         try {
-            // Загружаем связанные данные для заявки
+            
             $ticket->load([
                 'user:id,name,phone,role_id',
                 'user.role:id,name,slug',
@@ -181,7 +181,7 @@ class TicketController extends Controller
             $locations = $this->cacheService->getLocations();
             $assignable = $this->cacheService->getAssignableUsers();
 
-            // Формирование массива для категорий, аналогично массиву в представлении
+            
             $categoryLabels = $this->cacheService->getTicketCategories();
 
             return view(
@@ -201,9 +201,9 @@ class TicketController extends Controller
         }
     }
 
-    /**
+    
      * Show the form for editing the specified resource.
-     */
+
     public function edit(Ticket $ticket)
     {
         if (!$this->canModify($ticket)) {
@@ -212,9 +212,9 @@ class TicketController extends Controller
         return view("tickets.edit", compact("ticket"));
     }
 
-    /**
+    
      * Update the specified resource in storage.
-     */
+
     public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
         if (!$this->canModify($ticket)) {
@@ -230,9 +230,9 @@ class TicketController extends Controller
         );
     }
 
-    /**
+    
      * Remove the specified resource from storage.
-     */
+
     public function destroy(Ticket $ticket)
     {
         if (!$this->canModify($ticket)) {
@@ -245,14 +245,14 @@ class TicketController extends Controller
         );
     }
 
-    // Переход в работу
+    
     public function start(Ticket $ticket)
     {
         if (!$this->canTakeTicketInWork($ticket)) {
             abort(403);
         }
 
-        // Проверяем, можно ли взять заявку в работу
+        
         if ($ticket->status === "closed") {
             return Redirect::back()->with(
                 "error",
@@ -263,28 +263,28 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $oldAssignedId = $ticket->assigned_to_id;
         
-        // Обновляем статус и назначаем исполнителя
+        
         $ticket->update([
             "status" => "in_progress",
             "assigned_to_id" => Auth::id()
         ]);
 
-        // Отправляем событие об изменении статуса
+        
         event(new TicketStatusChanged($ticket, $oldStatus, "in_progress", Auth::user()));
 
-        // Если исполнитель изменился, отправляем событие о назначении
+        
         if ($oldAssignedId !== Auth::id()) {
             event(new TicketAssigned($ticket, Auth::user(), Auth::user()));
         }
 
-        // Отправляем уведомление об изменении статуса
+        
         $this->notificationService->notifyTicketStatusChanged(
             $ticket,
             $oldStatus,
             "in_progress",
         );
 
-        // Добавляем комментарий о смене статуса и назначении
+        
         $commentContent = "Заявка взята в работу";
         if ($oldAssignedId !== Auth::id()) {
             $commentContent .= " и назначена на " . Auth::user()->name;
@@ -300,14 +300,14 @@ class TicketController extends Controller
         return Redirect::back()->with("success", "Работа над заявкой начата");
     }
 
-    // Отметить как решённую
+    
     public function resolve(Ticket $ticket)
     {
         if (!$this->canModify($ticket)) {
             abort(403);
         }
 
-        // Проверяем, не закрыта ли заявка
+        
         if ($ticket->status === "closed") {
             return Redirect::back()->with(
                 "error",
@@ -318,17 +318,17 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "resolved"]);
 
-        // Отправляем событие об изменении статуса
+        
         event(new TicketStatusChanged($ticket, $oldStatus, "resolved", Auth::user()));
 
-        // Отправляем уведомление об изменении статуса
+        
         $this->notificationService->notifyTicketStatusChanged(
             $ticket,
             $oldStatus,
             "resolved",
         );
 
-        // Добавляем комментарий о смене статуса
+        
         TicketComment::create([
             "ticket_id" => $ticket->id,
             "user_id" => Auth::id(),
@@ -342,14 +342,14 @@ class TicketController extends Controller
         );
     }
 
-    // Закрыть
+    
     public function close(Ticket $ticket)
     {
         if (!$this->canModify($ticket)) {
             abort(403);
         }
 
-        // Проверяем, что заявка имеет исполнителя
+        
         if (!$ticket->assigned_to_id) {
             return Redirect::back()->with(
                 "error",
@@ -360,17 +360,17 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $ticket->update(["status" => "closed"]);
 
-        // Отправляем событие об изменении статуса
+        
         event(new TicketStatusChanged($ticket, $oldStatus, "closed", Auth::user()));
 
-        // Отправляем уведомление об изменении статуса
+        
         $this->notificationService->notifyTicketStatusChanged(
             $ticket,
             $oldStatus,
             "closed",
         );
 
-        // Добавляем комментарий о смене статуса
+        
         TicketComment::create([
             "ticket_id" => $ticket->id,
             "user_id" => Auth::id(),
@@ -381,7 +381,7 @@ class TicketController extends Controller
         return Redirect::back()->with("success", "Заявка закрыта");
     }
 
-    // Добавить комментарий
+    
     public function commentStore(StoreTicketCommentRequest $request, Ticket $ticket)
     {
         $data = $request->validated();
@@ -392,7 +392,7 @@ class TicketController extends Controller
             "content" => $data["content"],
         ]);
 
-        // Отправляем событие о создании комментария
+        
         event(new TicketCommentCreated($comment, Auth::user()));
 
         return Redirect::route("tickets.show", $ticket)->with(
@@ -401,12 +401,12 @@ class TicketController extends Controller
         );
     }
 
-    // Назначить заявку пользователю (ассайн)
+    
     public function assign(AssignTicketRequest $request, Ticket $ticket)
     {
         $this->authorizeAssign();
 
-        // Проверяем, что заявка не закрыта
+        
         if ($ticket->status === "closed") {
             return Redirect::back()->with(
                 "error",
@@ -414,18 +414,18 @@ class TicketController extends Controller
             );
         }
 
-        // Проверяем, если выбрано "Не назначено"
+        
         $data = $request->validated();
         $newAssignedId = $data["assigned_to_id"] ?? null;
 
         $oldAssignedId = $ticket->assigned_to_id;
         $ticket->update(["assigned_to_id" => $newAssignedId]);
 
-        // Отправляем уведомление о назначении, если заявка была назначена новому пользователю
+        
         if ($newAssignedId && $newAssignedId !== $oldAssignedId) {
             $assignedUser = User::find($newAssignedId);
             if ($assignedUser) {
-                // Отправляем событие о назначении заявки
+                
                 event(new TicketAssigned($ticket, $assignedUser, Auth::user()));
 
                 $this->notificationService->notifyTicketAssigned(
@@ -433,7 +433,7 @@ class TicketController extends Controller
                     $assignedUser,
                 );
 
-                // Добавляем комментарий о назначении
+                
                 TicketComment::create([
                     "ticket_id" => $ticket->id,
                     "user_id" => Auth::id(),
@@ -442,16 +442,16 @@ class TicketController extends Controller
                 ]);
             }
         } elseif ($oldAssignedId && $newAssignedId === null) {
-            // Уведомление о снятии назначения
+            
             $oldAssignedUser = User::find($oldAssignedId);
             if ($oldAssignedUser) {
-                // Отправляем уведомление о снятии с заявки
+                
                 $this->notificationService->notifyTicketUnassigned(
                     $ticket,
                     $oldAssignedUser,
                 );
 
-                // Добавляем комментарий о снятии назначения
+                
                 TicketComment::create([
                     "ticket_id" => $ticket->id,
                     "user_id" => Auth::id(),
@@ -488,9 +488,9 @@ class TicketController extends Controller
             in_array($user->role->slug, ["admin", "master", "technician"]);
     }
 
-    /**
+    
      * Check whether current user can modify/manage ticket.
-     */
+
     private function canModify(Ticket $ticket): bool
     {
         $user = Auth::user();
@@ -498,24 +498,24 @@ class TicketController extends Controller
             return false;
         }
         
-        // Админ/мастер могут управлять всеми заявками
+        
         if ($user->role && in_array($user->role->slug, ["admin", "master"])) {
             return true;
         }
         
-        // Техник может управлять заявками, которые не закрыты
+        
         if ($user->role && $user->role->slug === "technician" && $ticket->status !== "closed") {
             return true;
         }
         
-        // Обычный пользователь — только свои заявки (проверяем и user_id и reporter_id)
+        
         return ($ticket->user_id && $ticket->user_id === $user->id) || 
                ($ticket->reporter_id && $ticket->reporter_id === $user->id);
     }
 
-    /**
+    
      * Check whether current user can take ticket in work
-     */
+
     private function canTakeTicketInWork(Ticket $ticket): bool
     {
         $user = Auth::user();
@@ -523,7 +523,7 @@ class TicketController extends Controller
             return false;
         }
 
-        // Только админ, мастер или технический специалист могут брать заявки в работу
+        
         if (in_array($user->role->slug, ["admin", "master", "technician"])) {
             return $this->canTakeInWork($ticket);
         }
@@ -531,9 +531,9 @@ class TicketController extends Controller
         return false;
     }
 
-    /**
+    
      * Check if the ticket can be taken in work
-     */
+
     private function canTakeInWork(Ticket $ticket): bool
     {
         return $ticket->status !== "closed";

@@ -12,33 +12,33 @@ use App\Models\User;
 
 class SettingsController extends Controller
 {
-    /**
+    
      * Отображение страницы настроек профиля
      *
      * @return \Illuminate\View\View
-     */
+
     public function index()
     {
         $user = Auth::user();
         return view("settings.index", compact("user"));
     }
 
-    /**
+    
      * Отображение формы смены пароля
      *
      * @return \Illuminate\View\View
-     */
+
     public function showChangePasswordForm()
     {
         return view("settings.change-password");
     }
 
-    /**
+    
      * Обработка смены пароля
      *
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
-     */
+
     public function changePassword(Request $request)
     {
         $request->validate(
@@ -67,7 +67,7 @@ class SettingsController extends Controller
             return back()->with("error", "Пользователь не найден");
         }
 
-        // Проверяем текущий пароль
+        
         if (!Hash::check($request->current_password, $user->password)) {
             return back()
                 ->withErrors([
@@ -76,7 +76,7 @@ class SettingsController extends Controller
                 ->withInput();
         }
 
-        // Проверяем, что новый пароль отличается от текущего
+        
         if (Hash::check($request->new_password, $user->password)) {
             return back()
                 ->withErrors([
@@ -86,7 +86,7 @@ class SettingsController extends Controller
                 ->withInput();
         }
 
-        // Обновляем пароль
+        
         $user->password = Hash::make($request->new_password);
         $user->save();
 
@@ -95,12 +95,12 @@ class SettingsController extends Controller
             ->with("success", "Пароль успешно изменен");
     }
 
-    /**
+    
      * Отображение документации по исправлению ошибок OAuth
      *
      * @param string $docName Имя документации
      * @return \Illuminate\Http\Response
-     */
+
     public function viewDocumentation($docName)
     {
         $path = base_path("docs/{$docName}.md");
@@ -111,7 +111,7 @@ class SettingsController extends Controller
 
         $content = File::get($path);
 
-        // Возвращаем содержимое с правильным Content-Type для Markdown
+        
         return Response::make($content, 200, [
             "Content-Type" => "text/markdown",
             "Content-Disposition" => 'inline; filename="' . $docName . '.md"',

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class ValidationService
 {
-    /**
+    
      * Валидация данных с использованием предопределенных правил
      *
      * @param array $data Данные для валидации
@@ -16,7 +16,7 @@ class ValidationService
      * @param array $customMessages Пользовательские сообщения об ошибках
      * @return array Валидированные данные
      * @throws \Illuminate\Validation\ValidationException
-     */
+
     public function validate(array $data, string $ruleset, array $customMessages = []): array
     {
         $rules = $this->getRules($ruleset);
@@ -35,7 +35,7 @@ class ValidationService
         return $validator->validated();
     }
 
-    /**
+    
      * Валидация данных с пользовательскими правилами
      *
      * @param array $data Данные для валидации
@@ -43,7 +43,7 @@ class ValidationService
      * @param array $customMessages Пользовательские сообщения об ошибках
      * @return array Валидированные данные
      * @throws \Illuminate\Validation\ValidationException
-     */
+
     public function validateCustom(array $data, array $rules, array $customMessages = []): array
     {
         $validator = Validator::make($data, $rules, $customMessages);
@@ -56,18 +56,18 @@ class ValidationService
         return $validator->validated();
     }
 
-    /**
+    
      * Безопасная валидация без исключений
      *
      * @param array $data Данные для валидации
      * @param string|array $rules Набор правил или массив правил
      * @param array $customMessages Пользовательские сообщения об ошибках
      * @return array [bool $isValid, array $validatedData, array $errors]
-     */
+
     public function validateSafe(array $data, $rules, array $customMessages = []): array
     {
         try {
-            // Проверяем, передан ли строковый набор правил или массив
+            
             if (is_string($rules)) {
                 $validatedData = $this->validate($data, $rules, $customMessages);
             } else {
@@ -83,16 +83,16 @@ class ValidationService
         }
     }
 
-    /**
+    
      * Получить предопределенные правила валидации
      *
      * @param string $ruleset Имя набора правил
      * @return array Правила валидации
-     */
+
     protected function getRules(string $ruleset): array
     {
         $allRules = [
-            // Правила для пользователей
+            
             'user.create' => [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
@@ -107,7 +107,7 @@ class ValidationService
                 'is_active' => 'sometimes|boolean',
             ],
 
-            // Правила для заявок
+            
             'ticket.create' => [
                 'title' => 'required|string|min:5|max:255',
                 'description' => 'required|string|min:10',
@@ -132,14 +132,14 @@ class ValidationService
                 'attachments.*' => 'file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,zip|max:10240',
             ],
 
-            // Правила для комментариев к заявкам
+            
             'ticket.comment' => [
                 'content' => 'required|string|min:2|max:500',
                 'ticket_id' => 'required|exists:tickets,id',
                 'attachment' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,zip|max:10240',
             ],
 
-            // Правила для оборудования
+            
             'equipment.create' => [
                 'name' => 'required|string|max:255',
                 'type_id' => 'required|exists:equipment_types,id',
@@ -171,7 +171,7 @@ class ValidationService
                 'image' => 'sometimes|nullable|image|max:2048',
             ],
 
-            // Правила для аудиторий
+            
             'room.create' => [
                 'number' => 'required|string|max:50|unique:rooms,number',
                 'name' => 'nullable|string|max:255',
@@ -193,7 +193,7 @@ class ValidationService
                 'is_active' => 'sometimes|boolean',
             ],
 
-            // Правила для базы знаний
+            
             'knowledge.create' => [
                 'title' => 'required|string|min:5|max:255',
                 'content' => 'required|string|min:10',
@@ -215,7 +215,7 @@ class ValidationService
                 'attachments.*' => 'file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,zip|max:10240',
             ],
 
-            // Правила для поиска
+            
             'search' => [
                 'query' => 'required|string|min:2|max:255',
                 'type' => 'sometimes|in:all,tickets,equipment,knowledge,rooms,users',
@@ -223,14 +223,14 @@ class ValidationService
                 'per_page' => 'sometimes|integer|min:1|max:100',
             ],
 
-            // Правила для API
+            
             'api.auth' => [
                 'email' => 'required|string|email',
                 'password' => 'required|string',
                 'device_name' => 'sometimes|string|max:255',
             ],
 
-            // Правила для контактной формы
+            
             'contact' => [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255',
@@ -243,13 +243,13 @@ class ValidationService
         return $allRules[$ruleset] ?? [];
     }
 
-    /**
+    
      * Логирование ошибок валидации
      *
      * @param string $ruleset Набор правил
      * @param array $errors Ошибки валидации
      * @return void
-     */
+
     protected function logValidationError(string $ruleset, array $errors): void
     {
         Log::info('Ошибка валидации', [
@@ -260,11 +260,11 @@ class ValidationService
         ]);
     }
 
-    /**
+    
      * Получить стандартные сообщения об ошибках валидации
      *
      * @return array
-     */
+
     public function getDefaultMessages(): array
     {
         return [
@@ -298,11 +298,11 @@ class ValidationService
         ];
     }
 
-    /**
+    
      * Получить переводы для атрибутов валидации
      *
      * @return array
-     */
+
     public function getAttributeTranslations(): array
     {
         return [

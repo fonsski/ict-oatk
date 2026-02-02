@@ -15,9 +15,9 @@ class KnowledgeBaseArticleCreated
     public KnowledgeBase $article;
     public ?User $user;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(KnowledgeBase $article, ?User $user = null)
     {
         $this->article = $article;

@@ -15,9 +15,9 @@ class SystemNotificationCreated
     public array $notificationData;
     public ?User $createdBy;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(User $user, array $notificationData, ?User $createdBy = null)
     {
         $this->user = $user;

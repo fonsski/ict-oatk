@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateTicketPrioritiesTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('ticket_priorities', function (Blueprint $table) {
@@ -17,9 +17,9 @@ class CreateTicketPrioritiesTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('ticket_priorities');

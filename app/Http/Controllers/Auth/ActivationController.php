@@ -13,15 +13,15 @@ use Illuminate\Support\Facades\Mail;
 
 class ActivationController extends Controller
 {
-    /**
+    
      * Активация учетной записи пользователя администратором
      *
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
-     */
+
     public function activate(User $user)
     {
-        // Проверяем, имеет ли текущий пользователь права на активацию
+        
         if (!auth()->user()->canManageUsers()) {
             return redirect()
                 ->back()
@@ -31,19 +31,19 @@ class ActivationController extends Controller
                 );
         }
 
-        // Если пользователь уже активен, просто перенаправляем обратно
+        
         if ($user->is_active) {
             return redirect()
                 ->back()
                 ->with("info", "Учетная запись уже активирована.");
         }
 
-        // Активируем пользователя
+        
         $user->update([
             "is_active" => true,
         ]);
 
-        // Отправляем уведомление об активации
+        
         try {
             $user->notify(new AccountActivationNotification());
             Log::info("Отправлено уведомление об активации учетной записи", [
@@ -59,7 +59,7 @@ class ActivationController extends Controller
                 "trace" => $e->getTraceAsString(),
             ]);
 
-            // Сохраняем данные для возможного повторного отправления
+            
             session()->flash("activation_data", [
                 "user_id" => $user->id,
                 "timestamp" => now()->timestamp,
@@ -81,15 +81,15 @@ class ActivationController extends Controller
             );
     }
 
-    /**
+    
      * Деактивация учетной записи пользователя администратором
      *
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
-     */
+
     public function deactivate(User $user)
     {
-        // Проверяем, имеет ли текущий пользователь права на деактивацию
+        
         if (!auth()->user()->canManageUsers()) {
             return redirect()
                 ->back()
@@ -99,7 +99,7 @@ class ActivationController extends Controller
                 );
         }
 
-        // Нельзя деактивировать самого себя
+        
         if ($user->id === auth()->id()) {
             return redirect()
                 ->back()
@@ -109,14 +109,14 @@ class ActivationController extends Controller
                 );
         }
 
-        // Если пользователь уже неактивен, просто перенаправляем обратно
+        
         if (!$user->is_active) {
             return redirect()
                 ->back()
                 ->with("info", "Учетная запись уже деактивирована.");
         }
 
-        // Деактивируем пользователя
+        
         $user->update([
             "is_active" => false,
         ]);
@@ -133,16 +133,16 @@ class ActivationController extends Controller
             ->with("success", "Учетная запись успешно деактивирована.");
     }
 
-    /**
+    
      * Повторная отправка уведомления об активации учетной записи
      *
      * @param Request $request
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
-     */
+
     public function resendActivation(Request $request, User $user)
     {
-        // Проверяем, имеет ли текущий пользователь права
+        
         if (!auth()->user()->canManageUsers()) {
             return redirect()
                 ->back()
@@ -152,7 +152,7 @@ class ActivationController extends Controller
                 );
         }
 
-        // Проверяем, активен ли пользователь
+        
         if (!$user->is_active) {
             return redirect()
                 ->back()
@@ -163,7 +163,7 @@ class ActivationController extends Controller
         }
 
         try {
-            // Отправляем уведомление об активации
+            
             $user->notify(new AccountActivationNotification());
 
             Log::info("Повторная отправка данных для входа", [

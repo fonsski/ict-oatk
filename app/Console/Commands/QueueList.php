@@ -8,26 +8,26 @@ use Carbon\Carbon;
 
 class QueueList extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'queue:list
                             {--limit=20 : Максимальное количество заданий для отображения}
                             {--all : Показать все задания, включая зарезервированные}
                             {--failed : Показать только неудачные задания}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Показать список заданий в очереди';
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $limit = (int)$this->option('limit');
@@ -43,13 +43,13 @@ class QueueList extends Command
         return 0;
     }
 
-    /**
+    
      * Показать список ожидающих заданий
      *
      * @param int $limit
      * @param bool $showAll
      * @return void
-     */
+
     protected function showPendingJobs($limit, $showAll)
     {
         $query = DB::table('jobs')
@@ -82,7 +82,7 @@ class QueueList extends Command
             $payload = json_decode($job->payload, true);
             $commandName = $payload['data']['commandName'] ?? 'Unknown';
 
-            // Извлекаем имя класса
+            
             $classParts = explode('\\', $commandName);
             $shortName = end($classParts);
 
@@ -109,7 +109,7 @@ class QueueList extends Command
 
         $this->table($headers, $rows);
 
-        // Показываем общее количество заданий
+        
         $totalCount = DB::table('jobs')->count();
         $pendingCount = DB::table('jobs')->whereNull('reserved_at')->count();
         $reservedCount = DB::table('jobs')->whereNotNull('reserved_at')->count();
@@ -120,12 +120,12 @@ class QueueList extends Command
         $this->line('В обработке: ' . $reservedCount);
     }
 
-    /**
+    
      * Показать список неудачных заданий
      *
      * @param int $limit
      * @return void
-     */
+
     protected function showFailedJobs($limit)
     {
         $jobs = DB::table('failed_jobs')
@@ -155,11 +155,11 @@ class QueueList extends Command
             $payload = json_decode($job->payload, true);
             $commandName = $payload['data']['commandName'] ?? 'Unknown';
 
-            // Извлекаем имя класса
+            
             $classParts = explode('\\', $commandName);
             $shortName = end($classParts);
 
-            // Сокращаем текст ошибки
+            
             $errorMessage = substr(str_replace("\n", " ", $job->exception), 0, 50);
             if (strlen($job->exception) > 50) {
                 $errorMessage .= '...';
@@ -177,7 +177,7 @@ class QueueList extends Command
 
         $this->table($headers, $rows);
 
-        // Показываем общее количество неудачных заданий
+        
         $totalCount = DB::table('failed_jobs')->count();
         $this->line('');
         $this->line('Всего неудачных заданий: ' . $totalCount);

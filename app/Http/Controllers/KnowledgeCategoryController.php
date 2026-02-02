@@ -10,12 +10,12 @@ use Illuminate\Support\Str;
 
 class KnowledgeCategoryController extends Controller
 {
-    /**
+    
      * Конструктор контроллера
-     */
+
     public function __construct()
     {
-        // Проверка роли для всех методов
+        
         $this->middleware(function ($request, $next) {
             if (
                 !auth()->check() ||
@@ -32,9 +32,9 @@ class KnowledgeCategoryController extends Controller
         });
     }
 
-    /**
+    
      * Display a listing of the resource.
-     */
+
     public function index()
     {
         $categories = KnowledgeCategory::withCount("knowledgeBase")
@@ -44,17 +44,17 @@ class KnowledgeCategoryController extends Controller
         return view("knowledge.categories.index", compact("categories"));
     }
 
-    /**
+    
      * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view("knowledge.categories.create");
     }
 
-    /**
+    
      * Store a newly created resource in storage.
-     */
+
     public function store(StoreKnowledgeCategoryRequest $request)
     {
         $data = $request->validated();
@@ -70,9 +70,9 @@ class KnowledgeCategoryController extends Controller
             ->with("success", "Категория успешно создана");
     }
 
-    /**
+    
      * Display the specified resource.
-     */
+
     public function show(KnowledgeCategory $category)
     {
         $articles = $category
@@ -87,17 +87,17 @@ class KnowledgeCategoryController extends Controller
         );
     }
 
-    /**
+    
      * Show the form for editing the specified resource.
-     */
+
     public function edit(KnowledgeCategory $category)
     {
         return view("knowledge.categories.edit", compact("category"));
     }
 
-    /**
+    
      * Update the specified resource in storage.
-     */
+
     public function update(UpdateKnowledgeCategoryRequest $request, KnowledgeCategory $category)
     {
         $data = $request->validated();
@@ -113,12 +113,12 @@ class KnowledgeCategoryController extends Controller
             ->with("success", "Категория успешно обновлена");
     }
 
-    /**
+    
      * Remove the specified resource from storage.
-     */
+
     public function destroy(KnowledgeCategory $category)
     {
-        // Проверяем, есть ли статьи в этой категории
+        
         if ($category->knowledgeBase()->count() > 0) {
             return redirect()
                 ->route("knowledge.categories.index")

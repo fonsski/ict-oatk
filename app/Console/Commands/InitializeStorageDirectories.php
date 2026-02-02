@@ -8,25 +8,25 @@ use Illuminate\Support\Facades\Storage;
 
 class InitializeStorageDirectories extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'storage:init {--force : Force recreation of directories}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Initialize storage directories for uploads';
 
-    /**
+    
      * Required directories for application
      *
      * @var array
-     */
+
     protected $directories = [
         'public/knowledge/images',
         'public/knowledge/images/thumbnails',
@@ -36,20 +36,20 @@ class InitializeStorageDirectories extends Command
         'public/uploads/temp',
     ];
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $this->info('Initializing storage directories...');
 
-        // Ensure storage link exists
+        
         if (!file_exists(public_path('storage'))) {
             $this->warn('Storage symlink not found. Creating it now...');
             $this->call('storage:link');
         }
 
-        // Create directories
+        
         $force = $this->option('force');
         $count = 0;
 
@@ -72,7 +72,7 @@ class InitializeStorageDirectories extends Command
             $count++;
         }
 
-        // Set proper permissions
+        
         $this->info('Setting proper permissions...');
         $storagePath = storage_path('app/public');
 
@@ -96,12 +96,12 @@ class InitializeStorageDirectories extends Command
         $this->line('  - General uploads: ' . url('storage/uploads'));
     }
 
-    /**
+    
      * Execute a shell command
      *
      * @param string $command
      * @return void
-     */
+
     protected function exec($command)
     {
         $this->line(" > <fg=gray>{$command}</>");

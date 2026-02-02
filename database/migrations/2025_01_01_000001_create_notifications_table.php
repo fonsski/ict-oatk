@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateNotificationsTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
@@ -19,15 +19,15 @@ class CreateNotificationsTable extends Migration
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
             
-            // morphs() уже создает индекс для notifiable_type и notifiable_id
-            // Добавляем только составной индекс с read_at
+            
+            
             $table->index(['notifiable_type', 'notifiable_id', 'read_at']);
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('notifications');

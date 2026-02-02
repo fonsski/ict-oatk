@@ -7,15 +7,15 @@ use App\Models\KnowledgeBase;
 use App\Models\KnowledgeCategory;
 
 class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
-        // Сначала создаем базовые категории
+        
         $this->createDefaultCategories();
 
-        // Добавляем новое поле category_id
+        
         Schema::table("knowledge_bases", function (Blueprint $table) {
             $table
                 ->unsignedBigInteger("category_id")
@@ -28,26 +28,26 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
                 ->onDelete("set null");
         });
 
-        // Мигрируем данные из category в category_id
+        
         $this->migrateExistingData();
 
-        // Удаляем старое поле category
+        
         Schema::table("knowledge_bases", function (Blueprint $table) {
             $table->dropColumn("category");
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
-        // Добавляем обратно поле category
+        
         Schema::table("knowledge_bases", function (Blueprint $table) {
             $table->string("category")->nullable()->after("slug");
         });
 
-        // Мигрируем данные обратно из category_id в category
+        
         $knowledgeBases = KnowledgeBase::with("category")->get();
         foreach ($knowledgeBases as $kb) {
             if ($kb->category) {
@@ -55,7 +55,7 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
             }
         }
 
-        // Удаляем внешний ключ и поле category_id
+        
         Schema::table("knowledge_bases", function (Blueprint $table) {
             $table->dropForeign(["category_id"]);
             $table->dropColumn("category_id");
@@ -71,7 +71,7 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
                 "description" =>
                     "Статьи о компьютерном оборудовании и периферии",
                 "icon" => "computer-desktop",
-                "color" => "#059669",
+                "color" => "
                 "sort_order" => 1,
             ],
             [
@@ -79,7 +79,7 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
                 "slug" => "software",
                 "description" => "Статьи о программах и приложениях",
                 "icon" => "code-bracket",
-                "color" => "#3B82F6",
+                "color" => "
                 "sort_order" => 2,
             ],
             [
@@ -88,7 +88,7 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
                 "description" =>
                     "Статьи о настройке сети и интернет-подключения",
                 "icon" => "globe-alt",
-                "color" => "#8B5CF6",
+                "color" => "
                 "sort_order" => 3,
             ],
             [
@@ -96,7 +96,7 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
                 "slug" => "other",
                 "description" => "Прочие статьи",
                 "icon" => "ellipsis-horizontal",
-                "color" => "#6B7280",
+                "color" => "
                 "sort_order" => 4,
             ],
         ];
@@ -121,7 +121,7 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
             if ($category) {
                 $kb->update(["category_id" => $category->id]);
             } else {
-                // Если категория не найдена, создаем ее или назначаем "Другое"
+                
                 $otherCategory = KnowledgeCategory::where(
                     "slug",
                     "other",

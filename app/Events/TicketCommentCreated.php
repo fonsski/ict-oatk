@@ -15,9 +15,9 @@ class TicketCommentCreated
     public TicketComment $comment;
     public ?User $user;
 
-    /**
+    
      * Create a new event instance.
-     */
+
     public function __construct(TicketComment $comment, ?User $user = null)
     {
         $this->comment = $comment;

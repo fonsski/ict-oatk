@@ -8,24 +8,24 @@ use Carbon\Carbon;
 
 class QueueFailedJob extends Command
 {
-    /**
+    
      * The name and signature of the console command.
      *
      * @var string
-     */
+
     protected $signature = 'queue:failed-job
                             {id : ID неудачного задания}';
 
-    /**
+    
      * The console command description.
      *
      * @var string
-     */
+
     protected $description = 'Показать подробную информацию о неудачном задании';
 
-    /**
+    
      * Execute the console command.
-     */
+
     public function handle()
     {
         $id = $this->argument('id');
@@ -44,12 +44,12 @@ class QueueFailedJob extends Command
         return 0;
     }
 
-    /**
+    
      * Отображение подробностей о неудачном задании
      *
      * @param object $job
      * @return void
-     */
+
     protected function displayJobDetails($job)
     {
         $payload = json_decode($job->payload, true);
@@ -70,14 +70,14 @@ class QueueFailedJob extends Command
         $this->line("<comment>Команда:</comment> {$command}");
         $this->line("<comment>Дата сбоя:</comment> {$job->failed_at}");
 
-        // Форматируем ошибку для лучшей читаемости
+        
         $exception = str_replace("\n", "\n  ", $job->exception);
 
         $this->line('');
         $this->line("<comment>Ошибка:</comment>");
         $this->line("  {$exception}");
 
-        // Отображаем данные задания, если возможно
+        
         if ($data instanceof \Illuminate\Notifications\SendQueuedNotifications) {
             $this->displayNotificationDetails($data);
         } elseif (is_object($data)) {
@@ -86,17 +86,17 @@ class QueueFailedJob extends Command
 
         $this->line('');
         $this->line("<comment>Варианты действий:</comment>");
-        $this->line("  php artisan queue:retry {$job->id}   # Повторить задание");
-        $this->line("  php artisan queue:forget {$job->id}  # Удалить задание из очереди неудачных");
-        $this->line("  php artisan queue:flush              # Удалить все неудачные задания");
+        $this->line("  php artisan queue:retry {$job->id}   
+        $this->line("  php artisan queue:forget {$job->id}  
+        $this->line("  php artisan queue:flush              
     }
 
-    /**
+    
      * Отображение подробностей о неудачном уведомлении
      *
      * @param \Illuminate\Notifications\SendQueuedNotifications $notification
      * @return void
-     */
+
     protected function displayNotificationDetails($notification)
     {
         $notifiables = $notification->notifiables;
@@ -123,7 +123,7 @@ class QueueFailedJob extends Command
             }
         }
 
-        // Попытка отобразить данные уведомления
+        
         if (method_exists($notification->notification, 'toArray')) {
             try {
                 $notificationData = $notification->notification->toArray($notifiables[0] ?? null);
@@ -138,23 +138,23 @@ class QueueFailedJob extends Command
                     }
                 }
             } catch (\Exception $e) {
-                // Игнорируем ошибки при получении данных уведомления
+                
             }
         }
     }
 
-    /**
+    
      * Отображение подробностей о неудачной команде
      *
      * @param object $command
      * @return void
-     */
+
     protected function displayGenericCommandDetails($command)
     {
         $this->line('');
         $this->line("<comment>Данные задания:</comment>");
 
-        // Получаем публичные свойства класса
+        
         $reflectionClass = new \ReflectionClass($command);
         $properties = $reflectionClass->getProperties(\ReflectionProperty::IS_PUBLIC);
 

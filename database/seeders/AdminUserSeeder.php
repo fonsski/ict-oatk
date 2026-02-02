@@ -13,18 +13,18 @@ class AdminUserSeeder extends Seeder
     {
         $adminRole = Role::where("slug", "=", "admin")->first();
         if (!$adminRole) {
-            // Если роль админа не найдена, возьмем первую доступную роль
+            
             $adminRole = Role::first();
             if (!$adminRole) {
-                // Если нет ролей вообще, выходим
+                
                 return;
             }
         }
 
-        // Проверяем, существует ли уже администратор
+        
         $existingAdmin = User::where("phone", "+79953940601")->first();
         if ($existingAdmin) {
-            // Если администратор уже существует, обновляем его данные
+            
             $existingAdmin->name = "Хоробров Владислав Дмитриевич";
             $existingAdmin->email = "admin@example.com";
             $existingAdmin->password = Hash::make("admin123");
@@ -34,7 +34,7 @@ class AdminUserSeeder extends Seeder
             return;
         }
 
-        // Создаем нового администратора
+        
         $user = new User();
         $user->name = "Хоробров Владислав Дмитриевич";
         $user->email = "admin@example.com";

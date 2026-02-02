@@ -35,9 +35,9 @@ class Equipment extends Model
         "has_warranty" => "boolean",
     ];
 
-    /**
+    
      * Правила валидации для модели
-     */
+
     public static function validationRules()
     {
         return [
@@ -85,7 +85,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentLocationHistory::class);
     }
 
-    /**
+    
      * Записывает перемещение оборудования при смене кабинета
      *
      * @param int|null $fromRoomId
@@ -93,7 +93,7 @@ class Equipment extends Model
      * @param string|null $comment
      * @param bool $isInitial
      * @return EquipmentLocationHistory
-     */
+
     public function recordLocationChange(
         ?int $fromRoomId,
         ?int $toRoomId,
@@ -110,13 +110,13 @@ class Equipment extends Model
         ]);
     }
 
-    /**
+    
      * Записывает начальное размещение оборудования
      *
      * @param int|null $roomId
      * @param string|null $comment
      * @return EquipmentLocationHistory
-     */
+
     public function recordInitialLocation(
         ?int $roomId,
         ?string $comment = null,
@@ -124,23 +124,23 @@ class Equipment extends Model
         return $this->recordLocationChange(null, $roomId, $comment, true);
     }
 
-    /**
+    
      * Записывает перемещение оборудования в новый кабинет
      *
      * @param int|null $newRoomId
      * @param string|null $comment
      * @return EquipmentLocationHistory
-     */
+
     public function moveToRoom(
         ?int $newRoomId,
         ?string $comment = null,
     ): EquipmentLocationHistory {
         $oldRoomId = $this->room_id;
 
-        // Обновляем текущий кабинет
+        
         $this->update(["room_id" => $newRoomId]);
 
-        // Записываем историю перемещения
+        
         return $this->recordLocationChange($oldRoomId, $newRoomId, $comment);
     }
 }

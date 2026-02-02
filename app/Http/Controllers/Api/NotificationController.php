@@ -17,9 +17,9 @@ class NotificationController extends Controller
         $this->notificationService = $notificationService;
     }
 
-    /**
+    
      * Получить уведомления для текущего пользователя
-     */
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -33,7 +33,7 @@ class NotificationController extends Controller
         );
         $unreadCount = $this->notificationService->getUnreadCount($user);
 
-        // Добавляем отладочную информацию
+        
         \Log::debug("Notifications API response", [
             "user_id" => $user->id,
             "notifications_count" => $notifications->count(),
@@ -49,9 +49,9 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
+    
      * Получить количество непрочитанных уведомлений
-     */
+
     public function unreadCount()
     {
         $user = Auth::user();
@@ -64,9 +64,9 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
+    
      * Отметить уведомление как прочитанное
-     */
+
     public function markAsRead(Request $request, $notificationId)
     {
         $user = Auth::user();
@@ -81,9 +81,9 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
+    
      * Отметить все уведомления как прочитанные
-     */
+
     public function markAllAsRead(Request $request)
     {
         $user = Auth::user();
@@ -96,9 +96,9 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
+    
      * Получить статистику уведомлений
-     */
+
     public function stats()
     {
         $user = Auth::user();
@@ -110,9 +110,9 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
+    
      * Проверить наличие новых уведомлений (для polling)
-     */
+
     public function poll(Request $request)
     {
         $user = Auth::user();
@@ -125,7 +125,7 @@ class NotificationController extends Controller
             true,
         );
 
-        // Если есть timestamp последней проверки, фильтруем новые уведомления
+        
         if ($lastCheck) {
             \Log::debug("Poll check with timestamp", [
                 "last_check" => $lastCheck,

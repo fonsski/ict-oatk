@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateCacheTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('cache', function (Blueprint $table) {
@@ -24,9 +24,9 @@ class CreateCacheTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('cache');

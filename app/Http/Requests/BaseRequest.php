@@ -4,25 +4,25 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
+
  * Базовый класс для всех Request классов
  * Содержит общие методы валидации и обработки ошибок
- */
+
 abstract class BaseRequest extends FormRequest
 {
-    /**
+    
      * Общие правила валидации для всех форм
-     */
+
     protected function getCommonRules(): array
     {
         return [
-            // Общие правила для всех форм
+            
         ];
     }
     
-    /**
+    
      * Общие сообщения об ошибках
-     */
+
     protected function getCommonMessages(): array
     {
         return [
@@ -45,9 +45,9 @@ abstract class BaseRequest extends FormRequest
         ];
     }
     
-    /**
+    
      * Общие атрибуты полей
-     */
+
     protected function getCommonAttributes(): array
     {
         return [
@@ -66,97 +66,97 @@ abstract class BaseRequest extends FormRequest
         ];
     }
     
-    /**
+    
      * Валидация телефона в российском формате
-     */
+
     protected function getPhoneValidationRule(): string
     {
         return 'regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/';
     }
     
-    /**
+    
      * Валидация пароля с требованиями безопасности
-     */
+
     protected function getPasswordValidationRule(): string
     {
         return 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/';
     }
     
-    /**
+    
      * Валидация email
-     */
+
     protected function getEmailValidationRule(): string
     {
         return 'email|max:255';
     }
     
-    /**
+    
      * Валидация имени пользователя
-     */
+
     protected function getNameValidationRule(): string
     {
         return 'string|min:2|max:255';
     }
     
-    /**
+    
      * Валидация даты (не в будущем)
-     */
+
     protected function getPastDateValidationRule(): string
     {
         return 'date|before_or_equal:today';
     }
     
-    /**
+    
      * Валидация даты (не в прошлом)
-     */
+
     protected function getFutureDateValidationRule(): string
     {
         return 'date|after_or_equal:today';
     }
     
-    /**
+    
      * Валидация файлов изображений
-     */
+
     protected function getImageValidationRule(): string
     {
         return 'file|mimes:jpg,jpeg,png,gif,webp|max:10240';
     }
     
-    /**
+    
      * Валидация документов
-     */
+
     protected function getDocumentValidationRule(): string
     {
         return 'file|mimes:pdf,doc,docx,xls,xlsx|max:10240';
     }
     
-    /**
+    
      * Валидация всех типов файлов
-     */
+
     protected function getAllFilesValidationRule(): string
     {
         return 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp|max:10240';
     }
     
-    /**
+    
      * Объединяет правила валидации
-     */
+
     protected function mergeRules(array $rules): array
     {
         return array_merge($this->getCommonRules(), $rules);
     }
     
-    /**
+    
      * Объединяет сообщения об ошибках
-     */
+
     protected function mergeMessages(array $messages): array
     {
         return array_merge($this->getCommonMessages(), $messages);
     }
     
-    /**
+    
      * Объединяет атрибуты полей
-     */
+
     protected function mergeAttributes(array $attributes): array
     {
         return array_merge($this->getCommonAttributes(), $attributes);

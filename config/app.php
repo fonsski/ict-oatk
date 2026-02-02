@@ -1,7 +1,7 @@
 <?php
 
 return [
-    /*
+    
     |--------------------------------------------------------------------------
     | Application Name
     |--------------------------------------------------------------------------
@@ -10,11 +10,11 @@ return [
     | framework needs to place the application's name in a notification or
     | other UI elements where an application name needs to be displayed.
     |
-    */
+
 
     "name" => env("APP_NAME", "Laravel"),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
@@ -23,11 +23,11 @@ return [
     | running in. This may determine how you prefer to configure various
     | services the application utilizes. Set this in your ".env" file.
     |
-    */
+
 
     "env" => env("APP_ENV", "production"),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
@@ -36,11 +36,11 @@ return [
     | stack traces will be shown on every error that occurs within your
     | application. If disabled, a simple generic error page is shown.
     |
-    */
+
 
     "debug" => (bool) env("APP_DEBUG", false),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
@@ -49,11 +49,11 @@ return [
     | the Artisan command line tool. You should set this to the root of
     | the application so that it's available within Artisan commands.
     |
-    */
 
-    "url" => env("APP_URL", "http://localhost"),
 
-    /*
+    "url" => env("APP_URL", "http:
+
+    
     |--------------------------------------------------------------------------
     | WebSocket Configuration
     |--------------------------------------------------------------------------
@@ -61,12 +61,12 @@ return [
     | These values are used to configure the WebSocket server for real-time
     | updates. The host should match your application's host.
     |
-    */
+
 
     "websocket_host" => env("WEBSOCKET_HOST", "localhost"),
     "websocket_port" => env("WEBSOCKET_PORT", 8080),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
@@ -75,11 +75,11 @@ return [
     | will be used by the PHP date and date-time functions. The timezone
     | is set to "UTC" by default as it is suitable for most use cases.
     |
-    */
+
 
     "timezone" => env("APP_TIMEZONE", "UTC"),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
@@ -88,7 +88,7 @@ return [
     | by Laravel's translation / localization methods. This option can be
     | set to any locale for which you plan to have translation strings.
     |
-    */
+
 
     "locale" => env("APP_LOCALE", "en"),
 
@@ -96,7 +96,7 @@ return [
 
     "faker_locale" => env("APP_FAKER_LOCALE", "en_US"),
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
@@ -105,7 +105,7 @@ return [
     | to a random, 32 character string to ensure that all encrypted values
     | are secure. You should do this prior to deploying the application.
     |
-    */
+
 
     "cipher" => "AES-256-CBC",
 
@@ -115,7 +115,7 @@ return [
         ...array_filter(explode(",", (string) env("APP_PREVIOUS_KEYS", ""))),
     ],
 
-    /*
+    
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
@@ -126,21 +126,21 @@ return [
     |
     | Supported drivers: "file", "cache"
     |
-    */
+
 
     "maintenance" => [
         "driver" => env("APP_MAINTENANCE_DRIVER", "file"),
         "store" => env("APP_MAINTENANCE_STORE", "database"),
     ],
 
-    /*
+    
     |--------------------------------------------------------------------------
     | WebSocket Configuration
     |--------------------------------------------------------------------------
     |
     | Configuration for WebSocket server and real-time notifications
     |
-    */
+
 
     "websocket_host" => env("WEBSOCKET_HOST", "localhost"),
     "websocket_port" => env("WEBSOCKET_PORT", 8080),

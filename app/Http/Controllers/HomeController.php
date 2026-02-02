@@ -15,19 +15,19 @@ class HomeController extends Controller
 
     public function __construct(NotificationService $notificationService)
     {
-        // Middleware auth уже применяется в маршрутах
+        
         $this->notificationService = $notificationService;
     }
 
     public function index()
     {
-        // Показать на главной активные FAQ
+        
         $faqs = HomepageFAQ::active()->ordered()->take(6)->get();
 
         $tickets = collect();
         $ticketStats = null;
 
-        // Если пользователь авторизован и имеет роль техника, мастера или админа - показать все заявки
+        
         if (
             Auth::check() &&
             in_array(optional(Auth::user()->role)->slug, [
@@ -42,7 +42,7 @@ class HomeController extends Controller
                 ->take(10)
                 ->get();
 
-            // Статистика заявок для техника
+            
             $allTickets = Ticket::all();
             $ticketStats = [
                 "total" => $allTickets->count(),
@@ -55,19 +55,19 @@ class HomeController extends Controller
             ];
         }
 
-        // Код для тестовых уведомлений был удален
+        
 
         return view("home", compact("faqs", "tickets", "ticketStats"));
     }
 
-    /**
+    
      * API для получения заявок на главной странице техника
-     */
+
     public function technicianTicketsApi()
     {
         \Log::info("HomeController: technicianTicketsApi called");
 
-        // Проверка, что пользователь авторизован и имеет нужную роль
+        
         if (!Auth::check()) {
             \Log::warning("HomeController: User not authenticated");
             return response()->json(["error" => "Not authenticated"], 401);
@@ -87,7 +87,7 @@ class HomeController extends Controller
             );
         }
 
-        // Получение последних 10 заявок с полной информацией
+        
         $tickets = Ticket::with(["user", "location", "room", "assignedTo"])
             ->where("status", "!=", "closed")
             ->latest()
@@ -96,7 +96,7 @@ class HomeController extends Controller
 
         \Log::info("HomeController: Found {$tickets->count()} tickets");
 
-        // Статистика всех заявок
+        
         $allTickets = Ticket::all();
         $ticketStats = [
             "total" => $allTickets->count(),
@@ -110,7 +110,7 @@ class HomeController extends Controller
 
         \Log::info("HomeController: Stats - " . json_encode($ticketStats));
 
-        // Подготовка данных для JSON
+        
         $ticketsData = $tickets->map(function ($ticket) {
             return [
                 "id" => $ticket->id,

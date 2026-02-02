@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateHomepageFaqsTable extends Migration
 {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('homepage_faqs', function (Blueprint $table) {
@@ -28,9 +28,9 @@ class CreateHomepageFaqsTable extends Migration
         });
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('homepage_faqs');

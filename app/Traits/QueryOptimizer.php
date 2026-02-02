@@ -4,9 +4,9 @@ namespace App\Traits;
 
 trait QueryOptimizer
 {
-    /**
+    
      * Scope для оптимизированной загрузки связанных данных пользователей
-     */
+
     public function scopeWithUserData($query)
     {
         return $query->with([
@@ -15,9 +15,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для оптимизированной загрузки связанных данных заявок
-     */
+
     public function scopeWithTicketData($query)
     {
         return $query->with([
@@ -26,9 +26,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для оптимизированной загрузки связанных данных оборудования
-     */
+
     public function scopeWithEquipmentData($query)
     {
         return $query->with([
@@ -38,9 +38,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для оптимизированной загрузки связанных данных местоположений
-     */
+
     public function scopeWithLocationData($query)
     {
         return $query->with([
@@ -49,9 +49,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для оптимизированной загрузки связанных данных назначений
-     */
+
     public function scopeWithAssignmentData($query)
     {
         return $query->with([
@@ -60,9 +60,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для оптимизированной загрузки всех связанных данных заявки
-     */
+
     public function scopeWithFullTicketData($query)
     {
         return $query->with([
@@ -80,9 +80,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для оптимизированной загрузки всех связанных данных пользователя
-     */
+
     public function scopeWithFullUserData($query)
     {
         return $query->with([
@@ -94,9 +94,9 @@ trait QueryOptimizer
         ]);
     }
 
-    /**
+    
      * Scope для загрузки только необходимых полей
-     */
+
     public function scopeSelectEssential($query, array $additionalFields = [])
     {
         $essentialFields = array_merge([
@@ -108,9 +108,9 @@ trait QueryOptimizer
         return $query->select($essentialFields);
     }
 
-    /**
+    
      * Scope для ограничения количества связанных записей
-     */
+
     public function scopeWithLimited($query, string $relation, int $limit = 10, string $orderBy = 'created_at')
     {
         return $query->with([

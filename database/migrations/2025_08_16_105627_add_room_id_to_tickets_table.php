@@ -5,9 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
+    
      * Run the migrations.
-     */
+
     public function up(): void
     {
         if (Schema::hasTable("tickets")) {
@@ -19,7 +19,7 @@ return new class extends Migration {
                         ->index()
                         ->after("location_id");
                 } else {
-                    // If location_id doesn't exist, add at the end
+                    
                     $table->unsignedBigInteger("room_id")->nullable()->index();
                 }
 
@@ -32,9 +32,9 @@ return new class extends Migration {
         }
     }
 
-    /**
+    
      * Reverse the migrations.
-     */
+
     public function down(): void
     {
         if (

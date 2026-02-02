@@ -16,12 +16,12 @@ class HomepageFAQController extends Controller
 {
     public function __construct()
     {
-        // Middleware будет применяться через маршруты
+        
     }
 
-    /**
+    
      * Check if user has admin or master role
-     */
+
     private function checkPermission()
     {
         if (
@@ -33,9 +33,9 @@ class HomepageFAQController extends Controller
         }
     }
 
-    /**
+    
      * Display a listing of the resource.
-     */
+
     public function index()
     {
         $this->checkPermission();
@@ -45,9 +45,9 @@ class HomepageFAQController extends Controller
         return view("homepage-faq.index", compact("faqs"));
     }
 
-    /**
+    
      * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         $this->checkPermission();
@@ -55,9 +55,9 @@ class HomepageFAQController extends Controller
         return view("homepage-faq.create");
     }
 
-    /**
+    
      * Store a newly created resource in storage.
-     */
+
     public function store(StoreHomepageFAQRequest $request)
     {
         $this->checkPermission();
@@ -70,7 +70,7 @@ class HomepageFAQController extends Controller
         $faq->excerpt = $data["excerpt"] ?? null;
         $faq->markdown = $data["content"];
 
-        // Конвертируем markdown в HTML
+        
         if (class_exists(Parsedown::class)) {
             $parsedown = new Parsedown();
             $html = $parsedown->text($data["content"]);
@@ -90,9 +90,9 @@ class HomepageFAQController extends Controller
             ->with("success", "FAQ успешно создан");
     }
 
-    /**
+    
      * Display the specified resource.
-     */
+
     public function show($slug)
     {
         $faq = HomepageFAQ::where("slug", $slug)->active()->firstOrFail();
@@ -100,9 +100,9 @@ class HomepageFAQController extends Controller
         return view("homepage-faq.show", compact("faq"));
     }
 
-    /**
+    
      * Show the form for editing the specified resource.
-     */
+
     public function edit(HomepageFAQ $homepageFaq)
     {
         $this->checkPermission();
@@ -110,9 +110,9 @@ class HomepageFAQController extends Controller
         return view("homepage-faq.edit", ["faq" => $homepageFaq]);
     }
 
-    /**
+    
      * Update the specified resource in storage.
-     */
+
     public function update(UpdateHomepageFAQRequest $request, HomepageFAQ $homepageFaq)
     {
         $this->checkPermission();
@@ -124,7 +124,7 @@ class HomepageFAQController extends Controller
         $homepageFaq->excerpt = $data["excerpt"] ?? null;
         $homepageFaq->markdown = $data["content"];
 
-        // Конвертируем markdown в HTML
+        
         if (class_exists(Parsedown::class)) {
             $parsedown = new Parsedown();
             $html = $parsedown->text($data["content"]);
@@ -143,9 +143,9 @@ class HomepageFAQController extends Controller
             ->with("success", "FAQ успешно обновлен");
     }
 
-    /**
+    
      * Remove the specified resource from storage.
-     */
+
     public function destroy(HomepageFAQ $homepageFaq)
     {
         $this->checkPermission();
@@ -157,9 +157,9 @@ class HomepageFAQController extends Controller
             ->with("success", "FAQ успешно удален");
     }
 
-    /**
+    
      * Toggle active status
-     */
+
     public function toggleActive(HomepageFAQ $homepageFaq)
     {
         $this->checkPermission();
@@ -171,9 +171,9 @@ class HomepageFAQController extends Controller
         return back()->with("success", "FAQ {$status}");
     }
 
-    /**
+    
      * Preview markdown content
-     */
+
     public function preview(Request $request)
     {
         $this->checkPermission();
@@ -196,20 +196,20 @@ class HomepageFAQController extends Controller
         return response()->json(["html" => $clean]);
     }
 
-    /**
+    
      * Handle image uploads for FAQ content
-     */
+
     public function uploadImage(Request $request)
     {
         $this->checkPermission();
 
-        // Убедимся, что всегда возвращаем JSON-ответ
+        
         $request->headers->set("Accept", "application/json");
 
-        // Validate the request
+        
         try {
             $validated = $request->validate([
-                "image" => "required|image|max:5120", // 5MB max
+                "image" => "required|image|max:5120", 
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(
@@ -227,7 +227,7 @@ class HomepageFAQController extends Controller
         }
 
         try {
-            // Get the uploaded file
+            
             $file = $request->file("image");
 
             \Log::info("Попытка загрузки изображения", [
@@ -254,7 +254,7 @@ class HomepageFAQController extends Controller
                 );
             }
 
-            // Generate a unique filename
+            
             $extension = $file->getClientOriginalExtension();
             $filename =
                 Str::slug(
@@ -265,7 +265,7 @@ class HomepageFAQController extends Controller
                 "." .
                 $extension;
 
-            // Ensure upload directory exists
+            
             $directory = "public/faq/images";
             $storagePath = storage_path("app/{$directory}");
             \Log::info("Проверка директории для загрузки", [
@@ -290,7 +290,7 @@ class HomepageFAQController extends Controller
                 }
             }
 
-            // Store the file directly without processing
+            
             try {
                 $path = Storage::putFileAs($directory, $file, $filename);
                 \Log::info("Файл успешно сохранен", [
@@ -307,7 +307,7 @@ class HomepageFAQController extends Controller
                 );
             }
 
-            // Return the image URL and markdown for embedding
+            
             $url = url("storage/" . str_replace("public/", "", $path));
             return response()->json([
                 "success" => true,
@@ -316,7 +316,7 @@ class HomepageFAQController extends Controller
                     "![" . $file->getClientOriginalName() . "](" . $url . ")",
             ]);
         } catch (\Exception $e) {
-            // Log the error details
+            
             \Log::error("Image upload error in FAQ", [
                 "error" => $e->getMessage(),
                 "file" => $e->getFile(),
@@ -351,9 +351,9 @@ class HomepageFAQController extends Controller
         }
     }
 
-    /**
+    
      * Sanitize HTML output
-     */
+
     private function sanitizeHtml(string $html): string
     {
         if (class_exists("\HTMLPurifier")) {
@@ -366,17 +366,17 @@ class HomepageFAQController extends Controller
             return $purifier->purify($html);
         }
 
-        // Fallback: простая очистка
+        
         $html = preg_replace('/on[a-z]+\s*=\s*"[^"]*"/i', "", $html);
         $html = preg_replace('/on[a-z]+\s*=\s*\'[^\']*\'/i', "", $html);
         $html = preg_replace(
             '/(href|src)\s*=\s*"javascript:[^\"]*"/i',
-            '$1="#"',
+            '$1="
             $html,
         );
         $html = preg_replace(
             '/(href|src)\s*=\s*\'javascript:[^\']*\'/i',
-            '$1="#"',
+            '$1="
             $html,
         );
 

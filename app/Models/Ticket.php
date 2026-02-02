@@ -28,9 +28,9 @@ class Ticket extends Model
         "equipment_id",
     ];
 
-    /**
+    
      * Правила валидации для модели
-     */
+
     public static function validationRules()
     {
         return [

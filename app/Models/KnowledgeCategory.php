@@ -21,25 +21,25 @@ class KnowledgeCategory extends Model
         "sort_order" => "integer",
     ];
 
-    /**
+    
      * Связь с базой знаний
-     */
+
     public function knowledgeBase()
     {
         return $this->hasMany(KnowledgeBase::class, "category_id");
     }
 
-    /**
+    
      * Scope для активных категорий
-     */
+
     public function scopeActive($query)
     {
         return $query->where("is_active", true);
     }
 
-    /**
+    
      * Scope для сортировки по порядку
-     */
+
     public function scopeOrdered($query)
     {
         return $query->orderBy("sort_order");

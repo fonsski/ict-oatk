@@ -32,17 +32,17 @@ use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
-    /**
+    
      * The event to listener mappings for the application.
      *
      * @var array<class-string, array<int, class-string>>
-     */
+
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
 
-        // События заявок
+        
         TicketCreated::class => [
             LogTicketCreated::class,
             WebSocketNotificationListener::class,
@@ -63,7 +63,7 @@ class EventServiceProvider extends ServiceProvider
             WebSocketNotificationListener::class,
         ],
 
-        // События пользователей
+        
         UserCreated::class => [
             LogUserCreated::class,
             WebSocketNotificationListener::class,
@@ -74,7 +74,7 @@ class EventServiceProvider extends ServiceProvider
             WebSocketNotificationListener::class,
         ],
 
-        // События оборудования
+        
         EquipmentStatusChanged::class => [
             LogEquipmentStatusChanged::class,
             WebSocketNotificationListener::class,
@@ -85,7 +85,7 @@ class EventServiceProvider extends ServiceProvider
             WebSocketNotificationListener::class,
         ],
 
-        // События базы знаний
+        
         KnowledgeBaseArticleCreated::class => [
             LogKnowledgeBaseArticleCreated::class,
             WebSocketNotificationListener::class,
@@ -96,24 +96,24 @@ class EventServiceProvider extends ServiceProvider
             WebSocketNotificationListener::class,
         ],
 
-        // События системных уведомлений
+        
         SystemNotificationCreated::class => [
             LogSystemNotificationCreated::class,
             WebSocketNotificationListener::class,
         ],
     ];
 
-    /**
+    
      * Register any events for your application.
-     */
+
     public function boot(): void
     {
-        //
+        
     }
 
-    /**
+    
      * Determine if events and listeners should be automatically discovered.
-     */
+
     public function shouldDiscoverEvents(): bool
     {
         return false;

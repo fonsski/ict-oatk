@@ -16,14 +16,14 @@ class NotificationService
 
     public function __construct()
     {
-        // Отложенная инициализация контроллера телеграм-бота,
-        // чтобы избежать циклической зависимости
+        
+        
         $this->telegramBotController = null;
     }
 
-    /**
+    
      * Получить экземпляр TelegramBotController
-     */
+
     protected function getTelegramBotController()
     {
         if ($this->telegramBotController === null) {
@@ -34,28 +34,28 @@ class NotificationService
         return $this->telegramBotController;
     }
 
-    /**
+    
      * Отправить уведомление о снятии исполнителя с заявки
-     */
+
     public function notifyTicketUnassigned(Ticket $ticket, User $user)
     {
         try {
-            // Создаем уведомление о снятии с заявки
+            
             $notification = [
                 "title" => "Вы сняты с заявки",
-                "message" => "Вы были сняты с заявки #{$ticket->id}: \"{$ticket->title}\"",
+                "message" => "Вы были сняты с заявки 
                 "icon" => "info",
                 "color" => "blue",
                 "link" => route("tickets.show", $ticket),
             ];
 
-            // Отправляем уведомление в базу данных
+            
             $user->notify(
                 new \App\Notifications\TicketNotification($notification),
             );
 
             Log::info(
-                "Отправлено уведомление о снятии с заявки #{$ticket->id} пользователю {$user->name}",
+                "Отправлено уведомление о снятии с заявки 
             );
         } catch (\Exception $e) {
             Log::error(
@@ -65,13 +65,13 @@ class NotificationService
         }
     }
 
-    /**
+    
      * Отправить уведомление в Telegram (только в обычном окружении)
-     */
+
     public function sendTelegramNotification($chatId, $message, $params = [])
     {
-        // В Docker окружении не отправляем Telegram уведомления через NotificationService
-        // Они обрабатываются через TelegramStandalone
+        
+        
         if (env('LARAVEL_SAIL')) {
             Log::info("Telegram notification skipped in Docker environment", [
                 'chat_id' => $chatId,
@@ -93,12 +93,12 @@ class NotificationService
         }
     }
 
-    /**
+    
      * Отправить уведомление о новой заявке
-     */
+
     function notifyNewTicket(Ticket $ticket)
     {
-        // Проверяем, не отправляли ли мы уже уведомление для этой заявки
+        
         if (
             \App\Models\SentTelegramNotification::wasNotificationSent(
                 $ticket->id,
@@ -106,37 +106,37 @@ class NotificationService
             )
         ) {
             \Illuminate\Support\Facades\Log::info(
-                "Уведомление для заявки #{$ticket->id} уже было отправлено ранее. Пропускаем.",
+                "Уведомление для заявки 
             );
             return;
         }
 
-        // Используем мьютекс для предотвращения одновременного выполнения
+        
         $lockKey = "notification_lock_ticket_{$ticket->id}";
         if (
             isset($this->notificationLock[$lockKey]) &&
             $this->notificationLock[$lockKey]
         ) {
             \Illuminate\Support\Facades\Log::info(
-                "Уведомление для заявки #{$ticket->id} уже обрабатывается. Пропускаем.",
+                "Уведомление для заявки 
             );
             return;
         }
 
-        // Устанавливаем блокировку
+        
         $this->notificationLock[$lockKey] = true;
 
         try {
-            // В Docker окружении Telegram уведомления обрабатываются через TelegramStandalone
-            // Не отправляем дублирующие уведомления
+            
+            
             if (!env('LARAVEL_SAIL')) {
-                // Отправка уведомления в Telegram только в обычном окружении
+                
                 $this->getTelegramBotController()->sendNewTicketNotification(
                     $ticket,
                 );
             }
 
-            // Регистрируем отправленное уведомление в базе данных
+            
             \App\Models\SentTelegramNotification::registerSentNotification(
                 $ticket->id,
                 "new_ticket",
@@ -146,19 +146,19 @@ class NotificationService
                 "Ошибка отправки уведомления в Telegram: " . $e->getMessage(),
             );
         } finally {
-            // Снимаем блокировку в любом случае
+            
             $this->notificationLock[$lockKey] = false;
         }
 
         try {
-            // Получаем всех пользователей, которые должны получить уведомление
+            
             $recipients = User::whereHas("role", function ($q) {
                 $q->whereIn("slug", ["admin", "master", "technician"]);
             })
                 ->where("is_active", true)
                 ->get();
 
-            // Определяем приоритет для отображения
+            
             $priorities = [
                 "low" => "Низкий",
                 "medium" => "Средний",
@@ -177,7 +177,7 @@ class NotificationService
             ];
             $priorityColor = $priorityColors[$ticket->priority] ?? "blue";
 
-            // Категории заявок
+            
             $categories = [
                 "hardware" => "Оборудование",
                 "software" => "Программное обеспечение",
@@ -190,11 +190,11 @@ class NotificationService
                 Str::ucfirst($ticket->category);
 
             foreach ($recipients as $recipient) {
-                // Разные сообщения для разных ролей
+                
                 $title = "Новая заявка";
                 $message = "Создана новая заявка: {$ticket->title}";
 
-                // Более информативное сообщение для технических специалистов
+                
                 if (
                     in_array($recipient->role->slug, ["technician", "master"])
                 ) {
@@ -222,21 +222,21 @@ class NotificationService
             }
 
             Log::info(
-                "Sent notifications for new ticket #{$ticket->id} to " .
+                "Sent notifications for new ticket 
                     $recipients->count() .
                     " recipients",
             );
         } catch (\Exception $e) {
             Log::error(
-                "Failed to send notifications for ticket #{$ticket->id}: " .
+                "Failed to send notifications for ticket 
                     $e->getMessage(),
             );
         }
     }
 
-    /**
+    
      * Отправить уведомление об изменении статуса заявки
-     */
+
     public function notifyTicketStatusChanged(
         Ticket $ticket,
         $oldStatus,
@@ -245,21 +245,21 @@ class NotificationService
         try {
             $recipients = collect();
 
-            // Всегда уведомляем автора заявки, даже если он не авторизованный пользователь
+            
             if ($ticket->user) {
                 $recipients->push($ticket->user);
             }
 
-            // Если автор заявки не авторизованный пользователь, но указана его почта,
-            // все равно отправляем уведомление по электронной почте (в реальной системе)
+            
+            
             if (!$ticket->user && $ticket->reporter_email) {
                 Log::info(
-                    "Would send email notification to {$ticket->reporter_email} for ticket #{$ticket->id} status change",
+                    "Would send email notification to {$ticket->reporter_email} for ticket 
                 );
-                // В реальной системе здесь был бы код для отправки email
+                
             }
 
-            // Уведомляем назначенного исполнителя
+            
             if (
                 $ticket->assignedTo &&
                 $ticket->assignedTo->id !== optional($ticket->user)->id
@@ -267,7 +267,7 @@ class NotificationService
                 $recipients->push($ticket->assignedTo);
             }
 
-            // Уведомляем администраторов и мастеров
+            
             $adminUsers = User::whereHas("role", function ($q) {
                 $q->whereIn("slug", ["admin", "master"]);
             })
@@ -292,7 +292,7 @@ class NotificationService
 
             $statusLabel = $statusLabels[$newStatus] ?? $newStatus;
 
-            // Разные сообщения для разных типов получателей
+            
             foreach ($recipients as $recipient) {
                 $isAuthor =
                     $ticket->user && $recipient->id === $ticket->user->id;
@@ -303,7 +303,7 @@ class NotificationService
                 $title = "Изменение статуса заявки";
                 $message = "Статус заявки \"{$ticket->title}\" изменен на: {$statusLabel}";
 
-                // Персонализированные сообщения в зависимости от роли получателя
+                
                 if ($isAuthor && $newStatus === "in_progress") {
                     $message = "Ваша заявка \"{$ticket->title}\" взята в работу";
                     if ($ticket->assignedTo) {
@@ -336,21 +336,21 @@ class NotificationService
             }
 
             Log::info(
-                "Sent status change notifications for ticket #{$ticket->id} to " .
+                "Sent status change notifications for ticket 
                     $recipients->count() .
                     " recipients",
             );
         } catch (\Exception $e) {
             Log::error(
-                "Failed to send status change notifications for ticket #{$ticket->id}: " .
+                "Failed to send status change notifications for ticket 
                     $e->getMessage(),
             );
         }
     }
 
-    /**
+    
      * Отправить уведомление о назначении заявки
-     */
+
     public function notifyTicketAssigned(Ticket $ticket, User $assignedUser)
     {
         try {
@@ -369,19 +369,19 @@ class NotificationService
             ]);
 
             Log::info(
-                "Sent assignment notification for ticket #{$ticket->id} to user #{$assignedUser->id}",
+                "Sent assignment notification for ticket 
             );
         } catch (\Exception $e) {
             Log::error(
-                "Failed to send assignment notification for ticket #{$ticket->id}: " .
+                "Failed to send assignment notification for ticket 
                     $e->getMessage(),
             );
         }
     }
 
-    /**
+    
      * Получить уведомления для пользователя
-     */
+
     public function getUserNotifications(
         User $user,
         $limit = 10,
@@ -396,9 +396,9 @@ class NotificationService
         return $query->limit($limit)->get();
     }
 
-    /**
+    
      * Отметить уведомление как прочитанное
-     */
+
     public function markAsRead(User $user, $notificationId)
     {
         $notification = $user->notifications()->find($notificationId);
@@ -408,25 +408,25 @@ class NotificationService
         }
     }
 
-    /**
+    
      * Отметить все уведомления как прочитанные
-     */
+
     public function markAllAsRead(User $user)
     {
         $user->unreadNotifications()->update(['read_at' => now()]);
     }
 
-    /**
+    
      * Получить количество непрочитанных уведомлений
-     */
+
     public function getUnreadCount(User $user)
     {
         return $user->unreadNotifications()->count();
     }
 
-    /**
+    
      * Создать уведомление
-     */
+
     public function createNotification(array $data)
     {
         $user = User::find($data['user_id']);
@@ -448,14 +448,14 @@ class NotificationService
 
         $user->notify(new \App\Notifications\TicketNotification($notificationData));
 
-        // Отправляем событие для WebSocket уведомления
+        
         $createdBy = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::user() : $user;
         event(new SystemNotificationCreated($user, $notificationData, $createdBy));
     }
 
-    /**
+    
      * Очистить старые уведомления
-     */
+
     public function cleanupOldNotifications($daysOld = 30)
     {
         $cutoffDate = now()->subDays($daysOld);
@@ -467,9 +467,9 @@ class NotificationService
         return $deletedCount;
     }
 
-    /**
+    
      * Получить статистику уведомлений
-     */
+
     public function getNotificationStats(User $user)
     {
         $notifications = $user->notifications();

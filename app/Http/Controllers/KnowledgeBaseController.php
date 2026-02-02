@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-// Parsedown optional; if not installed we'll fallback to simple rendering
+
 use Parsedown;
 use HTMLPurifier;
 use HTMLPurifier_Config;
@@ -22,12 +22,12 @@ use App\Models\KnowledgeImage;
 
 class KnowledgeBaseController extends Controller
 {
-    /**
+    
      * Конструктор контроллера
-     */
+
     public function __construct()
     {
-        // Проверка роли для всех методов
+        
         $this->middleware(function ($request, $next) {
             if (
                 !Auth::check() ||
@@ -39,20 +39,20 @@ class KnowledgeBaseController extends Controller
         });
     }
 
-    /**
+    
      * Display a listing of the resource.
-     */
+
     public function index(Request $request)
     {
-        // Вывод списка статей базы знаний
+        
         $query = KnowledgeBase::with("category", "author");
 
-        // Фильтр по категории
+        
         if ($request->filled("category")) {
             $query->where("category_id", $request->get("category"));
         }
 
-        // Если есть параметр поиска
+        
         if ($request->filled("search")) {
             $searchQuery = $request->get("search");
             $query
@@ -66,19 +66,19 @@ class KnowledgeBaseController extends Controller
         return view("knowledge.index", compact("articles", "categories"));
     }
 
-    /**
+    
      * Show the form for creating a new resource.
-     */
+
     public function create()
     {
-        // Форма создания статьи
+        
         $categories = KnowledgeCategory::active()->ordered()->get();
         return view("knowledge.create", compact("categories"));
     }
 
-    /**
+    
      * Store a newly created resource in storage.
-     */
+
     public function store(StoreKnowledgeBaseRequest $request)
     {
         $data = $request->validated();
@@ -99,21 +99,21 @@ class KnowledgeBaseController extends Controller
 
         $article->content = $this->sanitizeHtml($html);
 
-        // Обрабатываем теги, убираем символы # если они есть и удаляем дубликаты
+        
         if (isset($data["tags"])) {
             $tags = explode(",", $data["tags"]);
             $cleanTags = [];
             foreach ($tags as $tag) {
                 $tag = trim($tag);
-                // Удаляем символ # в начале тега, если он есть
-                if (substr($tag, 0, 1) === "#") {
+                
+                if (substr($tag, 0, 1) === "
                     $tag = substr($tag, 1);
                 }
                 if (!empty($tag)) {
                     $cleanTags[] = $tag;
                 }
             }
-            // Удаляем дубликаты, сохраняя порядок
+            
             $cleanTags = array_unique($cleanTags);
             $article->tags = implode(", ", $cleanTags);
         } else {
@@ -123,7 +123,7 @@ class KnowledgeBaseController extends Controller
         $article->published_at = now();
         $article->save();
 
-        // Отправляем событие о создании статьи
+        
         event(new KnowledgeBaseArticleCreated($article, Auth::user()));
 
         return redirect()
@@ -131,12 +131,12 @@ class KnowledgeBaseController extends Controller
             ->with("success", "Статья создана");
     }
 
-    /**
+    
      * Display the specified resource.
-     */
+
     public function show(KnowledgeBase $knowledge)
     {
-        // Просмотр отдельной статьи
+        
         $article = $knowledge;
         $article->load("category", "author");
 
@@ -149,7 +149,7 @@ class KnowledgeBaseController extends Controller
 
         $article->load("images");
 
-        // If content is empty (for records created outside controller), render markdown and sanitize
+        
         if (empty($article->content) && !empty($article->markdown)) {
             if (class_exists(\Parsedown::class)) {
                 $pd = new \Parsedown();
@@ -164,9 +164,9 @@ class KnowledgeBaseController extends Controller
         return view("knowledge.show", compact("article", "relatedArticles"));
     }
 
-    /**
+    
      * Preview markdown via AJAX (returns sanitized HTML)
-     */
+
     public function preview(Request $request)
     {
         $request->validate([
@@ -186,9 +186,9 @@ class KnowledgeBaseController extends Controller
         return response()->json(["html" => $clean]);
     }
 
-    /**
+    
      * Show the form for editing the specified resource.
-     */
+
     public function edit(KnowledgeBase $knowledge)
     {
         $categories = KnowledgeCategory::active()->ordered()->get();
@@ -198,9 +198,9 @@ class KnowledgeBaseController extends Controller
         ]);
     }
 
-    /**
+    
      * Update the specified resource in storage.
-     */
+
     public function update(UpdateKnowledgeBaseRequest $request, KnowledgeBase $knowledge)
     {
         $data = $request->validated();
@@ -218,21 +218,21 @@ class KnowledgeBaseController extends Controller
             $knowledge->content = "<p>" . nl2br(e($data["content"])) . "</p>";
         }
 
-        // Обрабатываем теги, убираем символы # если они есть и удаляем дубликаты
+        
         if (isset($data["tags"])) {
             $tags = explode(",", $data["tags"]);
             $cleanTags = [];
             foreach ($tags as $tag) {
                 $tag = trim($tag);
-                // Удаляем символ # в начале тега, если он есть
-                if (substr($tag, 0, 1) === "#") {
+                
+                if (substr($tag, 0, 1) === "
                     $tag = substr($tag, 1);
                 }
                 if (!empty($tag)) {
                     $cleanTags[] = $tag;
                 }
             }
-            // Удаляем дубликаты, сохраняя порядок
+            
             $cleanTags = array_unique($cleanTags);
             $knowledge->tags = implode(", ", $cleanTags);
         } else {
@@ -240,7 +240,7 @@ class KnowledgeBaseController extends Controller
         }
         $knowledge->save();
 
-        // Отправляем событие об обновлении статьи
+        
         event(new KnowledgeBaseArticleUpdated($knowledge, Auth::user()));
 
         return redirect()
@@ -248,9 +248,9 @@ class KnowledgeBaseController extends Controller
             ->with("success", "Статья обновлена");
     }
 
-    /**
+    
      * Remove the specified resource from storage.
-     */
+
     public function destroy(KnowledgeBase $knowledge)
     {
         $knowledge->delete();
@@ -259,18 +259,18 @@ class KnowledgeBaseController extends Controller
             ->with("success", "Статья удалена");
     }
 
-    /**
+    
      * Handle image uploads for knowledge base articles
-     */
+
     public function uploadImage(Request $request)
     {
-        // Убедимся, что всегда возвращаем JSON-ответ
+        
         $request->headers->set("Accept", "application/json");
 
-        // Validate the request
+        
         try {
             $validated = $request->validate([
-                "image" => "required|image|max:5120", // 5MB max
+                "image" => "required|image|max:5120", 
                 "article_id" => "nullable|exists:knowledge_bases,id",
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -289,7 +289,7 @@ class KnowledgeBaseController extends Controller
         }
 
         try {
-            // Get the uploaded file
+            
             $file = $request->file("image");
 
             \Log::info("Попытка загрузки изображения", [
@@ -317,7 +317,7 @@ class KnowledgeBaseController extends Controller
                 );
             }
 
-            // Generate a unique filename
+            
             $extension = $file->getClientOriginalExtension();
             $filename =
                 Str::slug(
@@ -328,7 +328,7 @@ class KnowledgeBaseController extends Controller
                 "." .
                 $extension;
 
-            // Ensure upload directory exists
+            
             $directory = "public/knowledge/images";
             $storagePath = storage_path("app/{$directory}");
             \Log::info("Проверка директории для загрузки", [
@@ -353,9 +353,9 @@ class KnowledgeBaseController extends Controller
                 }
             }
 
-            // Store the file directly without processing
+            
             try {
-                // Проверяем существование директории еще раз
+                
                 $uploadDir = storage_path("app/{$directory}");
                 if (!file_exists($uploadDir)) {
                     echo "Директория {$uploadDir} не существует, пытаемся создать... ";
@@ -368,7 +368,7 @@ class KnowledgeBaseController extends Controller
                     echo "Директория создана успешно";
                 }
 
-                // Проверяем права на запись
+                
                 if (!is_writable($uploadDir)) {
                     echo "Директория {$uploadDir} недоступна для записи";
                     throw new \Exception(
@@ -376,7 +376,7 @@ class KnowledgeBaseController extends Controller
                     );
                 }
 
-                // Пробуем сохранить файл напрямую
+                
                 $uploadPath = $uploadDir . "/" . $filename;
                 if (move_uploaded_file($file->getPathname(), $uploadPath)) {
                     $path = $directory . "/" . $filename;
@@ -399,7 +399,7 @@ class KnowledgeBaseController extends Controller
                 );
             }
 
-            // If an article ID was provided, associate the image with the article
+            
             if ($request->filled("article_id")) {
                 KnowledgeImage::create([
                     "knowledge_base_id" => $request->input("article_id"),
@@ -408,7 +408,7 @@ class KnowledgeBaseController extends Controller
                 ]);
             }
 
-            // Return the image URL and markdown for embedding
+            
             $url = url("storage/" . str_replace("public/", "", $path));
             return response()->json([
                 "success" => true,
@@ -417,7 +417,7 @@ class KnowledgeBaseController extends Controller
                     "![" . $file->getClientOriginalName() . "](" . $url . ")",
             ]);
         } catch (\Exception $e) {
-            // Log the error details
+            
             \Log::error("Image upload error", [
                 "error" => $e->getMessage(),
                 "file" => $e->getFile(),
@@ -434,7 +434,7 @@ class KnowledgeBaseController extends Controller
                 ],
             ]);
 
-            // Выводим ошибку напрямую для отладки
+            
             echo "<pre>";
             echo "Ошибка загрузки изображения: " . $e->getMessage() . "\n";
             echo "Файл: " . $e->getFile() . "\n";
@@ -457,7 +457,7 @@ class KnowledgeBaseController extends Controller
             }
 
             die();
-            // Конец отладочного вывода
+            
 
             return response()->json(
                 [
@@ -477,15 +477,15 @@ class KnowledgeBaseController extends Controller
         }
     }
 
-    /**
+    
      * Sanitize HTML output using HTMLPurifier if available, otherwise fallback to simple filtering.
-     */
+
     private function sanitizeHtml(string $html): string
     {
-        // Prefer HTMLPurifier when available
+        
         if (class_exists("\HTMLPurifier")) {
             $config = \HTMLPurifier_Config::createDefault();
-            // Allow basic elements and safe attributes
+            
             $config->set(
                 "HTML.Allowed",
                 "p,strong,em,ul,ol,li,br,pre,code,h1,h2,h3,h4,blockquote,a[href|title|target],img[src|alt|width|height|class|style]",
@@ -494,23 +494,23 @@ class KnowledgeBaseController extends Controller
             return $purifier->purify($html);
         }
 
-        // Fallback: remove event handlers and javascript: links, then strip to allowed tags
-        // Remove on* attributes
+        
+        
         $html = preg_replace('/on[a-z]+\s*=\s*"[^"]*"/i', "", $html);
         $html = preg_replace('/on[a-z]+\s*=\s*\'[^\']*\'/i', "", $html);
-        // Remove javascript: in href/src
+        
         $html = preg_replace(
             '/(href|src)\s*=\s*"javascript:[^\"]*"/i',
-            '$1="#"',
+            '$1="
             $html,
         );
         $html = preg_replace(
             '/(href|src)\s*=\s*\'javascript:[^\']*\'/i',
-            '$1="#"',
+            '$1="
             $html,
         );
 
-        // Allow a conservative set of tags
+        
         $allowed =
             "<p><a><strong><em><ul><ol><li><br><pre><code><h1><h2><h3><h4><blockquote><img><div><span>";
         $clean = strip_tags($html, $allowed);

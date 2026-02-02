@@ -8,9 +8,9 @@ use App\Models\KnowledgeCategory;
 
 class KnowledgeCategorySeeder extends Seeder
 {
-    /**
+    
      * Run the database seeds.
-     */
+
     public function run(): void
     {
         $categories = [
@@ -20,7 +20,7 @@ class KnowledgeCategorySeeder extends Seeder
                 "description" =>
                     "Статьи о компьютерном оборудовании и периферии",
                 "icon" => "computer-desktop",
-                "color" => "#059669",
+                "color" => "
                 "sort_order" => 1,
                 "is_active" => true,
             ],
@@ -29,7 +29,7 @@ class KnowledgeCategorySeeder extends Seeder
                 "slug" => "software",
                 "description" => "Статьи о программах и приложениях",
                 "icon" => "code-bracket",
-                "color" => "#3B82F6",
+                "color" => "
                 "sort_order" => 2,
                 "is_active" => true,
             ],
@@ -39,7 +39,7 @@ class KnowledgeCategorySeeder extends Seeder
                 "description" =>
                     "Статьи о настройке сети и интернет-подключения",
                 "icon" => "globe-alt",
-                "color" => "#8B5CF6",
+                "color" => "
                 "sort_order" => 3,
                 "is_active" => true,
             ],
@@ -48,7 +48,7 @@ class KnowledgeCategorySeeder extends Seeder
                 "slug" => "other",
                 "description" => "Прочие статьи",
                 "icon" => "ellipsis-horizontal",
-                "color" => "#6B7280",
+                "color" => "
                 "sort_order" => 4,
                 "is_active" => true,
             ],
