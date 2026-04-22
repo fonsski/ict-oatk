@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -9,7 +9,7 @@ class UpdateRolesTable extends Migration
 {
     public function up(): void
     {
-        
+        // Добавляем базовые роли
         DB::table('roles')->insert([
             [
                 'name' => 'Администратор',

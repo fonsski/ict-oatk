@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Listeners;
 
@@ -11,17 +11,17 @@ class LogEquipmentStatusChanged implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    
+    /**
      * Create the event listener.
-
+     */
     public function __construct()
     {
-        
+        //
     }
 
-    
+    /**
      * Handle the event.
-
+     */
     public function handle(EquipmentStatusChanged $event): void
     {
         $equipment = $event->equipment;

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Listeners;
 
@@ -11,17 +11,17 @@ class LogSystemNotificationCreated implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    
+    /**
      * Create the event listener.
-
+     */
     public function __construct()
     {
-        
+        //
     }
 
-    
+    /**
      * Handle the event.
-
+     */
     public function handle(SystemNotificationCreated $event): void
     {
         $user = $event->user;

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -24,9 +24,9 @@ class TelegramController extends Controller
         $this->commandService = $commandService;
     }
 
-    
+    /**
      * Обработчик webhook от Telegram
-
+     */
     public function webhook(Request $request)
     {
         try {
@@ -39,7 +39,7 @@ class TelegramController extends Controller
                 'text' => $update['message']['text'] ?? null
             ]);
 
-            
+            // Обрабатываем только сообщения
             if (!isset($update['message'])) {
                 return response()->json(['status' => 'ok']);
             }
@@ -48,7 +48,7 @@ class TelegramController extends Controller
             $chatId = $message['chat']['id'];
             $text = $message['text'] ?? '';
 
-            
+            // Обрабатываем сообщение
             $this->processMessage($chatId, $text, $message);
 
             return response()->json(['status' => 'ok']);
@@ -63,9 +63,9 @@ class TelegramController extends Controller
         }
     }
 
-    
+    /**
      * Обрабатывает входящее сообщение
-
+     */
     protected function processMessage(int $chatId, string $text, array $message): void
     {
         Log::info('Processing message', [
@@ -75,28 +75,28 @@ class TelegramController extends Controller
             'in_auth_process' => $this->authService->isUserInAuthProcess($chatId)
         ]);
 
-        
+        // Проверяем, находится ли пользователь в процессе авторизации
         if ($this->authService->isUserInAuthProcess($chatId)) {
             Log::info('User in auth process, processing auth message', ['chat_id' => $chatId]);
             $this->processAuthMessage($chatId, $text);
             return;
         }
 
-        
+        // Обрабатываем команды
         if (strpos($text, '/') === 0) {
             Log::info('Processing command', ['chat_id' => $chatId, 'command' => $text]);
             $this->processCommand($chatId, $text);
             return;
         }
 
-        
+        // Обычные сообщения
         Log::info('Processing unknown message', ['chat_id' => $chatId, 'text' => $text]);
         $this->handleUnknownMessage($chatId, $text);
     }
 
-    
+    /**
      * Обрабатывает сообщения в процессе авторизации
-
+     */
     protected function processAuthMessage(int $chatId, string $text): void
     {
         $authState = $this->authService->getAuthState($chatId);
@@ -124,14 +124,14 @@ class TelegramController extends Controller
         }
     }
 
-    
+    /**
      * Обрабатывает команды
-
+     */
     protected function processCommand(int $chatId, string $text): void
     {
         $command = strtolower(trim($text));
 
-        
+        // Обрабатываем команды с параметрами
         if (preg_match('/^\/ticket_(\d+)$/', $command, $matches)) {
             $ticketId = (int) $matches[1];
             $this->commandService->handleTicketDetails($chatId, $ticketId);
@@ -162,7 +162,7 @@ class TelegramController extends Controller
             return;
         }
 
-        
+        // Обрабатываем простые команды
         switch ($command) {
             case '/start':
                 $this->commandService->handleStart($chatId);
@@ -203,9 +203,9 @@ class TelegramController extends Controller
         }
     }
 
-    
+    /**
      * Обрабатывает неизвестные команды
-
+     */
     protected function handleUnknownCommand(int $chatId, string $command): void
     {
         $message = "❓ <b>Неизвестная команда</b>\n\n";
@@ -215,9 +215,9 @@ class TelegramController extends Controller
         $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает неизвестные сообщения
-
+     */
     protected function handleUnknownMessage(int $chatId, string $text): void
     {
         $message = "🤔 <b>Не понимаю</b>\n\n";
@@ -227,9 +227,9 @@ class TelegramController extends Controller
         $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Тестовый метод для проверки работы контроллера
-
+     */
     public function test()
     {
         return response()->json([

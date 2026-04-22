@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Services;
 
@@ -13,20 +13,32 @@ class TelegramService
 
     public function __construct()
     {
-        $this->token = config('services.telegram.token');
-        $this->apiUrl = "https:
-        
-        if (empty($this->token)) {
-            throw new \Exception('Telegram bot token is not configured');
-        }
+        $this->token = (string) config('services.telegram.token');
+        $this->apiUrl = $this->token !== ""
+            ? "https://api.telegram.org/bot{$this->token}"
+            : "";
     }
 
-    
-     * Отправляет сообщение в чат
+    protected function isConfigured(): bool
+    {
+        if ($this->apiUrl !== "") {
+            return true;
+        }
 
+        Log::warning("Telegram bot token is not configured");
+        return false;
+    }
+
+    /**
+     * Отправляет сообщение в чат
+     */
     public function sendMessage(int $chatId, string $text, array $options = []): bool
     {
-        
+        if (!$this->isConfigured()) {
+            return false;
+        }
+
+        // Предотвращение дублирования сообщений
         $messageHash = md5($chatId . $text);
         $cacheKey = "telegram_message_{$messageHash}";
         
@@ -38,7 +50,7 @@ class TelegramService
             return false;
         }
         
-        Cache::put($cacheKey, true, 30); 
+        Cache::put($cacheKey, true, 30); // 30 секунд
 
         $params = array_merge([
             'chat_id' => $chatId,
@@ -74,11 +86,15 @@ class TelegramService
         }
     }
 
-    
+    /**
      * Получает информацию о боте
-
+     */
     public function getBotInfo(): ?array
     {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
         try {
             $response = Http::get("{$this->apiUrl}/getMe");
             $result = $response->json();
@@ -95,11 +111,15 @@ class TelegramService
         }
     }
 
-    
+    /**
      * Устанавливает webhook
-
+     */
     public function setWebhook(string $url): bool
     {
+        if (!$this->isConfigured()) {
+            return false;
+        }
+
         try {
             $response = Http::post("{$this->apiUrl}/setWebhook", [
                 'url' => $url
@@ -122,11 +142,15 @@ class TelegramService
         }
     }
 
-    
+    /**
      * Удаляет webhook
-
+     */
     public function deleteWebhook(): bool
     {
+        if (!$this->isConfigured()) {
+            return false;
+        }
+
         try {
             $response = Http::post("{$this->apiUrl}/deleteWebhook");
             $result = $response->json();
@@ -144,11 +168,15 @@ class TelegramService
         }
     }
 
-    
+    /**
      * Получает информацию о webhook
-
+     */
     public function getWebhookInfo(): ?array
     {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
         try {
             $response = Http::get("{$this->apiUrl}/getWebhookInfo");
             $result = $response->json();
@@ -165,11 +193,15 @@ class TelegramService
         }
     }
 
-    
+    /**
      * Получает обновления (для long polling)
-
+     */
     public function getUpdates(int $offset = 0, int $timeout = 30): array
     {
+        if (!$this->isConfigured()) {
+            return [];
+        }
+
         try {
             $response = Http::get("{$this->apiUrl}/getUpdates", [
                 'offset' => $offset,
@@ -190,12 +222,12 @@ class TelegramService
         }
     }
 
-    
+    /**
      * Отправляет уведомление о новой заявке
-
+     */
     public function sendNewTicketNotification(int $chatId, array $ticketData): bool
     {
-        $message = "🆕 <b>Новая заявка 
+        $message = "🆕 <b>Новая заявка #{$ticketData['id']}</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticketData['title']}\n";
         $message .= "📂 <b>Категория:</b> " . $this->getCategoryEmoji($ticketData['category']) . " " . $this->getHumanReadableCategory($ticketData['category']) . "\n";
         $message .= "⚡ <b>Приоритет:</b> " . $this->getPriorityEmoji($ticketData['priority']) . " " . $this->getHumanReadablePriority($ticketData['priority']) . "\n";
@@ -206,12 +238,12 @@ class TelegramService
         return $this->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Отправляет уведомление об изменении статуса заявки
-
+     */
     public function sendTicketStatusNotification(int $chatId, array $ticketData, string $oldStatus, string $newStatus): bool
     {
-        $message = "🔄 <b>Заявка 
+        $message = "🔄 <b>Заявка #{$ticketData['id']}</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticketData['title']}\n";
         $message .= "📊 <b>Статус изменен:</b> " . $this->getStatusEmoji($oldStatus) . " → " . $this->getStatusEmoji($newStatus) . "\n";
         $message .= "👤 <b>Исполнитель:</b> {$ticketData['assigned_to_name']}\n\n";
@@ -220,9 +252,9 @@ class TelegramService
         return $this->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Получает эмодзи для статуса
-
+     */
     protected function getStatusEmoji(string $status): string
     {
         return match ($status) {
@@ -234,9 +266,9 @@ class TelegramService
         };
     }
 
-    
+    /**
      * Получает эмодзи для приоритета
-
+     */
     protected function getPriorityEmoji(string $priority): string
     {
         return match (strtolower($priority)) {
@@ -248,9 +280,9 @@ class TelegramService
         };
     }
 
-    
+    /**
      * Получает человекочитаемый приоритет
-
+     */
     protected function getHumanReadablePriority(string $priority): string
     {
         return match (strtolower($priority)) {
@@ -262,9 +294,9 @@ class TelegramService
         };
     }
 
-    
+    /**
      * Получает эмодзи для категории
-
+     */
     protected function getCategoryEmoji(string $category): string
     {
         return match (strtolower($category)) {
@@ -277,9 +309,9 @@ class TelegramService
         };
     }
 
-    
+    /**
      * Получает человекочитаемую категорию
-
+     */
     protected function getHumanReadableCategory(string $category): string
     {
         return match (strtolower($category)) {

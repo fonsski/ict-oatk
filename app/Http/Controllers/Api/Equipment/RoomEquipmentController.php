@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api\Equipment;
 
@@ -9,12 +9,12 @@ use Illuminate\Http\JsonResponse;
 
 class RoomEquipmentController extends Controller
 {
-    
+    /**
      * Get equipment items for a specific room
      *
      * @param Request $request
      * @return JsonResponse
-
+     */
     public function getByRoom(Request $request): JsonResponse
     {
         $roomId = $request->input('room_id');

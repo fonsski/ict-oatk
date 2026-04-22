@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Services;
 
@@ -17,13 +17,13 @@ class TelegramNotificationService
         $this->telegramService = $telegramService;
     }
 
-    
+    /**
      * Отправляет уведомления о новых заявках
-
+     */
     public function notifyNewTickets(): void
     {
         try {
-            
+            // Получаем новые заявки за последние 15 минут
             $fifteenMinutesAgo = now()->subMinutes(15);
 
             $newTickets = Ticket::where('created_at', '>=', $fifteenMinutesAgo)
@@ -44,7 +44,7 @@ class TelegramNotificationService
                 'ticket_ids' => $newTickets->pluck('id')->toArray()
             ]);
 
-            
+            // Получаем пользователей с правами на уведомления
             $users = User::whereNotNull('telegram_id')
                 ->whereHas('role', function ($query) {
                     $query->whereIn('slug', ['admin', 'master', 'technician']);
@@ -67,14 +67,14 @@ class TelegramNotificationService
         }
     }
 
-    
+    /**
      * Отправляет уведомление о новой заявке
-
+     */
     protected function notifyNewTicket(Ticket $ticket, $users): void
     {
-        
+        // Проверяем еще раз, чтобы избежать гонки условий
         if (SentTelegramNotification::wasNotificationSent($ticket->id, 'new_ticket')) {
-            Log::info("Skipping already notified ticket 
+            Log::info("Skipping already notified ticket #{$ticket->id}");
             return;
         }
 
@@ -106,7 +106,7 @@ class TelegramNotificationService
                     'error' => $e->getMessage()
                 ]);
 
-                
+                // Если ошибка связана с неверным telegram_id, очищаем его
                 if (strpos($e->getMessage(), 'chat not found') !== false || 
                     strpos($e->getMessage(), 'user not found') !== false) {
                     $user->update(['telegram_id' => null]);
@@ -117,7 +117,7 @@ class TelegramNotificationService
             }
         }
 
-        
+        // Регистрируем отправку уведомления
         if (!empty($notifiedUserIds)) {
             SentTelegramNotification::registerSentNotification(
                 $ticket->id,
@@ -127,16 +127,16 @@ class TelegramNotificationService
         }
     }
 
-    
+    /**
      * Отправляет уведомление об изменении статуса заявки
-
+     */
     public function notifyTicketStatusChange(Ticket $ticket, string $oldStatus, string $newStatus): void
     {
         try {
-            
+            // Получаем пользователей, которые должны получить уведомление
             $users = collect();
 
-            
+            // Добавляем исполнителя заявки
             if ($ticket->assigned_to_id) {
                 $assignedUser = User::where('id', $ticket->assigned_to_id)
                     ->whereNotNull('telegram_id')
@@ -146,7 +146,7 @@ class TelegramNotificationService
                 }
             }
 
-            
+            // Добавляем администраторов и мастеров
             $adminUsers = User::whereNotNull('telegram_id')
                 ->whereHas('role', function ($query) {
                     $query->whereIn('slug', ['admin', 'master']);
@@ -154,7 +154,7 @@ class TelegramNotificationService
                 ->get();
             $users = $users->merge($adminUsers);
 
-            
+            // Убираем дубликаты
             $users = $users->unique('id');
 
             if ($users->isEmpty()) {
@@ -201,25 +201,25 @@ class TelegramNotificationService
         }
     }
 
-    
+    /**
      * Отправляет уведомление о назначении заявки
-
+     */
     public function notifyTicketAssignment(Ticket $ticket, ?User $oldAssignee, User $newAssignee): void
     {
         try {
             $users = collect();
 
-            
+            // Уведомляем нового исполнителя
             if ($newAssignee && $newAssignee->telegram_id) {
                 $users->push($newAssignee);
             }
 
-            
+            // Уведомляем старого исполнителя (если он есть и отличается от нового)
             if ($oldAssignee && $oldAssignee->id !== $newAssignee->id && $oldAssignee->telegram_id) {
                 $users->push($oldAssignee);
             }
 
-            
+            // Уведомляем администраторов
             $adminUsers = User::whereNotNull('telegram_id')
                 ->whereHas('role', function ($query) {
                     $query->whereIn('slug', ['admin', 'master']);
@@ -227,14 +227,14 @@ class TelegramNotificationService
                 ->get();
             $users = $users->merge($adminUsers);
 
-            
+            // Убираем дубликаты
             $users = $users->unique('id');
 
             if ($users->isEmpty()) {
                 return;
             }
 
-            $message = "👤 <b>Заявка 
+            $message = "👤 <b>Заявка #{$ticket->id} назначена</b>\n\n";
             $message .= "📋 <b>Название:</b> {$ticket->title}\n";
             $message .= "👤 <b>Назначена на:</b> {$newAssignee->name}\n";
             
@@ -269,15 +269,15 @@ class TelegramNotificationService
         }
     }
 
-    
+    /**
      * Отправляет уведомление о комментарии к заявке
-
+     */
     public function notifyTicketComment(Ticket $ticket, string $commentContent, User $commentAuthor): void
     {
         try {
             $users = collect();
 
-            
+            // Уведомляем исполнителя заявки (если это не автор комментария)
             if ($ticket->assigned_to_id && $ticket->assigned_to_id !== $commentAuthor->id) {
                 $assignedUser = User::find($ticket->assigned_to_id);
                 if ($assignedUser && $assignedUser->telegram_id) {
@@ -285,7 +285,7 @@ class TelegramNotificationService
                 }
             }
 
-            
+            // Уведомляем администраторов (если это не автор комментария)
             $adminUsers = User::whereNotNull('telegram_id')
                 ->where('id', '!=', $commentAuthor->id)
                 ->whereHas('role', function ($query) {
@@ -294,14 +294,14 @@ class TelegramNotificationService
                 ->get();
             $users = $users->merge($adminUsers);
 
-            
+            // Убираем дубликаты
             $users = $users->unique('id');
 
             if ($users->isEmpty()) {
                 return;
             }
 
-            $message = "💬 <b>Новый комментарий к заявке 
+            $message = "💬 <b>Новый комментарий к заявке #{$ticket->id}</b>\n\n";
             $message .= "📋 <b>Заявка:</b> {$ticket->title}\n";
             $message .= "👤 <b>Автор:</b> {$commentAuthor->name}\n";
             $message .= "💬 <b>Комментарий:</b>\n";

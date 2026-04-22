@@ -196,6 +196,16 @@ loadingManager.showElementLoading(element);
 .animate-fade-in, .animate-slide-up, .animate-pulse-once
 ```
 
+<!--
+Кнопки: .btn-primary, .btn-secondary, .btn-danger, .btn-success, .btn-sm, .btn-lg, .btn-full
+Карточки: .card, .card-header, .card-body, .card-footer
+Формы: .form-input, .form-label, .form-error, .form-help
+Таблицы: .table, .table-responsive
+Уведомления: .notification, .notification-success, .notification-error
+Модальные окна: .modal, .modal-overlay, .modal-header, .modal-body, .modal-footer
+Анимации: .animate-fade-in, .animate-slide-up, .animate-pulse-once
+-->
+
 ### **3. Адаптивность:**
 - Мобильные устройства: до 640px
 - Планшеты: 641px - 1024px

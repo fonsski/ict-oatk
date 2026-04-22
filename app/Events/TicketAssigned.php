@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Events;
 
@@ -16,9 +16,9 @@ class TicketAssigned
     public User $assignedUser;
     public ?User $assignedBy;
 
-    
+    /**
      * Create a new event instance.
-
+     */
     public function __construct(Ticket $ticket, User $assignedUser, ?User $assignedBy = null)
     {
         $this->ticket = $ticket;

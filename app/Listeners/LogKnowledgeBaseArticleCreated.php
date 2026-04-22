@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Listeners;
 
@@ -11,17 +11,17 @@ class LogKnowledgeBaseArticleCreated implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    
+    /**
      * Create the event listener.
-
+     */
     public function __construct()
     {
-        
+        //
     }
 
-    
+    /**
      * Handle the event.
-
+     */
     public function handle(KnowledgeBaseArticleCreated $event): void
     {
         $article = $event->article;

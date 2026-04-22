@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Services;
 
@@ -17,9 +17,9 @@ class TelegramCommandService
         $this->authService = $authService;
     }
 
-    
+    /**
      * Обрабатывает команду /start
-
+     */
     public function handleStart(int $chatId): bool
     {
         $message = "👋 <b>Добро пожаловать в систему управления заявками!</b>\n\n";
@@ -31,9 +31,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /help
-
+     */
     public function handleHelp(int $chatId): bool
     {
         $message = "📋 <b>Справка по командам</b>\n\n";
@@ -45,13 +45,13 @@ class TelegramCommandService
             $message .= "• <code>/all_tickets</code> - Все заявки (включая закрытые)\n";
             $message .= "• <code>/active</code> - Активные заявки в работе\n";
             $message .= "• <code>/stats</code> - Статистика заявок\n";
-            $message .= "• <code>/ticket_123</code> - Подробности заявки 
-            $message .= "• <code>/start_ticket_123</code> - Взять заявку 
-            $message .= "• <code>/assign_123</code> - Назначить заявку 
-            $message .= "• <code>/resolve_123</code> - Отметить заявку 
-            $message .= "• <code>/close_123</code> - Закрыть заявку 
+            $message .= "• <code>/ticket_123</code> - Подробности заявки #123\n";
+            $message .= "• <code>/start_ticket_123</code> - Взять заявку #123 в работу\n";
+            $message .= "• <code>/assign_123</code> - Назначить заявку #123 себе\n";
+            $message .= "• <code>/resolve_123</code> - Отметить заявку #123 как решенную\n";
+            $message .= "• <code>/close_123</code> - Закрыть заявку #123\n";
             
-            
+            // Добавляем команды для работы с помещениями и оборудованием
             if ($user->isAdmin() || $user->isMaster()) {
                 $message .= "• <code>/rooms</code> - Список помещений\n";
                 $message .= "• <code>/equipment</code> - Список оборудования\n";
@@ -60,7 +60,7 @@ class TelegramCommandService
             
             $message .= "• <code>/logout</code> - Выйти из системы\n\n";
             
-            
+            // Добавляем информацию о дальнейших действиях
             $message .= "💡 <b>Что делать дальше?</b>\n";
             $message .= "1️⃣ Используйте <code>/tickets</code> для просмотра активных заявок\n";
             $message .= "2️⃣ Выберите заявку и используйте <code>/ticket_ID</code> для подробностей\n";
@@ -78,9 +78,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /tickets
-
+     */
     public function handleTickets(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -93,7 +93,7 @@ class TelegramCommandService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        
+        // Получаем заявки в зависимости от роли пользователя
         if ($user->isAdmin() || $user->isMaster()) {
             $tickets = Ticket::where('status', '!=', 'closed')
                 ->orderBy('created_at', 'desc')
@@ -121,7 +121,7 @@ class TelegramCommandService
             $status = $this->getStatusEmoji($ticket->status) . " " . $this->getHumanReadableStatus($ticket->status);
             $priority = $this->getPriorityEmoji($ticket->priority) . " " . ucfirst($ticket->priority);
 
-            $message .= "🆔 <b>
+            $message .= "🆔 <b>#{$ticket->id}</b>: {$ticket->title}\n";
             $message .= "📊 Статус: {$status}\n";
             $message .= "⚡ Приоритет: {$priority}\n";
 
@@ -139,9 +139,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /all_tickets
-
+     */
     public function handleAllTickets(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -154,7 +154,7 @@ class TelegramCommandService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        
+        // Получаем все заявки (включая закрытые)
         if ($user->isAdmin() || $user->isMaster()) {
             $tickets = Ticket::orderBy('created_at', 'desc')
                 ->take(30)
@@ -180,7 +180,7 @@ class TelegramCommandService
             $status = $this->getStatusEmoji($ticket->status) . " " . $this->getHumanReadableStatus($ticket->status);
             $priority = $this->getPriorityEmoji($ticket->priority) . " " . ucfirst($ticket->priority);
 
-            $message .= "🆔 <b>
+            $message .= "🆔 <b>#{$ticket->id}</b>: {$ticket->title}\n";
             $message .= "📊 Статус: {$status}\n";
             $message .= "⚡ Приоритет: {$priority}\n";
 
@@ -200,9 +200,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /active
-
+     */
     public function handleActive(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -215,7 +215,7 @@ class TelegramCommandService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        
+        // Получаем только заявки в работе
         if ($user->isAdmin() || $user->isMaster()) {
             $tickets = Ticket::where('status', 'in_progress')
                 ->orderBy('updated_at', 'desc')
@@ -239,7 +239,7 @@ class TelegramCommandService
         foreach ($tickets as $ticket) {
             $priority = $this->getPriorityEmoji($ticket->priority) . " " . ucfirst($ticket->priority);
             
-            $message .= "🆔 <b>
+            $message .= "🆔 <b>#{$ticket->id}</b>: {$ticket->title}\n";
             $message .= "⚡ Приоритет: {$priority}\n";
             
             if ($ticket->assignedTo) {
@@ -249,7 +249,7 @@ class TelegramCommandService
             $message .= "📅 Взята в работу: " . $ticket->updated_at->format("d.m.Y H:i") . "\n";
             $message .= "📝 Заявитель: {$ticket->reporter_name}\n";
             
-            
+            // Добавляем кнопки действий
             if ($ticket->assigned_to_id === $user->id) {
                 $message .= "✅ <code>/resolve_{$ticket->id}</code> - Отметить решенной\n";
             }
@@ -261,9 +261,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /stats
-
+     */
     public function handleStats(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -276,7 +276,7 @@ class TelegramCommandService
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
-        
+        // Получаем статистику в зависимости от роли пользователя
         if ($user->isAdmin() || $user->isMaster()) {
             $allTickets = Ticket::all();
         } else {
@@ -301,7 +301,7 @@ class TelegramCommandService
         $message .= "✅ <b>Решенных:</b> {$stats['resolved']}\n";
         $message .= "🔒 <b>Закрытых:</b> {$stats['closed']}\n\n";
 
-        
+        // Добавляем процентное соотношение
         if ($stats['total'] > 0) {
             $openPercent = round(($stats['open'] / $stats['total']) * 100);
             $inProgressPercent = round(($stats['in_progress'] / $stats['total']) * 100);
@@ -318,9 +318,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду просмотра деталей заявки
-
+     */
     public function handleTicketDetails(int $chatId, int $ticketId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -342,7 +342,7 @@ class TelegramCommandService
         $status = $this->getStatusEmoji($ticket->status) . " " . $this->getHumanReadableStatus($ticket->status);
         $priority = $this->getPriorityEmoji($ticket->priority) . " " . ucfirst($ticket->priority);
 
-        $message = "🔍 <b>Детали заявки 
+        $message = "🔍 <b>Детали заявки #{$ticket->id}</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticket->title}\n";
         $message .= "📂 <b>Категория:</b> " . $this->getCategoryEmoji($ticket->category) . " " . $this->getHumanReadableCategory($ticket->category) . "\n";
         $message .= "📊 <b>Статус:</b> {$status}\n";
@@ -377,7 +377,7 @@ class TelegramCommandService
 
         $message .= "\n\n📅 <b>Создано:</b> " . $ticket->created_at->format("d.m.Y H:i");
 
-        
+        // Добавляем кнопки действий
         $message .= "\n\n🔧 <b>Действия:</b>\n";
 
         if ($ticket->status !== "in_progress" && $user->canManageTickets()) {
@@ -395,9 +395,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду взятия заявки в работу
-
+     */
     public function handleStartTicket(int $chatId, int $ticketId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -433,14 +433,14 @@ class TelegramCommandService
                 'assigned_to_id' => $user->id
             ]);
 
-            
+            // Добавляем комментарий
             $ticket->comments()->create([
                 'user_id' => $user->id,
                 'content' => "Заявка взята в работу и назначена на {$user->name}",
                 'is_system' => true
             ]);
 
-            $message = "✅ <b>Заявка 
+            $message = "✅ <b>Заявка #{$ticket->id} успешно взята в работу!</b>\n\n";
             $message .= "📋 <b>Название:</b> {$ticket->title}\n";
             $message .= "👤 <b>Назначена на:</b> {$user->name}\n";
             $message .= "📊 <b>Статус:</b> " . $this->getStatusEmoji('in_progress') . " В работе";
@@ -467,9 +467,9 @@ class TelegramCommandService
         }
     }
 
-    
+    /**
      * Обрабатывает команду назначения заявки
-
+     */
     public function handleAssignTicket(int $chatId, int $ticketId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -494,29 +494,29 @@ class TelegramCommandService
         }
 
         if ($ticket->assigned_to_id === $user->id) {
-            $message = "ℹ️ Заявка 
+            $message = "ℹ️ Заявка #{$ticket->id} уже назначена на вас.";
             return $this->telegramService->sendMessage($chatId, $message);
         }
 
         $ticket->update(['assigned_to_id' => $user->id]);
 
-        
+        // Добавляем комментарий
         $ticket->comments()->create([
             'user_id' => $user->id,
             'content' => "Заявка назначена на {$user->name}",
             'is_system' => true
         ]);
 
-        $message = "✅ <b>Заявка 
+        $message = "✅ <b>Заявка #{$ticket->id} успешно назначена на вас!</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticket->title}\n";
         $message .= "👤 <b>Назначена на:</b> {$user->name}";
 
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду отметки заявки как решенной
-
+     */
     public function handleResolveTicket(int $chatId, int $ticketId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -547,14 +547,14 @@ class TelegramCommandService
 
         $ticket->update(['status' => 'resolved']);
 
-        
+        // Добавляем комментарий
         $ticket->comments()->create([
             'user_id' => $user->id,
             'content' => "Заявка отмечена как решенная",
             'is_system' => true
         ]);
 
-        $message = "✅ <b>Заявка 
+        $message = "✅ <b>Заявка #{$ticket->id} успешно отмечена как решенная!</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticket->title}\n";
         $message .= "👤 <b>Решена:</b> {$user->name}\n";
         $message .= "📊 <b>Статус:</b> " . $this->getStatusEmoji('resolved') . " Решена\n\n";
@@ -563,9 +563,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Отправляет сообщение о необходимости авторизации
-
+     */
     protected function sendAuthRequired(int $chatId): bool
     {
         $message = "🔐 <b>Требуется авторизация</b>\n\n";
@@ -575,9 +575,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Получает эмодзи для статуса
-
+     */
     protected function getStatusEmoji(string $status): string
     {
         return match ($status) {
@@ -589,9 +589,9 @@ class TelegramCommandService
         };
     }
 
-    
+    /**
      * Получает человекочитаемый статус
-
+     */
     protected function getHumanReadableStatus(string $status): string
     {
         return match ($status) {
@@ -603,9 +603,9 @@ class TelegramCommandService
         };
     }
 
-    
+    /**
      * Получает эмодзи для приоритета
-
+     */
     protected function getPriorityEmoji(string $priority): string
     {
         return match (strtolower($priority)) {
@@ -617,9 +617,9 @@ class TelegramCommandService
         };
     }
 
-    
+    /**
      * Получает эмодзи для категории
-
+     */
     protected function getCategoryEmoji(string $category): string
     {
         return match (strtolower($category)) {
@@ -632,9 +632,9 @@ class TelegramCommandService
         };
     }
 
-    
+    /**
      * Получает человекочитаемую категорию
-
+     */
     protected function getHumanReadableCategory(string $category): string
     {
         return match (strtolower($category)) {
@@ -647,9 +647,9 @@ class TelegramCommandService
         };
     }
 
-    
+    /**
      * Обрабатывает команду закрытия заявки
-
+     */
     public function handleCloseTicket(int $chatId, int $ticketId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -680,14 +680,14 @@ class TelegramCommandService
 
         $ticket->update(['status' => 'closed']);
 
-        
+        // Добавляем комментарий
         $ticket->comments()->create([
             'user_id' => $user->id,
             'content' => "Заявка закрыта",
             'is_system' => true
         ]);
 
-        $message = "🔒 <b>Заявка 
+        $message = "🔒 <b>Заявка #{$ticket->id} успешно закрыта!</b>\n\n";
         $message .= "📋 <b>Название:</b> {$ticket->title}\n";
         $message .= "👤 <b>Закрыта:</b> {$user->name}\n";
         $message .= "📊 <b>Статус:</b> " . $this->getStatusEmoji('closed') . " Закрыта\n\n";
@@ -696,9 +696,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /rooms
-
+     */
     public function handleRooms(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -742,9 +742,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /equipment
-
+     */
     public function handleEquipment(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
@@ -787,9 +787,9 @@ class TelegramCommandService
         return $this->telegramService->sendMessage($chatId, $message);
     }
 
-    
+    /**
      * Обрабатывает команду /users
-
+     */
     public function handleUsers(int $chatId): bool
     {
         $user = $this->authService->getAuthenticatedUser($chatId);
