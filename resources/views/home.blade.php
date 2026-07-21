@@ -332,10 +332,7 @@
         </div>
     </section>
 
-    <!-- FAQ Section -->
-    @auth
-    @unless (user_has_role('user'))
-
+    <!-- FAQ Section: доступна всем, включая неавторизованных посетителей -->
     <section class="max-w-6xl mx-auto px-6">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
@@ -385,8 +382,6 @@
             @endif
         </div>
     </section>
-    @endunless
-    @endauth
 
     @if(user_can_manage_tickets())
     @push('scripts')

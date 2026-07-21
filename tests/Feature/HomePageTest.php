@@ -19,12 +19,8 @@ class HomePageTest extends TestCase
         $this->get('/')->assertOk();
     }
 
-    public function test_home_page_shows_active_faq_entries_to_staff(): void
+    private function seedFaqs(): void
     {
-        // Блок FAQ на главной обёрнут в @auth + @unless(user_has_role('user')),
-        // то есть виден только персоналу — гость и обычный пользователь его не получают.
-        $technician = User::factory()->withRole('technician')->create();
-
         HomepageFAQ::create([
             'title' => 'Как подать заявку?',
             'content' => 'Нажмите кнопку «Создать заявку» в верхнем меню.',
@@ -38,29 +34,47 @@ class HomePageTest extends TestCase
             'is_active' => false,
             'sort_order' => 2,
         ]);
+    }
 
-        $this->actingAs($technician)
-            ->get('/')
+    public function test_guest_sees_active_faq_entries(): void
+    {
+        $this->seedFaqs();
+
+        $this->get('/')
             ->assertOk()
             ->assertSee('Как подать заявку?', false)
             ->assertDontSee('Скрытый вопрос', false);
     }
 
-    public function test_faq_block_is_hidden_from_regular_users(): void
+    public function test_regular_user_sees_faq_entries(): void
     {
-        HomepageFAQ::create([
-            'title' => 'Как подать заявку?',
-            'content' => 'Нажмите кнопку «Создать заявку» в верхнем меню.',
-            'is_active' => true,
-            'sort_order' => 1,
-        ]);
+        $this->seedFaqs();
 
         $user = User::factory()->withRole('user')->create();
 
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertDontSee('Как подать заявку?', false);
+            ->assertSee('Как подать заявку?', false);
+    }
+
+    public function test_staff_sees_faq_entries(): void
+    {
+        $this->seedFaqs();
+
+        $technician = User::factory()->withRole('technician')->create();
+
+        $this->actingAs($technician)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Как подать заявку?', false);
+    }
+
+    public function test_guest_can_open_faq_detail_page(): void
+    {
+        $this->seedFaqs();
+
+        $this->get(route('homepage-faq.show', 'kak-podat-zaiavku'))->assertOk();
     }
 
     public function test_static_pages_are_available(): void
