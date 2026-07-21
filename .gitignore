@@ -12,7 +12,7 @@
 /.vscode
 /.zed
 /auth.json
-/node_modules
+node_modules/
 /public/build
 /public/hot
 /public/storage
@@ -26,3 +26,9 @@ Thumbs.db
 /composer-setup.php
 /database/database.sqlite
 /.claude
+
+# Артефакты прогона Playwright (видео, скриншоты, отчёты)
+/tests/e2e/playwright-report
+/tests/e2e/test-results
+/tests/e2e/test-results.json
+/tests/e2e/test-results.xml
