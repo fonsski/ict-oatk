@@ -271,11 +271,13 @@ if (!function_exists("truncate_text")) {
      */
     function truncate_text($text, $length = 100, $suffix = "...")
     {
-        if (strlen($text) <= $length) {
+        // Многобайтовые функции обязательны: байтовые strlen/substr режут
+        // кириллицу посреди символа и порождают битый UTF-8.
+        if (mb_strlen($text) <= $length) {
             return $text;
         }
 
-        return substr($text, 0, $length) . $suffix;
+        return mb_substr($text, 0, $length) . $suffix;
     }
 }
 

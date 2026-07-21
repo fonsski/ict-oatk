@@ -55,19 +55,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | WebSocket Configuration
-    |--------------------------------------------------------------------------
-    |
-    | These values are used to configure the WebSocket server for real-time
-    | updates. The host should match your application's host.
-    |
-    */
-
-    "websocket_host" => env("WEBSOCKET_HOST", "localhost"),
-    "websocket_port" => env("WEBSOCKET_PORT", 8080),
-
-    /*
-    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

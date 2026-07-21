@@ -29,21 +29,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * Правила валидации для модели
-     */
-    public static function validationRules()
-    {
-        return [
-            'name' => 'required|string|min:2|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'phone' => 'required|string|max:20|unique:users|regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
-            'password' => 'required|string|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
-            'role_id' => 'required|exists:roles,id',
-            'is_active' => 'boolean',
-        ];
-    }
-
-    /**
      * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
