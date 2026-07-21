@@ -3,21 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Route;
 
+/**
+ * Маршруты регистрируются в bootstrap/app.php через withRouting().
+ * Здесь остаётся только константа HOME, используемая middleware
+ * RedirectIfAuthenticated. Загрузку маршрутов сюда добавлять нельзя —
+ * иначе web.php и api.php будут зарегистрированы дважды.
+ */
 class RouteServiceProvider extends ServiceProvider
 {
     public const HOME = '/';
-
-    public function boot(): void
-    {
-        $this->routes(function () {
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
-
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
-        });
-    }
 }
