@@ -149,6 +149,7 @@
     </div>
 
     <!-- Rooms List -->
+    <div id="rooms-results" class="transition-opacity duration-200">
     @if($rooms->count())
         <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
@@ -374,163 +375,102 @@
             @endif
         </div>
     @endif
+    </div><!-- /#rooms-results -->
 </div>
 
 <script>
-// Status dropdown functionality and live search
+// Меню смены статуса + живой поиск по кабинетам
 document.addEventListener('DOMContentLoaded', function() {
-    const statusButtons = document.querySelectorAll('.status-menu-button');
-    const statusDropdowns = document.querySelectorAll('.status-dropdown');
-
-    statusButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            const roomId = this.dataset.roomId;
-            const dropdown = document.querySelector(`.status-dropdown[data-room-id="${roomId}"]`);
-
-            // Close all other dropdowns
-            statusDropdowns.forEach(function(d) {
-                if (d !== dropdown) {
-                    d.classList.add('hidden');
-                }
-            });
-
-            // Toggle current dropdown
-            dropdown.classList.toggle('hidden');
-        });
-    });
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.status-menu-button')) {
-            statusDropdowns.forEach(function(dropdown) {
-                dropdown.classList.add('hidden');
-            });
-        }
-    });
-
-    // Live search functionality
-    const searchInput = document.querySelector('input[name="search"]');
-    const statusSelect = document.querySelector('select[name="status"]');
-    const typeSelect = document.querySelector('select[name="type"]');
-    const buildingSelect = document.querySelector('select[name="building"]');
-    const floorSelect = document.querySelector('select[name="floor"]');
-    const activeSelect = document.querySelector('select[name="active"]');
-    const form = document.querySelector('form');
-
+    const form = document.querySelector('form[action="{{ route('room.index') }}"]');
+    const results = document.getElementById('rooms-results');
     let searchTimeout;
 
-    // Функция для выполнения поиска
-    function performSearch() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            // Показать индикатор загрузки
-            showLoadingIndicator();
+    // Меню статуса через делегирование — переживает подмену содержимого поиском
+    document.addEventListener('click', function(event) {
+        const button = event.target.closest('.status-menu-button');
 
-            // Отправить форму
-            const formData = new FormData(form);
-            const params = new URLSearchParams(formData);
-
-            fetch(window.location.pathname + '?' + params.toString())
-                .then(response => response.text())
-                .then(html => {
-                    // Создать временный элемент для парсинга HTML
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-
-                    // Найти новый контент в ответе
-                    const newRoomsGrid = tempDiv.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.gap-6');
-                    const currentRoomsGrid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.gap-6');
-
-                    if (newRoomsGrid && currentRoomsGrid) {
-                        currentRoomsGrid.innerHTML = newRoomsGrid.innerHTML;
-                        reinitializeDropdowns();
-                    }
-
-                    // Обновить пагинацию
-                    const newPagination = tempDiv.querySelector('.mt-8');
-                    const currentPagination = document.querySelector('.mt-8');
-
-                    if (newPagination && currentPagination) {
-                        currentPagination.innerHTML = newPagination.innerHTML;
-                    }
-
-                    hideLoadingIndicator();
-                })
-                .catch(error => {
-                    console.error('Ошибка поиска:', error);
-                    hideLoadingIndicator();
-                });
-        }, 300); // Задержка 300ms для избежания избыточных запросов
-    }
-
-    function showLoadingIndicator() {
-        const grid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.gap-6');
-        if (grid) {
-            grid.style.opacity = '0.5';
-        }
-    }
-
-    function hideLoadingIndicator() {
-        const grid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.gap-6');
-        if (grid) {
-            grid.style.opacity = '1';
-        }
-    }
-
-    function reinitializeDropdowns() {
-        // Переинициализировать dropdown'ы после обновления содержимого
-        const newStatusButtons = document.querySelectorAll('.status-menu-button');
-        const newStatusDropdowns = document.querySelectorAll('.status-dropdown');
-
-        newStatusButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                const roomId = this.dataset.roomId;
-                const dropdown = document.querySelector(`.status-dropdown[data-room-id="${roomId}"]`);
-
-                // Close all other dropdowns
-                newStatusDropdowns.forEach(function(d) {
-                    if (d !== dropdown) {
-                        d.classList.add('hidden');
-                    }
-                });
-
-                // Toggle current dropdown
-                dropdown.classList.toggle('hidden');
+        if (button) {
+            const roomId = button.dataset.roomId;
+            const dropdown = document.querySelector(`.status-dropdown[data-room-id="${roomId}"]`);
+            document.querySelectorAll('.status-dropdown').forEach(function(d) {
+                if (d !== dropdown) d.classList.add('hidden');
             });
+            if (dropdown) {
+                const willOpen = dropdown.classList.contains('hidden');
+                dropdown.classList.toggle('hidden', !willOpen);
+
+                if (willOpen) {
+                    // Если снизу не хватает места — раскрываем меню вверх,
+                    // чтобы не появлялась лишняя прокрутка страницы.
+                    const rect = button.getBoundingClientRect();
+                    const menuHeight = dropdown.offsetHeight;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    if (spaceBelow < menuHeight + 16 && rect.top > menuHeight + 16) {
+                        dropdown.style.top = 'auto';
+                        dropdown.style.bottom = 'calc(100% + 0.5rem)';
+                    } else {
+                        dropdown.style.bottom = 'auto';
+                        dropdown.style.top = '';
+                    }
+                }
+            }
+            return;
+        }
+
+        // Клик вне меню — закрываем все
+        document.querySelectorAll('.status-dropdown').forEach(function(d) {
+            d.classList.add('hidden');
         });
+    });
+
+    // Выполнить поиск: подменяем только блок результатов и обновляем URL
+    function performSearch() {
+        if (!form || !results) return;
+
+        const params = new URLSearchParams(new FormData(form));
+        // Убираем пустые параметры, чтобы URL был чистым
+        for (const [key, value] of [...params.entries()]) {
+            if (value === '') params.delete(key);
+        }
+        const url = form.action + (params.toString() ? '?' + params.toString() : '');
+
+        results.style.opacity = '0.5';
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const fresh = doc.getElementById('rooms-results');
+                if (fresh) {
+                    results.innerHTML = fresh.innerHTML;
+                }
+                window.history.replaceState({}, '', url);
+                results.style.opacity = '1';
+            })
+            .catch(function() {
+                results.style.opacity = '1';
+            });
     }
 
-    // Добавить обработчики событий для живого поиска
-    if (searchInput) {
-        searchInput.addEventListener('input', performSearch);
+    function debouncedSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300);
     }
 
-    if (statusSelect) {
-        statusSelect.addEventListener('change', performSearch);
-    }
-
-    if (typeSelect) {
-        typeSelect.addEventListener('change', performSearch);
-    }
-
-    if (buildingSelect) {
-        buildingSelect.addEventListener('change', performSearch);
-    }
-
-    if (floorSelect) {
-        floorSelect.addEventListener('change', performSearch);
-    }
-
-    if (activeSelect) {
-        activeSelect.addEventListener('change', performSearch);
-    }
-
-    // Обработчик для кнопки "Поиск" (оставляем для совместимости)
-    const submitBtn = document.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', function(e) {
+    if (form) {
+        // Обычная отправка формы работает как fallback, но перехватываем для AJAX
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
             performSearch();
+        });
+
+        const searchInput = form.querySelector('input[name="search"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', debouncedSearch);
+        }
+
+        form.querySelectorAll('select').forEach(function(select) {
+            select.addEventListener('change', performSearch);
         });
     }
 });

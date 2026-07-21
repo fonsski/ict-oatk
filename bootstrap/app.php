@@ -12,7 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: "/up",
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Автоматический выход по истечении времени неактивности сессии.
+        $middleware->web(append: [
+            \App\Http\Middleware\SessionTimeout::class,
+        ]);
+
+        // Псевдоним для проверки роли: ->middleware('role:admin,master').
+        // Маршруты также могут ссылаться на класс напрямую.
+        $middleware->alias([
+            'role' => \App\Http\Middleware\CheckRole::class,
+            'require_role' => \App\Http\Middleware\CheckRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Регистрация обработчиков для HTTP-ошибок

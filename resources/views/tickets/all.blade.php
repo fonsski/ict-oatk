@@ -1199,79 +1199,75 @@ if (action === 'change-status' && status) {
 
     // Функция инициализации выпадающих меню
     function initTableDropdowns() {
-        console.log('Инициализируем обработчики кнопок...');
-        
-        // Удаляем все старые обработчики
-        document.querySelectorAll('.actions-btn').forEach(btn => {
+        // Пере-навешиваем обработчик, предварительно сняв старый, чтобы не
+        // накапливались дубликаты при обновлении таблицы (LiveUpdates).
+        document.querySelectorAll('.actions-btn').forEach(function(btn) {
             btn.removeEventListener('click', handleActionsClick);
-        });
-
-        // Добавляем обработчики для всех кнопок действий
-        const buttons = document.querySelectorAll('.actions-btn');
-        console.log('Найдено кнопок:', buttons.length);
-        
-        buttons.forEach(btn => {
             btn.addEventListener('click', handleActionsClick);
-            console.log('Обработчик добавлен для кнопки:', btn.getAttribute('data-ticket-id'));
         });
     }
 
     // Обработчик клика по кнопке действий
     function handleActionsClick(e) {
-        console.log('Кнопка нажата!');
         e.preventDefault();
         e.stopPropagation();
 
         const button = e.currentTarget;
         const ticketId = button.getAttribute('data-ticket-id');
-        console.log('ID заявки:', ticketId);
-        
         const menu = document.querySelector(`.actions-menu[data-ticket-id="${ticketId}"]`);
-        console.log('Найдено меню:', menu);
 
         if (!menu) {
-            console.error('Меню не найдено для заявки:', ticketId);
             return;
         }
 
+        const willOpen = menu.classList.contains('hidden');
+
         // Закрыть все другие меню
-        document.querySelectorAll('.actions-menu').forEach(otherMenu => {
+        document.querySelectorAll('.actions-menu').forEach(function(otherMenu) {
             if (otherMenu !== menu) {
                 otherMenu.classList.add('hidden');
             }
         });
-
-        document.querySelectorAll('.actions-btn').forEach(otherBtn => {
+        document.querySelectorAll('.actions-btn').forEach(function(otherBtn) {
             if (otherBtn !== button) {
                 otherBtn.classList.remove('bg-slate-100');
             }
         });
 
-        // Переключить текущее меню
-        const isHidden = menu.classList.contains('hidden');
-        console.log('Меню скрыто:', isHidden);
-        
-        menu.classList.toggle('hidden');
-        button.classList.toggle('bg-slate-100');
-        
-        console.log('Меню после переключения скрыто:', menu.classList.contains('hidden'));
+        // Явное открытие/закрытие
+        menu.classList.toggle('hidden', !willOpen);
+        button.classList.toggle('bg-slate-100', willOpen);
 
-        // Позиционирование меню
-        if (!menu.classList.contains('hidden')) {
-            const rect = button.getBoundingClientRect();
-            const rightSpace = window.innerWidth - rect.right;
+        if (!willOpen) {
+            return;
+        }
 
-            menu.style.position = 'absolute';
-            menu.style.zIndex = '1000';
+        // Базовые стили
+        menu.style.position = 'absolute';
+        menu.style.zIndex = '1000';
+        menu.style.maxHeight = '80vh';
+        menu.style.overflowY = 'auto';
 
-            if (rightSpace < 200) {
-                menu.style.left = 'auto';
-                menu.style.right = '0';
-            } else {
-                menu.style.left = '0';
-                menu.style.right = 'auto';
-            }
+        const rect = button.getBoundingClientRect();
 
+        // Горизонтальное позиционирование
+        if (window.innerWidth - rect.right < 200) {
+            menu.style.left = 'auto';
+            menu.style.right = '0';
+        } else {
+            menu.style.left = '0';
+            menu.style.right = 'auto';
+        }
+
+        // Если снизу не хватает места — открываем вверх, чтобы меню не
+        // выходило за экран и не удлиняло страницу (лишняя прокрутка).
+        const menuHeight = menu.offsetHeight;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < menuHeight + 16 && rect.top > menuHeight + 16) {
+            menu.style.top = 'auto';
+            menu.style.bottom = 'calc(100% + 0.5rem)';
+        } else {
+            menu.style.bottom = 'auto';
             menu.style.top = 'calc(100% + 0.5rem)';
         }
     }

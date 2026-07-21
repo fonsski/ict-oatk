@@ -22,7 +22,7 @@ class RoleSeeder extends Seeder
             ],
             [
                 'name' => 'Техник',
-                'slug' => 'technican',
+                'slug' => 'technician',
                 'description' => 'Работа с заявками'
             ],
             [
@@ -33,7 +33,7 @@ class RoleSeeder extends Seeder
         ];
 
         foreach ($roles as $role) {
-            Role::create($role);
+            Role::firstOrCreate(['slug' => $role['slug']], $role);
         }
     }
 }

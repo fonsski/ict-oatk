@@ -50,31 +50,30 @@ class AddReporterPhoneToTicketsTable extends Migration
     private function updateReporterPhones(): void
     {
         try {
-            // Проверяем существование столбца reporter_email перед выполнением запроса
-            if (Schema::hasColumn("tickets", "reporter_email")) {
-                // Обновляем телефоны из связанных пользователей (где reporter_email совпадает с email пользователя)
-                DB::statement("
-                    UPDATE tickets t
-                    JOIN users u ON t.reporter_email = u.email
-                    SET t.reporter_phone = u.phone
-                    WHERE t.reporter_phone IS NULL
-                    AND u.phone IS NOT NULL
-                ");
-            }
+            $hasEmailColumn = Schema::hasColumn("tickets", "reporter_email");
 
-            // Обновляем телефоны из связанных пользователей (где user_id указан)
-            DB::statement("
-                UPDATE tickets t
-                JOIN users u ON t.user_id = u.id
-                SET t.reporter_phone = u.phone
-                WHERE t.reporter_phone IS NULL
-                AND u.phone IS NOT NULL
-            ");
+            // Портируемый вариант (MySQL и SQLite не поддерживают UPDATE ... JOIN
+            // одинаково): проходим по пользователям с телефоном и обновляем заявки.
+            DB::table("users")
+                ->whereNotNull("phone")
+                ->select("id", "email", "phone")
+                ->orderBy("id")
+                ->chunk(500, function ($users) use ($hasEmailColumn) {
+                    foreach ($users as $user) {
+                        DB::table("tickets")
+                            ->whereNull("reporter_phone")
+                            ->where("user_id", $user->id)
+                            ->update(["reporter_phone" => $user->phone]);
 
-            // Завершаем обновление без записи в лог
-            return;
+                        if ($hasEmailColumn && $user->email) {
+                            DB::table("tickets")
+                                ->whereNull("reporter_phone")
+                                ->where("reporter_email", $user->email)
+                                ->update(["reporter_phone" => $user->phone]);
+                        }
+                    }
+                });
         } catch (\Exception $e) {
-            // Логируем ошибку в консоль
             error_log(
                 "Ошибка при обновлении телефонов в заявках: " .
                     $e->getMessage(),

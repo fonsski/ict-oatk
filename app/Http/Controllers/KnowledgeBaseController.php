@@ -213,10 +213,13 @@ class KnowledgeBaseController extends Controller
 
         if (class_exists(Parsedown::class)) {
             $pd = new Parsedown();
-            $knowledge->content = $pd->text($data["content"]);
+            $html = $pd->text($data["content"]);
         } else {
-            $knowledge->content = "<p>" . nl2br(e($data["content"])) . "</p>";
+            $html = "<p>" . nl2br(e($data["content"])) . "</p>";
         }
+
+        // Санитизация обязательна: content выводится через {!! !!} в шаблоне
+        $knowledge->content = $this->sanitizeHtml($html);
 
         // Обрабатываем теги, убираем символы # если они есть и удаляем дубликаты
         if (isset($data["tags"])) {
@@ -434,43 +437,12 @@ class KnowledgeBaseController extends Controller
                 ],
             ]);
 
-            // Выводим ошибку напрямую для отладки
-            echo "<pre>";
-            echo "Ошибка загрузки изображения: " . $e->getMessage() . "\n";
-            echo "Файл: " . $e->getFile() . "\n";
-            echo "Строка: " . $e->getLine() . "\n";
-            echo "Трассировка: " . $e->getTraceAsString() . "\n";
-            echo "PHP версия: " . PHP_VERSION . "\n";
-            echo "Путь к storage: " . storage_path("app/public") . "\n";
-            echo "Права доступа: " .
-                (is_writable(storage_path("app/public"))
-                    ? "Доступно для записи"
-                    : "Недоступно для записи") .
-                "\n";
-
-            if (isset($file)) {
-                echo "Информация о файле:\n";
-                echo "  Имя: " . $file->getClientOriginalName() . "\n";
-                echo "  Размер: " . $file->getSize() . " байт\n";
-                echo "  MIME тип: " . $file->getMimeType() . "\n";
-                echo "  Ошибка загрузки: " . $file->getError() . "\n";
-            }
-
-            die();
-            // Конец отладочного вывода
-
+            // Детали уже записаны в лог выше — клиенту не раскрываем
+            // внутренние пути, версию PHP и трассировку.
             return response()->json(
                 [
                     "success" => false,
-                    "message" =>
-                        "Ошибка загрузки изображения: " . $e->getMessage(),
-                    "debug_info" => [
-                        "php_version" => PHP_VERSION,
-                        "storage_path" => storage_path("app/public"),
-                        "is_writable" => is_writable(
-                            storage_path("app/public"),
-                        ),
-                    ],
+                    "message" => "Ошибка загрузки изображения",
                 ],
                 500,
             );

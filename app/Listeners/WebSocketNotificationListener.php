@@ -239,15 +239,10 @@ class WebSocketNotificationListener implements ShouldQueue
     private function sendToWebSocket(array $message): void
     {
         try {
-            // Определяем хост в зависимости от окружения
-            if (app()->environment('local') && env('LARAVEL_SAIL')) {
-                // В Docker окружении используем имя сервиса
-                $host = config('app.websocket_docker_host', 'websocket-server');
-            } else {
-                // В обычном окружении используем localhost
-                $host = config('app.websocket_host', 'localhost');
-            }
-            
+            // Хост WebSocket-сервера берём из конфигурации (по умолчанию localhost).
+            // В Docker-окружении задайте WEBSOCKET_HOST=websocket-server в .env.
+            $host = config('app.websocket_host', 'localhost');
+
             $port = config('app.websocket_port', 8080);
             
             // Отправляем HTTP запрос к WebSocket серверу для broadcast

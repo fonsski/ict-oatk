@@ -161,6 +161,11 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
+        // Обычный пользователь может видеть только свои заявки (IDOR-защита)
+        if (!$this->canView($ticket)) {
+            abort(403);
+        }
+
         // Просмотр отдельной заявки
         try {
             // Загружаем связанные данные для заявки
@@ -384,6 +389,11 @@ class TicketController extends Controller
     // Добавить комментарий
     public function commentStore(StoreTicketCommentRequest $request, Ticket $ticket)
     {
+        // Комментировать можно только доступную пользователю заявку
+        if (!$this->canView($ticket)) {
+            abort(403);
+        }
+
         $data = $request->validated();
 
         $comment = TicketComment::create([
@@ -486,6 +496,26 @@ class TicketController extends Controller
         }
         return $user->role &&
             in_array($user->role->slug, ["admin", "master", "technician"]);
+    }
+
+    /**
+     * Check whether current user can view the ticket.
+     */
+    private function canView(Ticket $ticket): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+
+        // Персонал (админ/мастер/техник) может просматривать любые заявки
+        if ($user->role && in_array($user->role->slug, ["admin", "master", "technician"])) {
+            return true;
+        }
+
+        // Обычный пользователь — только свои заявки
+        return ($ticket->user_id && $ticket->user_id === $user->id) ||
+               ($ticket->reporter_id && $ticket->reporter_id === $user->id);
     }
 
     /**

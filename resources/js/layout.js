@@ -289,6 +289,13 @@ function pollForNewNotifications() {
     });
 }
 
+// Экранирование пользовательского текста перед вставкой через innerHTML
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
+}
+
 // Load notifications dropdown content
 function loadNotifications() {
     const dropdownContent = document.getElementById('notifications-list');
@@ -319,6 +326,12 @@ function loadNotifications() {
         let html = '';
         data.notifications.forEach(function(notification) {
             const isRead = notification.read_at !== null;
+            // Поля уведомления лежат во вложенном объекте data (формат Laravel
+            // DatabaseNotification): { title, message, link, ... }.
+            const payload = notification.data || {};
+            const title = escapeHtml(payload.title || 'Уведомление');
+            const message = escapeHtml(payload.message || '');
+            const link = payload.link || null;
             const createdAt = new Date(notification.created_at).toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
@@ -329,8 +342,8 @@ function loadNotifications() {
             html += '<div class="relative block px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ' + (isRead ? '' : 'bg-blue-50') + '" data-notification-id="' + notification.id + '">';
             html += '<div class="flex items-start justify-between">';
             html += '<div class="flex-1">';
-            html += '<p class="text-sm font-medium text-gray-900">' + notification.title + '</p>';
-            html += '<p class="text-sm text-gray-600 mt-1">' + notification.message + '</p>';
+            html += '<p class="text-sm font-medium text-gray-900">' + title + '</p>';
+            html += '<p class="text-sm text-gray-600 mt-1">' + message + '</p>';
             html += '<p class="text-xs text-gray-500 mt-2">' + createdAt + '</p>';
             html += '</div>';
 
@@ -340,8 +353,8 @@ function loadNotifications() {
 
             html += '</div>';
 
-            if (notification.url) {
-                html += '<a href="' + notification.url + '" class="block absolute inset-0" data-id="' + notification.id + '"></a>';
+            if (link) {
+                html += '<a href="' + encodeURI(link) + '" class="block absolute inset-0" data-id="' + notification.id + '"></a>';
             }
 
             html += '</div>'; // Close the notification item div

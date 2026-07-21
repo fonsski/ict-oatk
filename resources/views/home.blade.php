@@ -1004,72 +1004,83 @@
     function initTableDropdowns() {
         // Обработка выпадающих меню в таблице
         document.querySelectorAll('[data-dropdown]').forEach(function(dropdown) {
+            // Функция вызывается после каждого обновления списка — не навешиваем
+            // обработчик повторно, иначе накапливаются дубли и меню «мигает».
+            if (dropdown.dataset.dropdownBound === '1') {
+                return;
+            }
+            dropdown.dataset.dropdownBound = '1';
+
             const toggle = dropdown.querySelector('[data-dropdown-toggle]');
             const menu = dropdown.querySelector('[data-dropdown-menu]');
 
-            if (toggle && menu) {
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Закрыть все другие меню
-                    document.querySelectorAll('[data-dropdown-menu]').forEach(function(otherMenu) {
-                        if (otherMenu !== menu) {
-                            otherMenu.classList.add('hidden');
-                        }
-                    });
-
-                    document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
-                        if (otherToggle !== toggle) {
-                            otherToggle.classList.remove('bg-slate-100');
-                        }
-                    });
-
-                    // Переключить текущее меню
-                    menu.classList.toggle('hidden');
-                    toggle.classList.toggle('bg-slate-100');
-
-                    // Корректное позиционирование меню
-                    const rect = toggle.getBoundingClientRect();
-                    const rightSpace = window.innerWidth - rect.right;
-
-                    // Сбрасываем предыдущие стили
-                    menu.style.left = '';
-                    menu.style.right = '';
-                    menu.style.top = '';
-                    menu.style.position = 'absolute';
-                    menu.style.zIndex = '100';
-                    menu.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-                    menu.style.maxHeight = '80vh';
-                    menu.style.overflowY = 'auto';
-
-                    // Проверяем, достаточно ли места справа и слева
-                    if (rightSpace < 200) {
-                        // Недостаточно места справа, располагаем слева
-                        menu.style.left = 'auto';
-                        menu.style.right = '0';
-                    } else {
-                        // Достаточно места справа
-                        menu.style.left = '0';
-                        menu.style.right = 'auto';
-                    }
-
-                    // Обеспечиваем, чтобы меню не выходило за границы экрана
-                    const menuRect = menu.getBoundingClientRect();
-                    if (menuRect.right > window.innerWidth) {
-                        menu.style.right = '0';
-                        menu.style.left = 'auto';
-                    }
-
-                    // Устанавливаем позицию по вертикали
-                    menu.style.top = 'calc(100% + 0.5rem)';
-
-                    // Убеждаемся, что меню видно
-                    // Максимальная высота и прокрутка для больших меню
-                    menu.style.maxHeight = '80vh';
-                    menu.style.overflowY = 'auto';
-                });
+            if (!toggle || !menu) {
+                return;
             }
+
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const willOpen = menu.classList.contains('hidden');
+
+                // Закрыть все другие меню
+                document.querySelectorAll('[data-dropdown-menu]').forEach(function(otherMenu) {
+                    if (otherMenu !== menu) {
+                        otherMenu.classList.add('hidden');
+                    }
+                });
+                document.querySelectorAll('[data-dropdown-toggle]').forEach(function(otherToggle) {
+                    if (otherToggle !== toggle) {
+                        otherToggle.classList.remove('bg-slate-100');
+                    }
+                });
+
+                // Явное открытие/закрытие (без «двойного» переключения)
+                menu.classList.toggle('hidden', !willOpen);
+                toggle.classList.toggle('bg-slate-100', willOpen);
+
+                if (!willOpen) {
+                    return;
+                }
+
+                // Базовые стили
+                menu.style.position = 'absolute';
+                menu.style.zIndex = '100';
+                menu.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                menu.style.maxHeight = '80vh';
+                menu.style.overflowY = 'auto';
+
+                const rect = toggle.getBoundingClientRect();
+
+                // Горизонтальное позиционирование
+                if (window.innerWidth - rect.right < 200) {
+                    menu.style.left = 'auto';
+                    menu.style.right = '0';
+                } else {
+                    menu.style.left = '0';
+                    menu.style.right = 'auto';
+                }
+
+                // Вертикальное: если снизу не хватает места — открываем вверх,
+                // чтобы меню не выходило за экран и не удлиняло страницу (прокрутка).
+                const menuHeight = menu.offsetHeight;
+                const spaceBelow = window.innerHeight - rect.bottom;
+                if (spaceBelow < menuHeight + 16 && rect.top > menuHeight + 16) {
+                    menu.style.top = 'auto';
+                    menu.style.bottom = 'calc(100% + 0.5rem)';
+                } else {
+                    menu.style.bottom = 'auto';
+                    menu.style.top = 'calc(100% + 0.5rem)';
+                }
+
+                // Если меню всё же вылезает за правый край
+                const menuRect = menu.getBoundingClientRect();
+                if (menuRect.right > window.innerWidth) {
+                    menu.style.right = '0';
+                    menu.style.left = 'auto';
+                }
+            });
         });
     }
 

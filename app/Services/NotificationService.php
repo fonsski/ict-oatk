@@ -11,29 +11,6 @@ use Illuminate\Support\Str;
 
 class NotificationService
 {
-    protected $telegramBotController;
-    protected $notificationLock = [];
-
-    public function __construct()
-    {
-        // Отложенная инициализация контроллера телеграм-бота,
-        // чтобы избежать циклической зависимости
-        $this->telegramBotController = null;
-    }
-
-    /**
-     * Получить экземпляр TelegramBotController
-     */
-    protected function getTelegramBotController()
-    {
-        if ($this->telegramBotController === null) {
-            $this->telegramBotController = app(
-                \App\Http\Controllers\TelegramBotController::class,
-            );
-        }
-        return $this->telegramBotController;
-    }
-
     /**
      * Отправить уведомление о снятии исполнителя с заявки
      */
@@ -66,90 +43,13 @@ class NotificationService
     }
 
     /**
-     * Отправить уведомление в Telegram (только в обычном окружении)
-     */
-    public function sendTelegramNotification($chatId, $message, $params = [])
-    {
-        // В Docker окружении не отправляем Telegram уведомления через NotificationService
-        // Они обрабатываются через TelegramStandalone
-        if (env('LARAVEL_SAIL')) {
-            Log::info("Telegram notification skipped in Docker environment", [
-                'chat_id' => $chatId,
-                'message_preview' => substr($message, 0, 100)
-            ]);
-            return;
-        }
-
-        try {
-            $botman = app(\BotMan\BotMan\BotMan::class);
-            $botman->say($message, $chatId, \BotMan\Drivers\Telegram\TelegramDriver::class, $params);
-            
-            Log::info("Telegram notification sent via NotificationService", [
-                'chat_id' => $chatId,
-                'message_preview' => substr($message, 0, 100)
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Failed to send Telegram notification via NotificationService: " . $e->getMessage());
-        }
-    }
-
-    /**
      * Отправить уведомление о новой заявке
      */
-    function notifyNewTicket(Ticket $ticket)
+    public function notifyNewTicket(Ticket $ticket)
     {
-        // Проверяем, не отправляли ли мы уже уведомление для этой заявки
-        if (
-            \App\Models\SentTelegramNotification::wasNotificationSent(
-                $ticket->id,
-                "new_ticket",
-            )
-        ) {
-            \Illuminate\Support\Facades\Log::info(
-                "Уведомление для заявки #{$ticket->id} уже было отправлено ранее. Пропускаем.",
-            );
-            return;
-        }
-
-        // Используем мьютекс для предотвращения одновременного выполнения
-        $lockKey = "notification_lock_ticket_{$ticket->id}";
-        if (
-            isset($this->notificationLock[$lockKey]) &&
-            $this->notificationLock[$lockKey]
-        ) {
-            \Illuminate\Support\Facades\Log::info(
-                "Уведомление для заявки #{$ticket->id} уже обрабатывается. Пропускаем.",
-            );
-            return;
-        }
-
-        // Устанавливаем блокировку
-        $this->notificationLock[$lockKey] = true;
-
-        try {
-            // В Docker окружении Telegram уведомления обрабатываются через TelegramStandalone
-            // Не отправляем дублирующие уведомления
-            if (!env('LARAVEL_SAIL')) {
-                // Отправка уведомления в Telegram только в обычном окружении
-                $this->getTelegramBotController()->sendNewTicketNotification(
-                    $ticket,
-                );
-            }
-
-            // Регистрируем отправленное уведомление в базе данных
-            \App\Models\SentTelegramNotification::registerSentNotification(
-                $ticket->id,
-                "new_ticket",
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error(
-                "Ошибка отправки уведомления в Telegram: " . $e->getMessage(),
-            );
-        } finally {
-            // Снимаем блокировку в любом случае
-            $this->notificationLock[$lockKey] = false;
-        }
-
+        // Telegram-уведомления о новых заявках обрабатываются отдельно
+        // (TelegramNotificationService). Здесь создаём только внутрисистемные
+        // (in-app) уведомления получателям.
         try {
             // Получаем всех пользователей, которые должны получить уведомление
             $recipients = User::whereHas("role", function ($q) {

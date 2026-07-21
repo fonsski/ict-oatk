@@ -103,11 +103,32 @@ class SettingsController extends Controller
      */
     public function viewDocumentation($docName)
     {
-        $path = base_path("docs/{$docName}.md");
-
-        if (!File::exists($path)) {
+        // Защита от path traversal: допускаем только простое имя файла
+        // (буквы, цифры, дефис, подчёркивание), без слэшей и точек.
+        if (!preg_match('/^[A-Za-z0-9_-]+$/', $docName)) {
             abort(404, "Документация не найдена");
         }
+
+        $docsDir = base_path("docs");
+        $path = $docsDir . DIRECTORY_SEPARATOR . $docName . ".md";
+
+        // Дополнительно убеждаемся, что итоговый путь не вышел за каталог docs.
+        $realPath = realpath($path);
+        $realDocsDir = realpath($docsDir);
+
+        if (
+            $realPath === false ||
+            $realDocsDir === false ||
+            !str_starts_with($realPath, $realDocsDir . DIRECTORY_SEPARATOR)
+        ) {
+            abort(404, "Документация не найдена");
+        }
+
+        if (!File::exists($realPath)) {
+            abort(404, "Документация не найдена");
+        }
+
+        $path = $realPath;
 
         $content = File::get($path);
 

@@ -119,7 +119,7 @@ if (!function_exists("user_can_manage_equipment")) {
      */
     function user_can_manage_equipment()
     {
-        return user_has_role(["admin", "master"]);
+        return user_has_role(["admin", "master", "technician"]);
     }
 }
 
@@ -255,14 +255,6 @@ if (!function_exists("get_priority_badge_class")) {
             "high" => "bg-red-100 text-red-800",
             "urgent" => "bg-red-200 text-red-900",
         ];
-
-        // Для отладки: логируем входящий параметр и возвращаемое значение
-        \Illuminate\Support\Facades\Log::debug("Priority badge requested", [
-            "input_priority" => $priority,
-            "returned_class" => isset($classes[$priority])
-                ? $classes[$priority]
-                : "bg-slate-100 text-slate-800",
-        ]);
 
         return $classes[$priority] ?? "bg-slate-100 text-slate-800";
     }

@@ -33,14 +33,6 @@ class NotificationController extends Controller
         );
         $unreadCount = $this->notificationService->getUnreadCount($user);
 
-        // Добавляем отладочную информацию
-        \Log::debug("Notifications API response", [
-            "user_id" => $user->id,
-            "notifications_count" => $notifications->count(),
-            "unread_count" => $unreadCount,
-            "notifications" => $notifications->toArray(),
-        ]);
-
         return response()->json([
             "notifications" => $notifications,
             "unread_count" => $unreadCount,
@@ -127,21 +119,10 @@ class NotificationController extends Controller
 
         // Если есть timestamp последней проверки, фильтруем новые уведомления
         if ($lastCheck) {
-            \Log::debug("Poll check with timestamp", [
-                "last_check" => $lastCheck,
-                "notifications" => $notifications->toArray(),
-            ]);
-
-            $notifications = $notifications->filter(function (
-                $notification,
-            ) use ($lastCheck) {
-                $result = $notification["created_at"] > $lastCheck;
-                \Log::debug("Notification filter check", [
-                    "notification_date" => $notification["created_at"],
-                    "last_check" => $lastCheck,
-                    "passed_filter" => $result,
-                ]);
-                return $result;
+            $notifications = $notifications->filter(function ($notification) use (
+                $lastCheck
+            ) {
+                return $notification->created_at->toIso8601String() > $lastCheck;
             });
         }
 

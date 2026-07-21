@@ -469,7 +469,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (statusButton && statusDropdown) {
         statusButton.addEventListener('click', function() {
-            statusDropdown.classList.toggle('hidden');
+            const willOpen = statusDropdown.classList.contains('hidden');
+            statusDropdown.classList.toggle('hidden', !willOpen);
+
+            if (!willOpen) {
+                return;
+            }
+
+            // Если снизу не хватает места — раскрываем меню вверх, чтобы оно не
+            // выходило за экран и не удлиняло страницу (лишняя прокрутка).
+            const rect = statusButton.getBoundingClientRect();
+            const menuHeight = statusDropdown.offsetHeight;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < menuHeight + 16 && rect.top > menuHeight + 16) {
+                statusDropdown.style.top = 'auto';
+                statusDropdown.style.bottom = 'calc(100% + 0.5rem)';
+            } else {
+                statusDropdown.style.bottom = 'auto';
+                statusDropdown.style.top = '';
+            }
         });
 
         // Close dropdown when clicking outside
