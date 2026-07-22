@@ -250,6 +250,109 @@ class TicketController extends Controller
         );
     }
 
+    /**
+     * Корзина: заявки, удалённые мягко. Доступна только admin и master.
+     */
+    public function trashed(Request $request)
+    {
+        $this->authorizeTrashAccess();
+
+        $query = Ticket::onlyTrashed()->with([
+            "user:id,name,phone",
+            "assignedTo:id,name",
+            "room:id,number,name",
+        ]);
+
+        if ($request->filled("search")) {
+            $search = $request->get("search");
+            $query->where(function ($q) use ($search) {
+                $q->where("title", "like", "%{$search}%")->orWhere(
+                    "reporter_name",
+                    "like",
+                    "%{$search}%",
+                );
+            });
+        }
+
+        $tickets = $query
+            ->orderByDesc("deleted_at")
+            ->paginate(15)
+            ->withQueryString();
+
+        return view("tickets.trashed", compact("tickets"));
+    }
+
+    /**
+     * Восстановление мягко удалённой заявки.
+     */
+    public function restore(Ticket $ticket)
+    {
+        $this->authorizeTrashAccess();
+
+        if (!$ticket->trashed()) {
+            return Redirect::route("tickets.trashed")->with(
+                "error",
+                "Заявка не находится в корзине",
+            );
+        }
+
+        $ticket->restore();
+
+        TicketComment::create([
+            "ticket_id" => $ticket->id,
+            "user_id" => Auth::id(),
+            "content" => "Заявка восстановлена из корзины",
+            "is_system" => true,
+        ]);
+
+        return Redirect::route("tickets.show", $ticket)->with(
+            "success",
+            "Заявка восстановлена",
+        );
+    }
+
+    /**
+     * Безвозвратное удаление. Только admin.
+     */
+    public function forceDelete(Ticket $ticket)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->role || $user->role->slug !== "admin") {
+            abort(403);
+        }
+
+        if (!$ticket->trashed()) {
+            return Redirect::route("tickets.trashed")->with(
+                "error",
+                "Сначала переместите заявку в корзину",
+            );
+        }
+
+        $ticket->comments()->delete();
+        $ticket->forceDelete();
+
+        return Redirect::route("tickets.trashed")->with(
+            "success",
+            "Заявка удалена безвозвратно",
+        );
+    }
+
+    /**
+     * Доступ к корзине есть только у админов и мастеров: техник может
+     * удалить заявку, но разбирать удалённое — задача управляющих ролей.
+     */
+    private function authorizeTrashAccess(): void
+    {
+        $user = Auth::user();
+        if (
+            !$user ||
+            !$user->role ||
+            !in_array($user->role->slug, ["admin", "master"])
+        ) {
+            abort(403);
+        }
+    }
+
     // Переход в работу
     public function start(Ticket $ticket)
     {

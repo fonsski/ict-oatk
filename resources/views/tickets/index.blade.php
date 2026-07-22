@@ -10,9 +10,16 @@
             <h1 class="text-3xl font-bold text-slate-900 mb-2">Мои заявки</h1>
             <p class="text-slate-600">Управляйте вашими обращениями в службу поддержки</p>
             </div>
-        <a href="{{ route('tickets.create') }}" class="btn-primary mt-4 sm:mt-0">
-                    Новая заявка
-                </a>
+        <div class="flex items-center gap-3 mt-4 sm:mt-0">
+            @if(user_has_role(['admin', 'master']))
+            <a href="{{ route('tickets.trashed') }}" class="btn-secondary">
+                Корзина
+            </a>
+            @endif
+            <a href="{{ route('tickets.create') }}" class="btn-primary">
+                Новая заявка
+            </a>
+        </div>
     </div>
 
     <!-- Stats Cards -->

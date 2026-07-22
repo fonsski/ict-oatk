@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\QueryOptimizer;
 
 class Ticket extends Model
 {
-    use QueryOptimizer;
+    use QueryOptimizer, SoftDeletes;
 
     protected $fillable = [
         "title",

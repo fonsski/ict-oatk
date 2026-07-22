@@ -110,6 +110,27 @@ Route::middleware("auth")->group(function () {
         "assign",
     ])->name("tickets.assign");
 
+    // Корзина заявок. Путь через дефис, чтобы не пересекаться с /tickets/{ticket}.
+    // withTrashed() обязателен: иначе привязка модели не найдёт удалённую заявку.
+    Route::get("/tickets-trashed", [
+        TicketController::class,
+        "trashed",
+    ])->name("tickets.trashed");
+
+    Route::post("/tickets/{ticket}/restore", [
+        TicketController::class,
+        "restore",
+    ])
+        ->withTrashed()
+        ->name("tickets.restore");
+
+    Route::delete("/tickets/{ticket}/force", [
+        TicketController::class,
+        "forceDelete",
+    ])
+        ->withTrashed()
+        ->name("tickets.force-delete");
+
     // Маршруты для всех заявок (только для admin, master, technician)
     Route::middleware([
         "auth",
