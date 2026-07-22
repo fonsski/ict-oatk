@@ -372,14 +372,23 @@ class NotificationService
      */
     public function getNotificationStats(User $user)
     {
-        $notifications = $user->notifications();
+        // Забираем один раз: раньше каждая строка статистики била отдельным
+        // запросом по одному и тому же билдеру, накапливая условия.
+        $notifications = $user->notifications()->get();
         $recentDate = now()->subDays(7);
 
         return [
             "total" => $notifications->count(),
-            "unread" => $user->unreadNotifications()->count(),
-            "by_type" => $notifications->get()->groupBy("type")->map->count(),
-            "recent" => $notifications->where("created_at", ">=", $recentDate)->count(),
+            "unread" => $notifications->whereNull("read_at")->count(),
+            // Группируем по смысловому типу из полезной нагрузки: в колонке
+            // type Laravel хранит класс уведомления, то есть одно и то же
+            // значение для всех записей.
+            "by_type" => $notifications
+                ->groupBy(fn($notification) => $notification->data["type"] ?? "general")
+                ->map->count(),
+            "recent" => $notifications
+                ->where("created_at", ">=", $recentDate)
+                ->count(),
         ];
     }
 }
