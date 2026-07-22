@@ -181,7 +181,9 @@
                         </p>
                     </div>
 
-                    <div>
+                    {{-- Блок показывается только для категории «Оборудование»;
+                         управляется скриптом ниже. --}}
+                    <div id="equipment_block" {{ old('category', 'hardware') !== 'hardware' ? 'hidden' : '' }}>
                         <label for="equipment_id" class="block text-sm font-medium text-gray-700 mb-1">Оборудование</label>
                         <select id="equipment_id" name="equipment_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">Не указано</option>
@@ -282,52 +284,71 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomSelect = document.getElementById('room_id');
     const roomSearch = document.getElementById('room_search');
     const equipmentSelect = document.getElementById('equipment_id');
-    // Поиск по кабинетам и загрузка оборудования происходит независимо от маски телефона
+    const equipmentBlock = document.getElementById('equipment_block');
+    const categorySelect = document.getElementById('category');
 
-    // Улучшенный поиск по кабинетам
-    roomSearch.addEventListener('input', function() {
-        const searchText = this.value.toLowerCase().trim();
-        const options = roomSelect.options;
+    // Полный список кабинетов запоминаем один раз: поиск затем перестраивает
+    // опции списка. Прежняя реализация прятала <option> через display:none —
+    // это не работает в Safari и в нативных списках на мобильных.
+    const allRoomOptions = Array.from(roomSelect.options)
+        .filter(opt => opt.value !== '')
+        .map(opt => ({
+            value: opt.value,
+            label: opt.textContent.replace(/\s+/g, ' ').trim(),
+            haystack: [
+                opt.getAttribute('data-number') || '',
+                opt.getAttribute('data-name') || '',
+                opt.getAttribute('data-building') || '',
+                opt.getAttribute('data-floor') || '',
+            ].join(' ').toLowerCase(),
+            style: opt.getAttribute('style') || '',
+        }));
 
-        // Убедимся, что опция "Не указано" всегда видна
-        options[0].style.display = '';
+    const placeholderLabel = roomSelect.options[0]
+        ? roomSelect.options[0].textContent
+        : 'Не указано';
 
-        // Сохраняем текущий выбор
-        const currentSelectedValue = roomSelect.value;
-        let foundExactMatch = false;
-        let firstMatchIndex = -1;
+    function renderRoomOptions(searchText) {
+        const query = searchText.toLowerCase().trim();
+        const previousValue = roomSelect.value;
 
-        for (let i = 1; i < options.length; i++) {
-            const roomNumber = options[i].getAttribute('data-number') || '';
-            const roomName = options[i].getAttribute('data-name') || '';
-            const building = options[i].getAttribute('data-building') || '';
-            const floor = options[i].getAttribute('data-floor') || '';
+        const matches = query
+            ? allRoomOptions.filter(room => room.haystack.includes(query))
+            : allRoomOptions;
 
-            const optionText = `${roomNumber} ${roomName} ${building} ${floor}`.toLowerCase();
-            const isExactMatch = roomNumber.toLowerCase() === searchText;
+        roomSelect.innerHTML = '';
 
-            if (isExactMatch) {
-                foundExactMatch = true;
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = placeholderLabel;
+        roomSelect.appendChild(placeholder);
+
+        matches.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.value;
+            option.textContent = room.label;
+            if (room.style) {
+                option.setAttribute('style', room.style);
             }
+            roomSelect.appendChild(option);
+        });
 
-            // Проверяем, содержит ли опция текст поиска или пуст ли поиск
-            if (optionText.includes(searchText) || !searchText) {
-                options[i].style.display = '';
-
-                // Запоминаем индекс первого совпадения
-                if (firstMatchIndex === -1 && searchText) {
-                    firstMatchIndex = i;
-                }
-            } else {
-                options[i].style.display = 'none';
-            }
+        // Сохраняем выбор пользователя, если он остался среди совпадений.
+        if (previousValue && matches.some(room => room.value === previousValue)) {
+            roomSelect.value = previousValue;
+        } else if (query && matches.length === 1) {
+            // Единственное совпадение выбираем сразу — ради этого и поиск.
+            roomSelect.value = matches[0].value;
+        } else {
+            roomSelect.value = '';
         }
 
-        // Показать сообщение, если ничего не найдено
-        const visibleOptions = Array.from(options).filter(opt => opt.style.display !== 'none' && opt.value !== '');
-        const noResultsMsg = document.getElementById('no-results-message');
+        if (roomSelect.value !== previousValue) {
+            loadEquipmentByRoom(roomSelect.value);
+        }
 
-        if (visibleOptions.length === 0 && searchText) {
+        const noResultsMsg = document.getElementById('no-results-message');
+        if (matches.length === 0) {
             if (!noResultsMsg) {
                 const message = document.createElement('div');
                 message.id = 'no-results-message';
@@ -338,14 +359,27 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (noResultsMsg) {
             noResultsMsg.remove();
         }
+    }
 
-        // Убрали автоматический выбор кабинета - пользователь должен выбрать вручную
+    roomSearch.addEventListener('input', function() {
+        renderRoomOptions(this.value);
     });
 
-    // Слушаем изменения в выборе кабинета напрямую
-    roomSelect.addEventListener('change', function() {
-        loadEquipmentByRoom(this.value);
-    });
+    // Оборудование имеет смысл только для заявок про оборудование.
+    function syncEquipmentVisibility() {
+        const isHardware = categorySelect.value === 'hardware';
+        equipmentBlock.hidden = !isHardware;
+
+        // Сбрасываем выбор, чтобы скрытое поле не уехало на сервер.
+        if (!isHardware) {
+            equipmentSelect.value = '';
+        } else if (roomSelect.value) {
+            loadEquipmentByRoom(roomSelect.value);
+        }
+    }
+
+    categorySelect.addEventListener('change', syncEquipmentVisibility);
+    syncEquipmentVisibility();
 
     // Функция для загрузки оборудования по ID кабинета
     function loadEquipmentByRoom(roomId) {
@@ -392,10 +426,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loadEquipmentByRoom(this.value);
     });
 
-    // Загружаем оборудование при загрузке страницы, если кабинет уже выбран
-    if (roomSelect.value) {
-        loadEquipmentByRoom(roomSelect.value);
-    }
+    // Начальная загрузка выполняется в syncEquipmentVisibility() выше:
+    // она уже учитывает выбранную категорию.
 });
 </script>
 @endpush

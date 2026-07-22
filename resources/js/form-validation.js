@@ -1,8 +1,17 @@
 ﻿
 
 class FormValidator {
-    constructor(formSelector, options = {}) {
-        this.form = document.querySelector(formSelector);
+    /**
+     * @param {string|HTMLFormElement} formTarget CSS-селектор или сам элемент формы.
+     *   Элемент предпочтительнее: у формы может не быть id, и тогда
+     *   собранный из него селектор оказывается невалидным.
+     */
+    constructor(formTarget, options = {}) {
+        this.formSelector = typeof formTarget === 'string' ? formTarget : null;
+        this.form =
+            typeof formTarget === 'string'
+                ? document.querySelector(formTarget)
+                : formTarget;
         this.options = {
             showErrorsInline: true,
             validateOnBlur: true,
@@ -334,7 +343,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Инициализируем валидацию для всех форм с классом 'needs-validation'
     const forms = document.querySelectorAll('form.needs-validation');
     forms.forEach(form => {
-        new FormValidator(`#${form.id}`, {
+        // Передаём элемент, а не `#${form.id}`: у форм без id селектор
+        // получался равным '#', и querySelector бросал SyntaxError,
+        // из-за чего валидация не инициализировалась на всей странице.
+        new FormValidator(form, {
             validateOnBlur: true,
             validateOnInput: true,
             showErrorsInline: true
