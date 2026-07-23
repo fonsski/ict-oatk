@@ -47,9 +47,7 @@ class NotificationService
      */
     public function notifyNewTicket(Ticket $ticket)
     {
-        // Telegram-уведомления о новых заявках обрабатываются отдельно
-        // (TelegramNotificationService). Здесь создаём только внутрисистемные
-        // (in-app) уведомления получателям.
+        // Создаём внутрисистемные (in-app) уведомления получателям.
         try {
             // Получаем всех пользователей, которые должны получить уведомление
             $recipients = User::whereHas("role", function ($q) {

@@ -158,19 +158,4 @@ test.describe('Настройки уведомлений', () => {
     
     await expect(page.locator('text=Настройки сохранены')).toBeVisible();
   });
-
-  test('Настройка уведомлений по Telegram', async ({ page }) => {
-    await loginAs(page, 'user');
-    
-    // Переходим в настройки профиля
-    await page.click('[data-testid="user-menu"]');
-    await page.click('a[href*="/profile"]');
-    
-    // Включаем уведомления по Telegram
-    await page.check('input[name="telegram_notifications"]');
-    await page.fill('input[name="telegram_id"]', '123456789');
-    await page.click('button[type="submit"]');
-    
-    await expect(page.locator('text=Настройки сохранены')).toBeVisible();
-  });
 });

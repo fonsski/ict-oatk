@@ -24,35 +24,6 @@ services:
         depends_on:
             - mysql
 
-    telegram-bot:
-        image: "sail-8.4/app"
-        restart: unless-stopped
-        environment:
-            WWWUSER: "${WWWUSER}"
-            LARAVEL_SAIL: 1
-            CONTAINER_ROLE: "telegram-bot"
-            TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
-        volumes:
-            - ".:/var/www/html"
-            - "telegram-bot-data:/var/www/html/storage/telegram"
-        networks:
-            - sail
-        depends_on:
-            - laravel.test
-            - mysql
-        healthcheck:
-            test: ["CMD", "php", "artisan", "telegram:bot", "--mode=polling"]
-            interval: 60s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
-        command: php artisan telegram:simple
-        logging:
-            driver: "json-file"
-            options:
-                max-size: "10m"
-                max-file: "3"
-
     websocket-server:
         image: "sail-8.4/app"
         restart: unless-stopped
@@ -114,6 +85,4 @@ networks:
         driver: bridge
 volumes:
     sail-mysql:
-        driver: local
-    telegram-bot-data:
         driver: local

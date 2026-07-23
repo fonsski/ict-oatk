@@ -7,50 +7,30 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * Регрессия: routes/api.php когда-то не подключался в bootstrap/app.php,
- * из-за чего вебхук Telegram отвечал 404, а весь бот был недоступен.
+ * Регрессия: routes/api.php когда-то не подключался в bootstrap/app.php.
+ * Проверяем, что API-маршруты регистрируются и ни один маршрут не заведён
+ * дважды (ловушка с RouteServiceProvider).
  */
 class ApiRouteRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_telegram_webhook_route_is_registered(): void
+    public function test_api_routes_are_loaded(): void
     {
+        // Маршрут из routes/api.php — признак того, что файл подключён.
         $this->assertNotNull(
-            Route::getRoutes()->getByAction(
-                'App\Http\Controllers\TelegramController@webhook',
-            ),
-            'Маршрут вебхука Telegram не зарегистрирован — проверьте, что '
-                . 'routes/api.php подключён в withRouting() в bootstrap/app.php',
+            Route::getRoutes()->getByName('sanctum.csrf-cookie')
+                ?: collect(Route::getRoutes()->getRoutes())->first(
+                    fn ($route) => $route->uri() === 'api/user',
+                ),
+            'API-маршруты не зарегистрированы — проверьте, что routes/api.php '
+                . 'подключён в withRouting() в bootstrap/app.php',
         );
     }
 
-    public function test_telegram_webhook_accepts_updates(): void
+    public function test_api_user_route_requires_authentication(): void
     {
-        $response = $this->postJson('/api/telegram/webhook', [
-            'update_id' => 1,
-            'message' => [
-                'message_id' => 10,
-                'chat' => ['id' => 12345],
-                'text' => '/start',
-            ],
-        ]);
-
-        $response->assertOk()->assertJson(['status' => 'ok']);
-    }
-
-    public function test_telegram_webhook_ignores_payload_without_message(): void
-    {
-        $this->postJson('/api/telegram/webhook', ['update_id' => 2])
-            ->assertOk()
-            ->assertJson(['status' => 'ok']);
-    }
-
-    public function test_telegram_test_endpoint_responds(): void
-    {
-        $this->getJson('/api/telegram/test')
-            ->assertOk()
-            ->assertJson(['status' => 'ok']);
+        $this->getJson('/api/user')->assertUnauthorized();
     }
 
     public function test_web_routes_are_not_registered_twice(): void
