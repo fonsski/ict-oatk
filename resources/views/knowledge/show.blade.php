@@ -141,6 +141,27 @@
                     {!! $article->content !!}
                 </div>
 
+                <!-- Вложения -->
+                @if($article->attachments->count())
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Вложения</h3>
+                    <ul class="space-y-2">
+                        @foreach($article->attachments as $attachment)
+                        <li class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                            </svg>
+                            <a href="{{ route('knowledge.attachments.download', ['knowledge' => $article, 'attachment' => $attachment]) }}"
+                               class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                {{ $attachment->original_name }}
+                            </a>
+                            <span class="text-xs text-gray-400">{{ $attachment->human_size }}</span>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
                 <!-- Article Footer -->
                 <!-- Tags Section -->
                 @if($article->tags)

@@ -45,6 +45,11 @@ class KnowledgeBase extends Model
         return $this->hasMany(KnowledgeImage::class);
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(KnowledgeAttachment::class);
+    }
+
     public function author()
     {
         return $this->belongsTo(User::class, "author_id");

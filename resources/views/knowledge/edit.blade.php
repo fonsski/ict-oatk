@@ -219,6 +219,46 @@
                 </div>
             </form>
         </div>
+
+        <!-- Вложения (отдельно от формы статьи) -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 mt-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Вложения</h2>
+
+            @if($article->attachments->count())
+            <ul class="divide-y divide-gray-200 mb-6">
+                @foreach($article->attachments as $attachment)
+                <li class="flex items-center justify-between py-3">
+                    <div class="min-w-0">
+                        <a href="{{ route('knowledge.attachments.download', ['knowledge' => $article, 'attachment' => $attachment]) }}"
+                           class="text-sm font-medium text-blue-600 hover:text-blue-800 truncate block">
+                            {{ $attachment->original_name }}
+                        </a>
+                        <span class="text-xs text-gray-400">{{ $attachment->human_size }}</span>
+                    </div>
+                    <form action="{{ route('knowledge.attachments.destroy', ['knowledge' => $article, 'attachment' => $attachment]) }}" method="POST"
+                          onsubmit="return confirm('Удалить вложение «{{ $attachment->original_name }}»?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-800">Удалить</button>
+                    </form>
+                </li>
+                @endforeach
+            </ul>
+            @else
+            <p class="text-sm text-gray-500 mb-6">Файлов пока нет</p>
+            @endif
+
+            <form action="{{ route('knowledge.attachments.store', $article) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
+                @csrf
+                <input type="file" name="file" required
+                       class="text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <button type="submit" class="btn-primary py-2 text-sm">Прикрепить файл</button>
+            </form>
+            <p class="mt-2 text-xs text-gray-500">До 10 МБ. Допустимо: pdf, doc(x), xls(x), ppt(x), txt, csv, zip, изображения.</p>
+            @error('file')
+            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
     </div>
 </div>
 @endsection

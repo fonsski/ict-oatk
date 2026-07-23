@@ -493,6 +493,21 @@ Route::middleware("auth")->group(function () {
         "uploadImage",
     ])->name("knowledge.upload-image");
 
+    // Вложения статей. Скачивание — через контролируемый маршрут
+    // (файлы лежат на приватном диске).
+    Route::post("/knowledge/{knowledge}/attachments", [
+        KnowledgeBaseController::class,
+        "storeAttachment",
+    ])->name("knowledge.attachments.store");
+    Route::get("/knowledge/{knowledge}/attachments/{attachment}/download", [
+        KnowledgeBaseController::class,
+        "downloadAttachment",
+    ])->name("knowledge.attachments.download");
+    Route::delete("/knowledge/{knowledge}/attachments/{attachment}", [
+        KnowledgeBaseController::class,
+        "destroyAttachment",
+    ])->name("knowledge.attachments.destroy");
+
     // API Routes for notifications
     Route::prefix("api/notifications")->group(function () {
         Route::get("/", [NotificationController::class, "index"])->name(

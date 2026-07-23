@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Models\KnowledgeAttachment;
 // Parsedown optional; if not installed we'll fallback to simple rendering
 use Parsedown;
 use HTMLPurifier;
@@ -237,7 +239,7 @@ class KnowledgeBaseController extends Controller
             ->take(4)
             ->get();
 
-        $article->load("images");
+        $article->load("images", "attachments");
 
         // If content is empty (for records created outside controller), render markdown and sanitize
         if (empty($article->content) && !empty($article->markdown)) {
@@ -282,6 +284,7 @@ class KnowledgeBaseController extends Controller
     public function edit(KnowledgeBase $knowledge)
     {
         $categories = KnowledgeCategory::active()->ordered()->get();
+        $knowledge->load("attachments");
         return view("knowledge.edit", [
             "article" => $knowledge,
             "categories" => $categories,
@@ -418,10 +421,14 @@ class KnowledgeBaseController extends Controller
 
         // Удаляем связанные файлы изображений с диска и записи о них.
         foreach ($knowledge->images as $image) {
-            \Illuminate\Support\Facades\Storage::disk("public")->delete(
-                $image->path,
-            );
+            Storage::disk("public")->delete($image->path);
             $image->delete();
+        }
+
+        // Файлы вложений лежат на приватном диске.
+        foreach ($knowledge->attachments as $attachment) {
+            Storage::disk("local")->delete($attachment->path);
+            $attachment->delete();
         }
 
         $knowledge->forceDelete();
@@ -429,6 +436,74 @@ class KnowledgeBaseController extends Controller
         return redirect()
             ->route("knowledge.trashed")
             ->with("success", "Статья удалена безвозвратно");
+    }
+
+    /**
+     * Загрузить вложение к статье.
+     */
+    public function storeAttachment(Request $request, KnowledgeBase $knowledge)
+    {
+        $request->validate([
+            "file" => [
+                "required",
+                "file",
+                "max:10240", // до 10 МБ
+                "mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,png,jpg,jpeg,gif",
+            ],
+        ]);
+
+        $file = $request->file("file");
+
+        // Приватный диск: вложения доступны только через контролируемый
+        // маршрут скачивания, а не по прямой ссылке.
+        $path = $file->store("knowledge/attachments/{$knowledge->id}", "local");
+
+        $knowledge->attachments()->create([
+            "path" => $path,
+            "original_name" => $file->getClientOriginalName(),
+            "mime_type" => $file->getClientMimeType(),
+            "size" => $file->getSize(),
+        ]);
+
+        return back()->with("success", "Файл прикреплён");
+    }
+
+    /**
+     * Скачать вложение (с проверкой принадлежности статье).
+     */
+    public function downloadAttachment(
+        KnowledgeBase $knowledge,
+        KnowledgeAttachment $attachment,
+    ) {
+        if ($attachment->knowledge_base_id !== $knowledge->id) {
+            abort(404);
+        }
+
+        if (!Storage::disk("local")->exists($attachment->path)) {
+            abort(404);
+        }
+
+        return Storage::disk("local")->download(
+            $attachment->path,
+            $attachment->original_name,
+        );
+    }
+
+    /**
+     * Удалить вложение.
+     */
+    public function destroyAttachment(
+        KnowledgeBase $knowledge,
+        KnowledgeAttachment $attachment,
+    ) {
+        if ($attachment->knowledge_base_id !== $knowledge->id) {
+            abort(404);
+        }
+
+        Storage::disk("local")->delete($attachment->path);
+        $attachment->delete();
+
+        return back()->with("success", "Вложение удалено");
     }
 
     /**
