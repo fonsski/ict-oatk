@@ -77,7 +77,7 @@ class KnowledgeBaseTest extends TestCase
         $needleInB = $this->article($catB, [
             'title' => 'Замена картриджа',
             'slug' => 'kartridzh-b',
-            'content' => '<p>уникальноеслово в контенте</p>',
+            'markdown' => 'уникальноеслово в тексте статьи',
         ]);
 
         // Ищем слово, которое есть только в статье категории Б,
@@ -90,6 +90,68 @@ class KnowledgeBaseTest extends TestCase
         );
 
         $response->assertOk()->assertDontSee('Замена картриджа', false);
+    }
+
+    public function test_multi_term_search_requires_all_terms(): void
+    {
+        // Регистр слов совпадает со статьёй: SQLite (в тестах) сравнивает
+        // LIKE по кириллице с учётом регистра; в бою на MySQL поиск
+        // регистронезависим.
+        $cat = $this->category();
+
+        $this->article($cat, [
+            'title' => 'настройка принтера в кабинете',
+            'slug' => 'a-1', 'markdown' => 'подключение принтера по сети',
+        ]);
+        $this->article($cat, [
+            'title' => 'настройка проектора',
+            'slug' => 'a-2', 'markdown' => 'калибровка проектора',
+        ]);
+
+        // Оба слова есть только у первой статьи.
+        $this->actingAs($this->staff())
+            ->get(route('knowledge.index', ['search' => 'настройка принтер']))
+            ->assertOk()
+            ->assertSee('настройка принтера в кабинете', false)
+            ->assertDontSee('настройка проектора', false);
+    }
+
+    public function test_search_matches_tags_and_body(): void
+    {
+        $cat = $this->category();
+        $this->article($cat, [
+            'title' => 'Общая статья', 'slug' => 'tag-1',
+            'tags' => 'vpn, доступ', 'markdown' => 'нейтральный текст',
+        ]);
+
+        $this->actingAs($this->staff())
+            ->get(route('knowledge.index', ['search' => 'vpn']))
+            ->assertOk()
+            ->assertSee('Общая статья', false);
+    }
+
+    public function test_search_ranks_title_matches_first(): void
+    {
+        $cat = $this->category();
+        $this->article($cat, [
+            'title' => 'второстепенная', 'slug' => 'rank-body',
+            'markdown' => 'здесь встречается маршрутизатор в тексте',
+        ]);
+        $this->article($cat, [
+            'title' => 'маршрутизатор настройка', 'slug' => 'rank-title',
+            'markdown' => 'нейтральный текст без ключа',
+        ]);
+
+        $content = $this->actingAs($this->staff())
+            ->get(route('knowledge.index', ['search' => 'маршрутизатор']))
+            ->assertOk()
+            ->getContent();
+
+        // Статья с ключевым словом в заголовке идёт раньше.
+        $this->assertLessThan(
+            strpos($content, 'второстепенная'),
+            strpos($content, 'маршрутизатор настройка'),
+        );
     }
 
     public function test_viewing_article_increments_view_count(): void

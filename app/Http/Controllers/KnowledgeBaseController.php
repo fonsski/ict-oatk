@@ -50,19 +50,46 @@ class KnowledgeBaseController extends Controller
             $query->where("category_id", $request->get("category"));
         }
 
-        // Если есть параметр поиска. Условия title/content группируем,
-        // иначе orWhere ломает фильтр по категории (category = X AND title
-        // OR content → возвращает статьи из других категорий).
+        // Полнотекстовый поиск по нескольким полям. Запрос разбивается на
+        // слова: каждое слово должно встретиться хотя бы в одном из полей
+        // (title / excerpt / markdown / tags), а результаты ранжируются —
+        // совпадения в заголовке и тегах идут выше. Реализация портируемая
+        // (SQLite в разработке, MySQL в бою), без внешнего поискового движка.
+        $searching = false;
         if ($request->filled("search")) {
-            $searchQuery = $request->get("search");
-            $query->where(function ($q) use ($searchQuery) {
-                $q->where("title", "like", "%{$searchQuery}%")
-                    ->orWhere("content", "like", "%{$searchQuery}%")
-                    ->orWhere("tags", "like", "%{$searchQuery}%");
+            $searching = true;
+            $terms = array_filter(
+                preg_split('/\s+/', trim($request->get("search"))),
+            );
+
+            $query->where(function ($outer) use ($terms) {
+                foreach ($terms as $term) {
+                    $like = "%{$term}%";
+                    $outer->where(function ($q) use ($like) {
+                        $q->where("title", "like", $like)
+                            ->orWhere("excerpt", "like", $like)
+                            ->orWhere("markdown", "like", $like)
+                            ->orWhere("tags", "like", $like);
+                    });
+                }
             });
+
+            // Ранжирование: заголовок > теги > краткое описание > текст.
+            $full = "%" . trim($request->get("search")) . "%";
+            $query->orderByRaw(
+                "CASE
+                    WHEN title LIKE ? THEN 0
+                    WHEN tags LIKE ? THEN 1
+                    WHEN excerpt LIKE ? THEN 2
+                    ELSE 3
+                END",
+                [$full, $full, $full],
+            );
         }
 
-        $articles = $query->latest()->paginate(10);
+        $articles = ($searching ? $query->orderByDesc("created_at") : $query->latest())
+            ->paginate(10)
+            ->withQueryString();
         $categories = KnowledgeCategory::active()->ordered()->get();
 
         // Число собственных черновиков — для бейджа на ссылке «Мои черновики».

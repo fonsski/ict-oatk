@@ -66,7 +66,7 @@
                         <input type="text"
                             name="search"
                             value="{{ request('search') }}"
-                            placeholder="Поиск по статьям..."
+                            placeholder="Поиск по заголовку, тексту и тегам..."
                             maxlength="100"
                             class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     </div>
