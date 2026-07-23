@@ -120,13 +120,19 @@ class FormValidator {
     validateField(field) {
         const fieldName = field.name;
         const value = field.value.trim();
-        
+
         // Очищаем предыдущие ошибки для поля
         this.clearFieldError(field);
-        
+
+        // Пустое необязательное поле считается валидным: правила формата
+        // (email, phone) не должны срабатывать на пустом значении.
+        if (value === '' && !field.hasAttribute('required')) {
+            return true;
+        }
+
         // Получаем правила валидации для поля
         const rules = this.getFieldRules(field);
-        
+
         // Проверяем каждое правило
         for (const rule of rules) {
             const error = this.validateRule(value, rule, field);
@@ -220,20 +226,27 @@ class FormValidator {
                 }
                 break;
                 
+            // Кастомные правила возвращают строку с ошибкой либо true при
+            // успехе. Приводим true к null, иначе успешная проверка была бы
+            // истолкована вызывающим кодом как ошибка с текстом «true».
             case 'email':
-                return this.options.customRules.email(value);
-                
+                return this.normalizeResult(this.options.customRules.email(value));
+
             case 'password':
-                return this.options.customRules.password(value);
-                
+                return this.normalizeResult(this.options.customRules.password(value));
+
             case 'password_confirmation':
-                return this.options.customRules.password_confirmation(value);
-                
+                return this.normalizeResult(this.options.customRules.password_confirmation(value));
+
             case 'phone':
-                return this.options.customRules.phone(value);
+                return this.normalizeResult(this.options.customRules.phone(value));
         }
-        
+
         return null;
+    }
+
+    normalizeResult(result) {
+        return result === true ? null : result;
     }
     
     setFieldError(field, message) {

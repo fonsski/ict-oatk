@@ -53,6 +53,54 @@
                 </div>
                 @endif
 
+                {{-- Данные заявителя: гость представляется сам, у вошедшего
+                     сотрудника ФИО и телефон берутся из аккаунта. --}}
+                @guest
+                <div class="space-y-4 border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900">Ваши данные</h3>
+                    <div>
+                        <label for="reporter_name" class="block text-sm font-medium text-gray-700 mb-1">
+                            ФИО <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text"
+                            id="reporter_name"
+                            name="reporter_name"
+                            value="{{ old('reporter_name') }}"
+                            required
+                            minlength="2"
+                            maxlength="255"
+                            placeholder="Иванов Иван Иванович"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="reporter_phone" class="block text-sm font-medium text-gray-700 mb-1">
+                            Телефон <span class="text-red-500">*</span>
+                        </label>
+                        <input type="tel"
+                            id="reporter_phone"
+                            name="reporter_phone"
+                            value="{{ old('reporter_phone') }}"
+                            required
+                            placeholder="+7 (999) 123-45-67"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-sm text-gray-500">По этому номеру с вами свяжутся специалисты</p>
+                    </div>
+                    <div>
+                        <label for="reporter_email" class="block text-sm font-medium text-gray-700 mb-1">
+                            Электронная почта
+                        </label>
+                        <input type="email"
+                            id="reporter_email"
+                            name="reporter_email"
+                            value="{{ old('reporter_email') }}"
+                            maxlength="255"
+                            placeholder="you@example.com"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-sm text-gray-500">Необязательно</p>
+                    </div>
+                </div>
+                @endguest
+
                 <!-- Заголовок заявки -->
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-1">

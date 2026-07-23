@@ -24,11 +24,6 @@ class RoleSeeder extends Seeder
                 'name' => 'Техник',
                 'slug' => 'technician',
                 'description' => 'Работа с заявками'
-            ],
-            [
-                'name' => 'Пользователь',
-                'slug' => 'user',
-                'description' => 'Базовый доступ'
             ]
         ];
 

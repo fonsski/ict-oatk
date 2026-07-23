@@ -4,6 +4,14 @@
 
 @section('content')
 <div class="space-y-16">
+    @if(session('success'))
+    <div class="max-w-6xl mx-auto px-6 pt-6">
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-md" role="alert">
+            <p class="text-sm text-green-700">{{ session('success') }}</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-hidden">
         <div class="absolute inset-0 bg-black/10"></div>
@@ -18,13 +26,13 @@
 
                 @guest
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="{{ route('login') }}"
+                    <a href="{{ route('tickets.create') }}"
                         class="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-semibold rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                        Войти в систему
+                        Подать заявку
                     </a>
-                    <a href="{{ route('register') }}"
+                    <a href="{{ route('login') }}"
                         class="inline-flex items-center justify-center px-8 py-4 border border-white text-white font-semibold rounded-lg hover:bg-white hover:text-slate-900 transition-colors duration-200">
-                        Зарегистрироваться
+                        Войти в систему
                     </a>
                 </div>
                 @endguest
@@ -1110,12 +1118,12 @@
         <div class="bg-slate-900 rounded-2xl p-8 text-center text-white">
             <h2 class="text-3xl font-bold mb-4">Готовы начать?</h2>
             <p class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-                Присоединяйтесь к нашей системе технической поддержки и получите быструю помощь
+                Опишите проблему — и наши специалисты помогут её решить. Регистрация не требуется.
             </p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="{{ route('register') }}"
+                <a href="{{ route('tickets.create') }}"
                     class="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-semibold rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                    Создать аккаунт
+                    Подать заявку
                 </a>
                 <a href="{{ route('login') }}"
                     class="inline-flex items-center justify-center px-8 py-4 border border-white text-white font-semibold rounded-lg hover:bg-white hover:text-slate-900 transition-colors duration-200">

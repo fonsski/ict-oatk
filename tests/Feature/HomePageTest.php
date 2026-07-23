@@ -46,18 +46,6 @@ class HomePageTest extends TestCase
             ->assertDontSee('Скрытый вопрос', false);
     }
 
-    public function test_regular_user_sees_faq_entries(): void
-    {
-        $this->seedFaqs();
-
-        $user = User::factory()->withRole('user')->create();
-
-        $this->actingAs($user)
-            ->get('/')
-            ->assertOk()
-            ->assertSee('Как подать заявку?', false);
-    }
-
     public function test_staff_sees_faq_entries(): void
     {
         $this->seedFaqs();
@@ -83,9 +71,14 @@ class HomePageTest extends TestCase
         $this->get(route('privacy'))->assertOk();
     }
 
-    public function test_login_and_register_pages_are_available_to_guests(): void
+    public function test_login_page_is_available_to_guests(): void
     {
         $this->get(route('login'))->assertOk();
-        $this->get(route('register'))->assertOk();
+    }
+
+    public function test_registration_route_no_longer_exists(): void
+    {
+        // Саморегистрация удалена: аккаунты заводит только администратор.
+        $this->assertFalse(app('router')->has('register'));
     }
 }

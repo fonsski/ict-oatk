@@ -12,9 +12,8 @@ use Illuminate\Support\Facades\Hash;
  * (кроме админа — он создаётся в AdminUserSeeder) для ручного тестирования.
  *
  * Учётные данные для входа (вход выполняется по номеру телефона):
- *   Мастер:       +79000000002 / password
- *   Техник:       +79000000003 / password
- *   Пользователь: +79000000004 / password
+ *   Мастер: +79000000002 / password
+ *   Техник: +79000000003 / password
  */
 class SampleUsersSeeder extends Seeder
 {
@@ -32,12 +31,6 @@ class SampleUsersSeeder extends Seeder
                 'phone' => '+79000000003',
                 'email' => 'technician@example.com',
                 'role' => 'technician',
-            ],
-            [
-                'name' => 'Пользователь Тестовый',
-                'phone' => '+79000000004',
-                'email' => 'user@example.com',
-                'role' => 'user',
             ],
         ];
 

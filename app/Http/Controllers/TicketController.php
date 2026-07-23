@@ -77,17 +77,14 @@ class TicketController extends Controller
         if ($user && $user->role) {
             if (in_array($user->role->slug, ["admin", "master"])) {
                 // Администраторы и мастера видят все заявки
-            } elseif ($user->role->slug === "technician") {
-                // Технические специалисты видят свои заявки и назначенные на них
+            } else {
+                // Техник видит созданные им и назначенные на него заявки
                 $query->where(function ($q) use ($user) {
                     $q->where("user_id", $user->id)->orWhere(
                         "assigned_to_id",
                         $user->id,
                     );
                 });
-            } else {
-                // Обычные пользователи видят только свои заявки
-                $query->where("user_id", $user->id);
             }
         }
 
@@ -133,15 +130,18 @@ class TicketController extends Controller
     {
         $data = $request->validated();
 
-        // Всегда используем данные авторизованного пользователя
         $user = Auth::user();
         if ($user) {
-            // Всегда используем данные авторизованного пользователя независимо от ввода
+            // Сотрудник: данные заявителя берём из его аккаунта, ввод игнорируем.
             $data["reporter_name"] = $user->name;
             $data["reporter_phone"] = $user->phone;
+            $data["user_id"] = $user->id;
+        } else {
+            // Гость представился сам; телефон храним в нормализованном виде.
+            $data["reporter_phone"] = clean_phone($data["reporter_phone"] ?? null);
+            $data["user_id"] = null;
         }
 
-        $data["user_id"] = $user ? $user->id : null;
         $ticket = Ticket::create($data);
 
         // Отправляем событие о создании заявки
@@ -149,6 +149,15 @@ class TicketController extends Controller
 
         // Отправляем уведомление о новой заявке
         $this->notificationService->notifyNewTicket($ticket);
+
+        // Гость не имеет доступа к странице заявки, поэтому возвращаем его
+        // на главную с подтверждением.
+        if (!$user) {
+            return Redirect::route("home")->with(
+                "success",
+                "Заявка отправлена! Наши специалисты свяжутся с вами.",
+            );
+        }
 
         return Redirect::route("tickets.show", $ticket)->with(
             "success",
@@ -606,19 +615,13 @@ class TicketController extends Controller
      */
     private function canView(Ticket $ticket): bool
     {
+        // Аккаунты есть только у персонала, поэтому просмотр заявок доступен
+        // любому вошедшему сотруднику.
         $user = Auth::user();
-        if (!$user) {
-            return false;
-        }
 
-        // Персонал (админ/мастер/техник) может просматривать любые заявки
-        if ($user->role && in_array($user->role->slug, ["admin", "master", "technician"])) {
-            return true;
-        }
-
-        // Обычный пользователь — только свои заявки
-        return ($ticket->user_id && $ticket->user_id === $user->id) ||
-               ($ticket->reporter_id && $ticket->reporter_id === $user->id);
+        return $user &&
+            $user->role &&
+            in_array($user->role->slug, ["admin", "master", "technician"]);
     }
 
     /**
@@ -635,15 +638,11 @@ class TicketController extends Controller
         if ($user->role && in_array($user->role->slug, ["admin", "master"])) {
             return true;
         }
-        
+
         // Техник может управлять заявками, которые не закрыты
-        if ($user->role && $user->role->slug === "technician" && $ticket->status !== "closed") {
-            return true;
-        }
-        
-        // Обычный пользователь — только свои заявки (проверяем и user_id и reporter_id)
-        return ($ticket->user_id && $ticket->user_id === $user->id) || 
-               ($ticket->reporter_id && $ticket->reporter_id === $user->id);
+        return $user->role &&
+            $user->role->slug === "technician" &&
+            $ticket->status !== "closed";
     }
 
     /**

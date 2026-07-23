@@ -41,7 +41,7 @@ class NotificationApiTest extends TestCase
 
     public function test_user_receives_own_notifications(): void
     {
-        $user = User::factory()->withRole('user')->create();
+        $user = User::factory()->withRole('technician')->create();
         $this->notify($user, 'new_ticket', 'Новая заявка');
 
         $this->actingAs($user)
@@ -53,8 +53,8 @@ class NotificationApiTest extends TestCase
 
     public function test_notifications_are_not_leaked_between_users(): void
     {
-        $owner = User::factory()->withRole('user')->create();
-        $other = User::factory()->withRole('user')->create();
+        $owner = User::factory()->withRole('technician')->create();
+        $other = User::factory()->withRole('technician')->create();
 
         $this->notify($owner, 'new_ticket', 'Личное уведомление');
 
@@ -67,7 +67,7 @@ class NotificationApiTest extends TestCase
 
     public function test_semantic_type_is_persisted_in_payload(): void
     {
-        $user = User::factory()->withRole('user')->create();
+        $user = User::factory()->withRole('technician')->create();
         $this->notify($user, 'ticket_assigned', 'Назначена заявка');
 
         $this->assertSame(
@@ -78,7 +78,7 @@ class NotificationApiTest extends TestCase
 
     public function test_stats_group_by_semantic_type(): void
     {
-        $user = User::factory()->withRole('user')->create();
+        $user = User::factory()->withRole('technician')->create();
 
         $this->notify($user, 'new_ticket', 'Заявка 1');
         $this->notify($user, 'new_ticket', 'Заявка 2');
@@ -95,7 +95,7 @@ class NotificationApiTest extends TestCase
 
     public function test_unread_count_endpoint(): void
     {
-        $user = User::factory()->withRole('user')->create();
+        $user = User::factory()->withRole('technician')->create();
         $this->notify($user, 'new_ticket', 'Новая заявка');
 
         $this->actingAs($user)
@@ -106,7 +106,7 @@ class NotificationApiTest extends TestCase
 
     public function test_marking_all_as_read_clears_unread_count(): void
     {
-        $user = User::factory()->withRole('user')->create();
+        $user = User::factory()->withRole('technician')->create();
         $this->notify($user, 'new_ticket', 'Заявка 1');
         $this->notify($user, 'new_ticket', 'Заявка 2');
 
@@ -120,7 +120,7 @@ class NotificationApiTest extends TestCase
 
     public function test_marking_single_notification_as_read(): void
     {
-        $user = User::factory()->withRole('user')->create();
+        $user = User::factory()->withRole('technician')->create();
         $this->notify($user, 'new_ticket', 'Заявка 1');
         $this->notify($user, 'new_ticket', 'Заявка 2');
 

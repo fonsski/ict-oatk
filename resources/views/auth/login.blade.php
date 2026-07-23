@@ -121,12 +121,12 @@
                     </div>
                 </div>
 
-                <!-- Register Link -->
+                <!-- Подать заявку без входа -->
                 <div class="text-center">
                     <p class="text-sm text-gray-600">
-                        Нет учетной записи?
-                        <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
-                            Зарегистрироваться
+                        Нужна помощь?
+                        <a href="{{ route('tickets.create') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                            Подать заявку без входа
                         </a>
                     </p>
                 </div>

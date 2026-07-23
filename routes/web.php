@@ -13,7 +13,6 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HomepageFAQController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ActivationController;
 use App\Http\Controllers\PageController;
@@ -26,11 +25,6 @@ Route::middleware("guest")->group(function () {
         "login",
     );
     Route::post("login", [LoginController::class, "login"]);
-    Route::get("register", [
-        RegisterController::class,
-        "showRegistrationForm",
-    ])->name("register");
-    Route::post("register", [RegisterController::class, "register"]);
 
     // Маршруты для сброса пароля
     Route::get("password/reset", [
@@ -82,12 +76,24 @@ Route::get("/home/technician/tickets", [
     ->name("home.technician.tickets")
     ->middleware("auth");
 
-// Общедоступные маршруты (index/show will be registered after protected routes to avoid route collisions)
+// Публичная подача заявки — доступна без входа в систему.
+// Регистрируется до защищённого ресурса, чтобы /tickets/create не
+// перехватывался маршрутом /tickets/{ticket}. Throttle защищает от спама:
+// не более 5 обращений в минуту с одного IP (WAF в проекте отключён).
+Route::get("/tickets/create", [TicketController::class, "create"])->name(
+    "tickets.create",
+);
+Route::post("/tickets", [TicketController::class, "store"])
+    ->middleware("throttle:5,1")
+    ->name("tickets.store");
 
 // Защищенные маршруты
 Route::middleware("auth")->group(function () {
-    // Маршруты для всех авторизованных пользователей
-    Route::resource("/tickets", TicketController::class);
+    // Создание заявки объявлено публично выше.
+    Route::resource("/tickets", TicketController::class)->except([
+        "create",
+        "store",
+    ]);
     // Дополнительные действия для заявок
     Route::post("/tickets/{ticket}/start", [
         TicketController::class,

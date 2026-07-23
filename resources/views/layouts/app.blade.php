@@ -189,10 +189,10 @@
                                 Войти
                             </a>
 
-                            <!-- Регистрация -->
-                            <a href="{{ route('register') }}"
+                            <!-- Подать заявку -->
+                            <a href="{{ route('tickets.create') }}"
                                 class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                Регистрация
+                                Подать заявку
                             </a>
                         </div>
                     @endauth
@@ -315,9 +315,9 @@
                             Войти
                         </a>
 
-                        <a href="{{ route('register') }}"
+                        <a href="{{ route('tickets.create') }}"
                             class="block px-3 py-2 text-base font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Регистрация
+                            Подать заявку
                         </a>
                     </div>
                 @endauth

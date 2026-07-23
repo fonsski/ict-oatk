@@ -96,11 +96,9 @@ class TicketSoftDeleteTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_regular_user_cannot_open_trash(): void
+    public function test_guest_cannot_open_trash(): void
     {
-        $user = User::factory()->withRole('user')->create();
-
-        $this->actingAs($user)->get(route('tickets.trashed'))->assertForbidden();
+        $this->get(route('tickets.trashed'))->assertUnauthorized();
     }
 
     public function test_trash_link_is_shown_only_to_managing_roles(): void

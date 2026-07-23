@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * Проверяет разграничение доступа к заявкам в TicketController:
- * обычный пользователь работает только со своими заявками,
- * персонал (admin/master/technician) — со всеми.
+ * Разграничение доступа к заявкам после перехода на публичную подачу:
+ * управлять заявками может только персонал (admin/master/technician),
+ * гость не имеет доступа к списку и карточкам.
  */
 class TicketAuthorizationTest extends TestCase
 {
@@ -27,7 +27,7 @@ class TicketAuthorizationTest extends TestCase
         Http::fake();
     }
 
-    private function makeTicket(?User $owner = null): Ticket
+    private function makeTicket(): Ticket
     {
         return Ticket::create([
             'title' => 'Не включается монитор',
@@ -35,7 +35,8 @@ class TicketAuthorizationTest extends TestCase
             'category' => 'hardware',
             'priority' => 'medium',
             'status' => 'open',
-            'user_id' => $owner?->id,
+            'reporter_name' => 'Иванов Иван',
+            'reporter_phone' => '+79001234567',
         ]);
     }
 
@@ -48,89 +49,37 @@ class TicketAuthorizationTest extends TestCase
         $this->get(route('tickets.show', $ticket))->assertUnauthorized();
     }
 
-    public function test_user_cannot_view_foreign_ticket(): void
+    public function test_guest_cannot_open_ticket_list(): void
     {
-        $owner = User::factory()->withRole('user')->create();
-        $intruder = User::factory()->withRole('user')->create();
-
-        $ticket = $this->makeTicket($owner);
-
-        $this->actingAs($intruder)
-            ->get(route('tickets.show', $ticket))
-            ->assertForbidden();
-    }
-
-    public function test_user_can_view_own_ticket(): void
-    {
-        $owner = User::factory()->withRole('user')->create();
-        $ticket = $this->makeTicket($owner);
-
-        $this->actingAs($owner)
-            ->get(route('tickets.show', $ticket))
-            ->assertSuccessful();
+        $this->get(route('tickets.index'))->assertUnauthorized();
     }
 
     public function test_technician_can_view_any_ticket(): void
     {
-        $owner = User::factory()->withRole('user')->create();
         $technician = User::factory()->withRole('technician')->create();
-
-        $ticket = $this->makeTicket($owner);
+        $ticket = $this->makeTicket();
 
         $this->actingAs($technician)
             ->get(route('tickets.show', $ticket))
             ->assertSuccessful();
     }
 
-    public function test_user_cannot_delete_foreign_ticket(): void
+    public function test_admin_can_view_and_delete_ticket(): void
     {
-        $owner = User::factory()->withRole('user')->create();
-        $intruder = User::factory()->withRole('user')->create();
+        $admin = User::factory()->withRole('admin')->create();
+        $ticket = $this->makeTicket();
 
-        $ticket = $this->makeTicket($owner);
-
-        $this->actingAs($intruder)
+        $this->actingAs($admin)
             ->delete(route('tickets.destroy', $ticket))
-            ->assertForbidden();
+            ->assertRedirect(route('tickets.index'));
 
-        $this->assertDatabaseHas('tickets', ['id' => $ticket->id]);
-    }
-
-    public function test_user_cannot_comment_on_foreign_ticket(): void
-    {
-        $owner = User::factory()->withRole('user')->create();
-        $intruder = User::factory()->withRole('user')->create();
-
-        $ticket = $this->makeTicket($owner);
-
-        $this->actingAs($intruder)
-            ->post(route('tickets.comment.store', $ticket), [
-                'content' => 'Пытаюсь прокомментировать чужую заявку',
-            ])
-            ->assertForbidden();
-    }
-
-    public function test_regular_user_cannot_take_ticket_in_work(): void
-    {
-        $owner = User::factory()->withRole('user')->create();
-        $ticket = $this->makeTicket($owner);
-
-        $this->actingAs($owner)
-            ->post(route('tickets.start', $ticket))
-            ->assertForbidden();
-
-        $this->assertDatabaseHas('tickets', [
-            'id' => $ticket->id,
-            'status' => 'open',
-        ]);
+        $this->assertSoftDeleted('tickets', ['id' => $ticket->id]);
     }
 
     public function test_technician_taking_ticket_in_work_assigns_and_updates_status(): void
     {
-        $owner = User::factory()->withRole('user')->create();
         $technician = User::factory()->withRole('technician')->create();
-
-        $ticket = $this->makeTicket($owner);
+        $ticket = $this->makeTicket();
 
         $this->actingAs($technician)->post(route('tickets.start', $ticket));
 
