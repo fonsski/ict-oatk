@@ -455,11 +455,16 @@ const notificationsButton = document.getElementById('notifications-menu-button')
 const notificationBadge = document.getElementById('notification-badge');
 const notificationsDropdown = document.getElementById('notifications-dropdown');
 
-// Initial check after page load
-setTimeout(() => {
-    updateNotificationBadge();
-}, 1000);
+// Колокольчик уведомлений рендерится только для авторизованных
+// пользователей. Без него опрашивать /api/notifications нет смысла —
+// гость получал бы 401 на каждый запрос.
+if (notificationBadge) {
+    // Initial check after page load
+    setTimeout(() => {
+        updateNotificationBadge();
+    }, 1000);
 
-// Start polling
-startNotificationPolling();
-window.addEventListener('beforeunload', stopNotificationPolling);
+    // Start polling
+    startNotificationPolling();
+    window.addEventListener('beforeunload', stopNotificationPolling);
+}
