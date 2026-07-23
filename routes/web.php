@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\KnowledgeCategoryController;
+use App\Http\Controllers\NetworkTopologyController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HomepageFAQController;
 use App\Http\Controllers\HomeController;
@@ -399,6 +400,63 @@ Route::middleware("auth")->group(function () {
             "update" => "knowledge.categories.update",
             "destroy" => "knowledge.categories.destroy",
         ]);
+    });
+
+    // Топология сети — просмотр и построение доступны всему персоналу.
+    Route::middleware([
+        "auth",
+        \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
+    ])->group(function () {
+        Route::get("/topology", [
+            NetworkTopologyController::class,
+            "index",
+        ])->name("topology.index");
+        Route::get("/topology/create", [
+            NetworkTopologyController::class,
+            "create",
+        ])->name("topology.create");
+        Route::post("/topology", [
+            NetworkTopologyController::class,
+            "store",
+        ])->name("topology.store");
+        Route::get("/topology/{topology}", [
+            NetworkTopologyController::class,
+            "show",
+        ])->name("topology.show");
+        Route::put("/topology/{topology}", [
+            NetworkTopologyController::class,
+            "update",
+        ])->name("topology.update");
+        Route::delete("/topology/{topology}", [
+            NetworkTopologyController::class,
+            "destroy",
+        ])->name("topology.destroy");
+        Route::get("/topology/{topology}/print", [
+            NetworkTopologyController::class,
+            "print",
+        ])->name("topology.print");
+
+        // JSON-API редактора топологии.
+        Route::post("/topology/{topology}/nodes", [
+            NetworkTopologyController::class,
+            "storeNode",
+        ])->name("topology.nodes.store");
+        Route::put("/topology/{topology}/nodes/{node}", [
+            NetworkTopologyController::class,
+            "updateNode",
+        ])->name("topology.nodes.update");
+        Route::delete("/topology/{topology}/nodes/{node}", [
+            NetworkTopologyController::class,
+            "destroyNode",
+        ])->name("topology.nodes.destroy");
+        Route::post("/topology/{topology}/links", [
+            NetworkTopologyController::class,
+            "storeLink",
+        ])->name("topology.links.store");
+        Route::delete("/topology/{topology}/links/{link}", [
+            NetworkTopologyController::class,
+            "destroyLink",
+        ])->name("topology.links.destroy");
     });
 
     // Управление FAQ главной страницы (только для admin и master)

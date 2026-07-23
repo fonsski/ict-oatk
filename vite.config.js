@@ -15,6 +15,7 @@ export default defineConfig({
                 "resources/js/realtime.js",
                 "resources/js/live-updates.js",
                 "resources/js/smart-updates.js",
+                "resources/js/topology-editor.js",
             ],
             refresh: [
                 ...refreshPaths,

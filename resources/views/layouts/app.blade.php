@@ -61,6 +61,10 @@
                                 class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                 База знаний
                             </a>
+                            <a href="{{ route('topology.index') }}"
+                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('topology.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                Топология
+                            </a>
                         @endif
 
                         @if (user_can_manage_users())
