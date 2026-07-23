@@ -24,16 +24,13 @@ services:
         depends_on:
             - mysql
 
-    websocket-server:
+    reverb:
         image: "sail-8.4/app"
         restart: unless-stopped
         environment:
             WWWUSER: "${WWWUSER}"
             LARAVEL_SAIL: 1
-            CONTAINER_ROLE: "websocket-server"
-            WEBSOCKET_HOST: "0.0.0.0"
-            WEBSOCKET_PORT: "8080"
-            WEBSOCKET_ENABLED: "true"
+            CONTAINER_ROLE: "reverb"
         volumes:
             - ".:/var/www/html"
         networks:
@@ -43,13 +40,7 @@ services:
         depends_on:
             - laravel.test
             - mysql
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:8080/test"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
-        command: php artisan websocket:serve --port=8080
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
         logging:
             driver: "json-file"
             options:

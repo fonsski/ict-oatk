@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . "/../routes/console.php",
         health: "/up",
     )
+    // Регистрирует маршрут авторизации приватных каналов (/broadcasting/auth)
+    // и загружает определения каналов из routes/channels.php.
+    ->withBroadcasting(__DIR__ . "/../routes/channels.php")
     ->withMiddleware(function (Middleware $middleware): void {
         // Автоматический выход по истечении времени неактивности сессии.
         $middleware->web(append: [

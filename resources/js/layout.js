@@ -464,7 +464,12 @@ if (notificationBadge) {
         updateNotificationBadge();
     }, 1000);
 
-    // Start polling
+    // Мгновенное обновление бейджа по push от Reverb (realtime.js).
+    window.addEventListener('realtime:notification', () => {
+        updateNotificationBadge();
+    });
+
+    // Поллинг остаётся резервом на случай, если WebSocket недоступен.
     startNotificationPolling();
     window.addEventListener('beforeunload', stopNotificationPolling);
 }

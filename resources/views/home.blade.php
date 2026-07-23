@@ -402,7 +402,9 @@
     // Объявляем переменные в глобальной области видимости
     let techRefreshBtn, techStatusIndicator, techLastUpdated, techTicketsContainer;
     let liveUpdates;
-    const TECH_REFRESH_INTERVAL = 1000; // 1 секунда
+    // Резервный опрос раз в 30 секунд: мгновенные обновления доски приходят
+    // через Reverb (событие realtime:tickets), поэтому частый поллинг не нужен.
+    const TECH_REFRESH_INTERVAL = 30000;
 
     // Функция инициализации панели техника
     function initTechnicianDashboard() {
@@ -997,6 +999,15 @@
             if (techLastUpdated) {
                 techLastUpdated.textContent = `Загружено: ${new Date().toLocaleString('ru-RU')}`;
             }
+
+            // Мгновенное обновление доски по push от Reverb (realtime.js).
+            window.addEventListener('realtime:tickets', function() {
+                if (liveUpdates) {
+                    liveUpdates.refresh();
+                } else {
+                    refreshTechTickets();
+                }
+            });
         }
 
         // Initialize event listeners

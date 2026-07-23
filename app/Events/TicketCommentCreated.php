@@ -5,10 +5,12 @@ namespace App\Events;
 use App\Models\TicketComment;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TicketCommentCreated
+class TicketCommentCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -22,5 +24,24 @@ class TicketCommentCreated
     {
         $this->comment = $comment;
         $this->user = $user;
+    }
+
+    public function broadcastOn(): PrivateChannel
+    {
+        return new PrivateChannel('staff');
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'ticket.comment';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'ticket_id' => $this->comment->ticket_id,
+            'comment_id' => $this->comment->id,
+            'message' => "Новый комментарий к заявке #{$this->comment->ticket_id}",
+        ];
     }
 }

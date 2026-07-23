@@ -14,6 +14,7 @@ if not exist vendor (
 start "ICT - Web server (http://127.0.0.1:8000)" cmd /k php artisan serve --host=127.0.0.1 --port=8000
 start "ICT - Vite dev" cmd /k npm run dev
 start "ICT - Queue worker" cmd /k php artisan queue:work --tries=3
+start "ICT - Reverb (WebSocket)" cmd /k php artisan reverb:start --host=127.0.0.1 --port=8080
 
 timeout /t 4 >nul
 start http://127.0.0.1:8000

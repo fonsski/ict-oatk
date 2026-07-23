@@ -11,8 +11,9 @@ export default defineConfig({
                 "resources/css/layout.css",
                 "resources/js/app.js",
                 "resources/js/layout.js",
+                "resources/js/echo.js",
+                "resources/js/realtime.js",
                 "resources/js/live-updates.js",
-                "resources/js/websocket-client.js",
                 "resources/js/smart-updates.js",
             ],
             refresh: [

@@ -425,20 +425,15 @@
         statusSelect.addEventListener('change', performSearch);
     }
 
-    // WebSocket интеграция для real-time обновлений
+    // Периодическое обновление статистики пользователей.
     let liveUpdates;
-    
-    // Инициализируем LiveUpdates для пользователей
+
     if (typeof LiveUpdates !== 'undefined') {
         liveUpdates = new LiveUpdates({
             apiEndpoint: '{{ route("user.index") }}',
             csrfToken: '{{ csrf_token() }}',
-            useWebSocket: true,
-            websocketUrl: 'ws://localhost:8080',
-            refreshInterval: 5000, // 5 секунд
+            refreshInterval: 30000,
             onSuccess: function(data) {
-                console.log('LiveUpdates: Данные пользователей обновлены');
-                // Обновляем статистику
                 updateUserStats(data);
             },
             onError: function(error) {
@@ -469,21 +464,6 @@
         }
     }
 
-    // Обработка WebSocket сообщений для пользователей
-    if (typeof WebSocketClient !== 'undefined') {
-        const wsClient = new WebSocketClient({
-            url: 'ws://localhost:8080',
-            onMessage: function(data) {
-                if (data.type === 'user_created' || data.type === 'user_status_changed') {
-                    console.log('WebSocket: Получено обновление пользователя:', data);
-                    // Обновляем страницу при изменении пользователей
-                    if (liveUpdates) {
-                        liveUpdates.refresh();
-                    }
-                }
-            }
-        });
-    }
 </script>
 @endpush
 @endsection

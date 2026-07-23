@@ -369,14 +369,15 @@
 </div>
 
 @push('scripts')
-<script src="{{ Vite::asset('resources/js/websocket-client.js') }}"></script>
 <script src="{{ Vite::asset('resources/js/live-updates.js') }}"></script>
 <script src="{{ Vite::asset('resources/js/smart-updates.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let liveUpdates;
     let refreshInterval;
-    const REFRESH_INTERVAL = 1000; // 1 секунда
+    // Резервный опрос: мгновенные обновления приходят через Reverb
+    // (событие realtime:tickets), поэтому частый поллинг не нужен.
+    const REFRESH_INTERVAL = 30000;
 
     // Инициализируем таблицу с начальными данными
     const initialTicketsData = @json($tickets);
@@ -1274,6 +1275,13 @@ if (action === 'change-status' && status) {
 
     // Инициализация LiveUpdates
     initLiveUpdates();
+
+    // Мгновенное обновление доски по push от Reverb (realtime.js),
+    // плюс резервный опрос на случай недоступности WebSocket.
+    window.addEventListener('realtime:tickets', function() {
+        refreshTickets();
+    });
+    startAutoRefresh();
 
     // Инициализация выпадающих меню при загрузке страницы
     initTableDropdowns();

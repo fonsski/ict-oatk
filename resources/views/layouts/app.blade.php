@@ -414,8 +414,14 @@
     </script>
 
 
-    <!-- WebSocket Scripts -->
-    @vite(['resources/js/websocket-client.js', 'resources/js/live-updates.js'])
+    {{-- Реальное время (Reverb/Echo) и поллинг — только для авторизованных:
+         приватные каналы требуют аутентификации. --}}
+    @auth
+    <script>
+        window.authUserId = {{ auth()->id() }};
+    </script>
+    @vite(['resources/js/echo.js', 'resources/js/realtime.js', 'resources/js/live-updates.js'])
+    @endauth
 
     @stack('scripts')
 </body>
