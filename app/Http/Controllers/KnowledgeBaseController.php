@@ -258,14 +258,95 @@ class KnowledgeBaseController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage (мягкое удаление).
      */
     public function destroy(KnowledgeBase $knowledge)
     {
         $knowledge->delete();
         return redirect()
             ->route("knowledge.index")
-            ->with("success", "Статья удалена");
+            ->with("success", "Статья перемещена в корзину");
+    }
+
+    /**
+     * Корзина: мягко удалённые статьи. Только admin и master.
+     */
+    public function trashed()
+    {
+        $this->authorizeTrashAccess();
+
+        $articles = KnowledgeBase::onlyTrashed()
+            ->with("category", "author")
+            ->orderByDesc("deleted_at")
+            ->paginate(10);
+
+        return view("knowledge.trashed", compact("articles"));
+    }
+
+    /**
+     * Восстановление статьи из корзины.
+     */
+    public function restore(KnowledgeBase $knowledge)
+    {
+        $this->authorizeTrashAccess();
+
+        if (!$knowledge->trashed()) {
+            return redirect()
+                ->route("knowledge.trashed")
+                ->with("error", "Статья не находится в корзине");
+        }
+
+        $knowledge->restore();
+
+        return redirect()
+            ->route("knowledge.show", $knowledge)
+            ->with("success", "Статья восстановлена");
+    }
+
+    /**
+     * Безвозвратное удаление статьи вместе с изображениями. Только admin.
+     */
+    public function forceDelete(KnowledgeBase $knowledge)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->role || $user->role->slug !== "admin") {
+            abort(403);
+        }
+
+        if (!$knowledge->trashed()) {
+            return redirect()
+                ->route("knowledge.trashed")
+                ->with("error", "Сначала переместите статью в корзину");
+        }
+
+        // Удаляем связанные файлы изображений с диска и записи о них.
+        foreach ($knowledge->images as $image) {
+            \Illuminate\Support\Facades\Storage::disk("public")->delete(
+                $image->path,
+            );
+            $image->delete();
+        }
+
+        $knowledge->forceDelete();
+
+        return redirect()
+            ->route("knowledge.trashed")
+            ->with("success", "Статья удалена безвозвратно");
+    }
+
+    /**
+     * Доступ к корзине только у управляющих ролей.
+     */
+    private function authorizeTrashAccess(): void
+    {
+        $user = Auth::user();
+        if (
+            !$user ||
+            !$user->role ||
+            !in_array($user->role->slug, ["admin", "master"])
+        ) {
+            abort(403);
+        }
     }
 
     /**
@@ -360,7 +441,8 @@ class KnowledgeBaseController extends Controller
         $suffix = 2;
 
         while (
-            KnowledgeBase::where("slug", $slug)
+            KnowledgeBase::withTrashed()
+                ->where("slug", $slug)
                 ->when($ignoreId, fn($q) => $q->where("id", "!=", $ignoreId))
                 ->exists()
         ) {

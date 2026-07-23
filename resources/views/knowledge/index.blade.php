@@ -30,9 +30,16 @@
                     @endphp
 
                     @if($user && in_array($role, ['admin','master','technician']))
-                    <a href="{{ route('knowledge.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                        Добавить статью
-                    </a>
+                    <div class="flex items-center gap-3">
+                        @if(in_array($role, ['admin','master']))
+                        <a href="{{ route('knowledge.trashed') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                            Корзина
+                        </a>
+                        @endif
+                        <a href="{{ route('knowledge.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            Добавить статью
+                        </a>
+                    </div>
                     @endif
                 </div>
             </div>

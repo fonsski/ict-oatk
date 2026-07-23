@@ -3,9 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KnowledgeBase extends Model
 {
+    use SoftDeletes;
+
+    /**
+     * URL статей строятся по slug, а не по id.
+     */
+    public function getRouteKeyName(): string
+    {
+        return "slug";
+    }
+
     protected $fillable = [
         "title",
         "slug",

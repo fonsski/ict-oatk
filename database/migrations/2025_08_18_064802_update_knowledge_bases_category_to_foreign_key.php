@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\KnowledgeBase;
-use App\Models\KnowledgeCategory;
+use Illuminate\Support\Facades\DB;
 
 class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
     /**
@@ -47,11 +46,18 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
             $table->string("category")->nullable()->after("slug");
         });
 
-        // Мигрируем данные обратно из category_id в category
-        $knowledgeBases = KnowledgeBase::with("category")->get();
-        foreach ($knowledgeBases as $kb) {
-            if ($kb->category) {
-                $kb->update(["category" => $kb->category->slug]);
+        // Мигрируем данные обратно из category_id в category.
+        // Только query builder: модели в миграциях завязываются на текущую
+        // схему и глобальные scope-ы, которых на этом шаге ещё нет.
+        $rows = DB::table("knowledge_bases")->whereNotNull("category_id")->get();
+        foreach ($rows as $kb) {
+            $slug = DB::table("knowledge_categories")
+                ->where("id", $kb->category_id)
+                ->value("slug");
+            if ($slug) {
+                DB::table("knowledge_bases")
+                    ->where("id", $kb->id)
+                    ->update(["category" => $slug]);
             }
         }
 
@@ -102,33 +108,38 @@ class UpdateKnowledgeBasesCategoryToForeignKey extends Migration {
         ];
 
         foreach ($categories as $category) {
-            KnowledgeCategory::firstOrCreate(
-                ["slug" => $category["slug"]],
-                $category,
-            );
+            $exists = DB::table("knowledge_categories")
+                ->where("slug", $category["slug"])
+                ->exists();
+            if (!$exists) {
+                DB::table("knowledge_categories")->insert(
+                    $category + [
+                        "is_active" => true,
+                        "created_at" => now(),
+                        "updated_at" => now(),
+                    ],
+                );
+            }
         }
     }
 
     private function migrateExistingData()
     {
-        $knowledgeBases = KnowledgeBase::whereNotNull("category")->get();
+        $otherId = DB::table("knowledge_categories")
+            ->where("slug", "other")
+            ->value("id");
 
-        foreach ($knowledgeBases as $kb) {
-            $category = KnowledgeCategory::where(
-                "slug",
-                $kb->category,
-            )->first();
-            if ($category) {
-                $kb->update(["category_id" => $category->id]);
-            } else {
-                // Если категория не найдена, создаем ее или назначаем "Другое"
-                $otherCategory = KnowledgeCategory::where(
-                    "slug",
-                    "other",
-                )->first();
-                if ($otherCategory) {
-                    $kb->update(["category_id" => $otherCategory->id]);
-                }
+        $rows = DB::table("knowledge_bases")->whereNotNull("category")->get();
+        foreach ($rows as $kb) {
+            $categoryId =
+                DB::table("knowledge_categories")
+                    ->where("slug", $kb->category)
+                    ->value("id") ?? $otherId;
+
+            if ($categoryId) {
+                DB::table("knowledge_bases")
+                    ->where("id", $kb->id)
+                    ->update(["category_id" => $categoryId]);
             }
         }
     }

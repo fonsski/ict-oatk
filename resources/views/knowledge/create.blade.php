@@ -88,13 +88,12 @@
                 <!-- Краткое описание -->
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-                        Краткое описание
+                        Краткое описание <span class="text-gray-400">(необязательно)</span>
                     </label>
                     <textarea id="description"
                               name="description"
                               rows="3"
-                              required
-                              maxlength="500"
+                              maxlength="1000"
                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                               placeholder="Краткое описание статьи...">{{ old('description') }}</textarea>
                 </div>
