@@ -28,6 +28,7 @@ class UpdateKnowledgeBaseRequest extends FormRequest
             'description' => 'sometimes|nullable|string|min:10|max:1000',
             'content' => 'sometimes|required|string|min:20|max:10000',
             'tags' => 'sometimes|nullable|string|min:2|max:255',
+            'action' => 'nullable|in:draft,publish',
         ];
     }
 

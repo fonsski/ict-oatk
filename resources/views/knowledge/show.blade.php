@@ -21,8 +21,12 @@
         $role = optional($user)->role ? optional($user->role)->slug : null;
         @endphp
 
+        @php
+        $canManageStatus = $user && ($article->author_id === $user->id || in_array($role, ['admin','master']));
+        @endphp
+
         @if($user && in_array($role, ['admin','master','technician']))
-        <div class="flex items-center space-x-2">
+        <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('knowledge.edit', $article) }}"
                class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <svg class="mr-2 -ml-1 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -31,7 +35,28 @@
                 </svg>
                 Редактировать
             </a>
-            <form action="{{ route('knowledge.destroy', $article) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить эту статью?')">
+
+            @if($canManageStatus && !$article->isPublished())
+            <form action="{{ route('knowledge.publish', $article) }}" method="POST">
+                @csrf
+                <button type="submit"
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Опубликовать
+                </button>
+            </form>
+            @endif
+
+            @if($canManageStatus && $article->isPublished())
+            <form action="{{ route('knowledge.archive-article', $article) }}" method="POST">
+                @csrf
+                <button type="submit"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    В архив
+                </button>
+            </form>
+            @endif
+
+            <form action="{{ route('knowledge.destroy', $article) }}" method="POST" onsubmit="return confirm('Статья будет перемещена в корзину. Продолжить?')">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
@@ -45,6 +70,18 @@
             </form>
         </div>
         @endif
+
+        @unless($article->isPublished())
+        <div class="mt-4 rounded-md border-l-4 {{ $article->isDraft() ? 'bg-amber-50 border-amber-400' : 'bg-gray-100 border-gray-400' }} p-4">
+            <p class="text-sm {{ $article->isDraft() ? 'text-amber-800' : 'text-gray-700' }}">
+                @if($article->isDraft())
+                Это <strong>черновик</strong> — статья ещё не опубликована и видна только вам. Нажмите «Опубликовать», когда закончите.
+                @else
+                Статья находится <strong>в архиве</strong> и не показывается в общем списке.
+                @endif
+            </p>
+        </div>
+        @endunless
 
         <!-- Article Content -->
         <article class="bg-white rounded-lg shadow-sm border border-gray-200">

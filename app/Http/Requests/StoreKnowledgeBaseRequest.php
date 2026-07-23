@@ -27,6 +27,7 @@ class StoreKnowledgeBaseRequest extends FormRequest
             'description' => 'nullable|string|min:10|max:1000',
             'content' => 'required|string|min:20|max:10000',
             'tags' => 'nullable|string|min:2|max:255',
+            'action' => 'nullable|in:draft,publish',
         ];
     }
 

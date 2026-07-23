@@ -42,8 +42,8 @@ class KnowledgeBaseController extends Controller
      */
     public function index(Request $request)
     {
-        // Вывод списка статей базы знаний
-        $query = KnowledgeBase::with("category", "author");
+        // Основной список — только опубликованные статьи.
+        $query = KnowledgeBase::published()->with("category", "author");
 
         // Фильтр по категории
         if ($request->filled("category")) {
@@ -65,7 +65,44 @@ class KnowledgeBaseController extends Controller
         $articles = $query->latest()->paginate(10);
         $categories = KnowledgeCategory::active()->ordered()->get();
 
-        return view("knowledge.index", compact("articles", "categories"));
+        // Число собственных черновиков — для бейджа на ссылке «Мои черновики».
+        $myDraftsCount = KnowledgeBase::draft()
+            ->where("author_id", Auth::id())
+            ->count();
+
+        return view(
+            "knowledge.index",
+            compact("articles", "categories", "myDraftsCount"),
+        );
+    }
+
+    /**
+     * Черновики текущего пользователя.
+     */
+    public function drafts()
+    {
+        $articles = KnowledgeBase::draft()
+            ->where("author_id", Auth::id())
+            ->with("category")
+            ->latest()
+            ->paginate(10);
+
+        return view("knowledge.drafts", compact("articles"));
+    }
+
+    /**
+     * Архив статей. Доступен управляющим ролям.
+     */
+    public function archiveIndex()
+    {
+        $this->authorizeArchiveManagement();
+
+        $articles = KnowledgeBase::archived()
+            ->with("category", "author")
+            ->latest()
+            ->paginate(10);
+
+        return view("knowledge.archive", compact("articles"));
     }
 
     /**
@@ -122,15 +159,28 @@ class KnowledgeBaseController extends Controller
             $article->tags = null;
         }
         $article->author_id = Auth::id();
-        $article->published_at = now();
+
+        // Статус определяется нажатой кнопкой: «Сохранить черновик» или
+        // «Опубликовать». Черновик виден только автору и не попадает в
+        // общий список; дата публикации выставляется только при публикации.
+        $isDraft = $request->input("action") === "draft";
+        $article->status = $isDraft
+            ? KnowledgeBase::STATUS_DRAFT
+            : KnowledgeBase::STATUS_PUBLISHED;
+        $article->published_at = $isDraft ? null : now();
         $article->save();
 
-        // Отправляем событие о создании статьи
-        event(new KnowledgeBaseArticleCreated($article, Auth::user()));
+        // Событие о публикации шлём только для реально опубликованных статей.
+        if (!$isDraft) {
+            event(new KnowledgeBaseArticleCreated($article, Auth::user()));
+        }
 
         return redirect()
             ->route("knowledge.show", $article)
-            ->with("success", "Статья создана");
+            ->with(
+                "success",
+                $isDraft ? "Черновик сохранён" : "Статья опубликована",
+            );
     }
 
     /**
@@ -141,12 +191,19 @@ class KnowledgeBaseController extends Controller
         // Просмотр отдельной статьи
         $article = $knowledge;
 
+        // Черновик виден только автору и управляющим ролям.
+        if ($article->isDraft() && !$this->canSeeDraft($article)) {
+            abort(404);
+        }
+
         // Счётчик просмотров: увеличиваем атомарно, без изменения updated_at.
         $article->incrementQuietly("views_count");
 
         $article->load("category", "author");
 
-        $relatedArticles = KnowledgeBase::with("category")
+        // В блок «похожие» подтягиваем только опубликованные статьи.
+        $relatedArticles = KnowledgeBase::published()
+            ->with("category")
             ->where("category_id", $article->category_id)
             ->where("id", "!=", $article->id)
             ->latest()
@@ -247,14 +304,27 @@ class KnowledgeBaseController extends Controller
         } else {
             $knowledge->tags = null;
         }
+        // Статус меняем только по явной кнопке. «Опубликовать» публикует
+        // черновик; «Сохранить черновик» держит статью в черновиках.
+        $action = $request->input("action");
+        if ($action === "publish") {
+            $knowledge->status = KnowledgeBase::STATUS_PUBLISHED;
+            $knowledge->published_at = $knowledge->published_at ?? now();
+        } elseif ($action === "draft") {
+            $knowledge->status = KnowledgeBase::STATUS_DRAFT;
+        }
+
         $knowledge->save();
 
         // Отправляем событие об обновлении статьи
         event(new KnowledgeBaseArticleUpdated($knowledge, Auth::user()));
 
+        $message =
+            $action === "publish" ? "Статья опубликована" : "Статья обновлена";
+
         return redirect()
             ->route("knowledge.show", $knowledge)
-            ->with("success", "Статья обновлена");
+            ->with("success", $message);
     }
 
     /**
@@ -335,9 +405,48 @@ class KnowledgeBaseController extends Controller
     }
 
     /**
+     * Опубликовать статью (из черновика или из архива).
+     */
+    public function publish(KnowledgeBase $knowledge)
+    {
+        $this->authorizeStatusChange($knowledge);
+
+        $knowledge->update([
+            "status" => KnowledgeBase::STATUS_PUBLISHED,
+            "published_at" => $knowledge->published_at ?? now(),
+        ]);
+
+        return redirect()
+            ->route("knowledge.show", $knowledge)
+            ->with("success", "Статья опубликована");
+    }
+
+    /**
+     * Отправить статью в архив.
+     */
+    public function archive(KnowledgeBase $knowledge)
+    {
+        $this->authorizeStatusChange($knowledge);
+
+        $knowledge->update(["status" => KnowledgeBase::STATUS_ARCHIVED]);
+
+        return redirect()
+            ->route("knowledge.show", $knowledge)
+            ->with("success", "Статья отправлена в архив");
+    }
+
+    /**
      * Доступ к корзине только у управляющих ролей.
      */
     private function authorizeTrashAccess(): void
+    {
+        $this->authorizeArchiveManagement();
+    }
+
+    /**
+     * Управление архивом — только admin и master.
+     */
+    private function authorizeArchiveManagement(): void
     {
         $user = Auth::user();
         if (
@@ -347,6 +456,35 @@ class KnowledgeBaseController extends Controller
         ) {
             abort(403);
         }
+    }
+
+    /**
+     * Менять статус статьи может её автор либо управляющие роли.
+     */
+    private function authorizeStatusChange(KnowledgeBase $article): void
+    {
+        if (!$this->canManageStatus($article)) {
+            abort(403);
+        }
+    }
+
+    private function canManageStatus(KnowledgeBase $article): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->role) {
+            return false;
+        }
+
+        return in_array($user->role->slug, ["admin", "master"]) ||
+            $article->author_id === $user->id;
+    }
+
+    /**
+     * Черновик виден автору и управляющим ролям.
+     */
+    private function canSeeDraft(KnowledgeBase $article): bool
+    {
+        return $this->canManageStatus($article);
     }
 
     /**

@@ -338,6 +338,28 @@ Route::middleware("auth")->group(function () {
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
     ])->group(function () {
+        // Черновики текущего пользователя и архив. Пути через дефис,
+        // чтобы не пересекаться с /knowledge/{knowledge}.
+        Route::get("/knowledge-drafts", [
+            KnowledgeBaseController::class,
+            "drafts",
+        ])->name("knowledge.drafts");
+
+        Route::get("/knowledge-archive", [
+            KnowledgeBaseController::class,
+            "archiveIndex",
+        ])->name("knowledge.archive");
+
+        Route::post("/knowledge/{knowledge}/publish", [
+            KnowledgeBaseController::class,
+            "publish",
+        ])->name("knowledge.publish");
+
+        Route::post("/knowledge/{knowledge}/archive", [
+            KnowledgeBaseController::class,
+            "archive",
+        ])->name("knowledge.archive-article");
+
         // Корзина статей. Путь через дефис, чтобы не пересекаться с
         // /knowledge/{knowledge}. withTrashed() нужен для привязки удалённых.
         Route::get("/knowledge-trashed", [

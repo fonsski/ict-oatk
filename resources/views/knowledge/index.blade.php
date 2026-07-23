@@ -31,7 +31,16 @@
 
                     @if($user && in_array($role, ['admin','master','technician']))
                     <div class="flex items-center gap-3">
+                        <a href="{{ route('knowledge.drafts') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                            Мои черновики
+                            @if(($myDraftsCount ?? 0) > 0)
+                            <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">{{ $myDraftsCount }}</span>
+                            @endif
+                        </a>
                         @if(in_array($role, ['admin','master']))
+                        <a href="{{ route('knowledge.archive') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                            Архив
+                        </a>
                         <a href="{{ route('knowledge.trashed') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
                             Корзина
                         </a>
