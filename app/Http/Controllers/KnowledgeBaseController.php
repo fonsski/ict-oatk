@@ -11,8 +11,6 @@ use App\Http\Requests\UpdateKnowledgeBaseRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 // Parsedown optional; if not installed we'll fallback to simple rendering
 use Parsedown;
@@ -52,12 +50,16 @@ class KnowledgeBaseController extends Controller
             $query->where("category_id", $request->get("category"));
         }
 
-        // Если есть параметр поиска
+        // Если есть параметр поиска. Условия title/content группируем,
+        // иначе orWhere ломает фильтр по категории (category = X AND title
+        // OR content → возвращает статьи из других категорий).
         if ($request->filled("search")) {
             $searchQuery = $request->get("search");
-            $query
-                ->where("title", "like", "%{$searchQuery}%")
-                ->orWhere("content", "like", "%{$searchQuery}%");
+            $query->where(function ($q) use ($searchQuery) {
+                $q->where("title", "like", "%{$searchQuery}%")
+                    ->orWhere("content", "like", "%{$searchQuery}%")
+                    ->orWhere("tags", "like", "%{$searchQuery}%");
+            });
         }
 
         $articles = $query->latest()->paginate(10);
@@ -85,7 +87,7 @@ class KnowledgeBaseController extends Controller
 
         $article = new KnowledgeBase();
         $article->title = $data["title"];
-        $article->slug = Str::slug($data["title"]);
+        $article->slug = $this->uniqueSlug($data["title"]);
         $article->category_id = $data["category_id"];
         $article->excerpt = $data["description"] ?? null;
         $article->markdown = $data["content"];
@@ -138,6 +140,10 @@ class KnowledgeBaseController extends Controller
     {
         // Просмотр отдельной статьи
         $article = $knowledge;
+
+        // Счётчик просмотров: увеличиваем атомарно, без изменения updated_at.
+        $article->incrementQuietly("views_count");
+
         $article->load("category", "author");
 
         $relatedArticles = KnowledgeBase::with("category")
@@ -206,7 +212,7 @@ class KnowledgeBaseController extends Controller
         $data = $request->validated();
 
         $knowledge->title = $data["title"];
-        $knowledge->slug = Str::slug($data["title"]);
+        $knowledge->slug = $this->uniqueSlug($data["title"], $knowledge->id);
         $knowledge->category_id = $data["category_id"];
         $knowledge->excerpt = $data["description"] ?? null;
         $knowledge->markdown = $data["content"];
@@ -267,13 +273,12 @@ class KnowledgeBaseController extends Controller
      */
     public function uploadImage(Request $request)
     {
-        // Убедимся, что всегда возвращаем JSON-ответ
+        // Всегда отвечаем JSON — редактор ждёт JSON и на ошибках тоже.
         $request->headers->set("Accept", "application/json");
 
-        // Validate the request
         try {
-            $validated = $request->validate([
-                "image" => "required|image|max:5120", // 5MB max
+            $request->validate([
+                "image" => "required|image|max:5120", // до 5 МБ
                 "article_id" => "nullable|exists:knowledge_bases,id",
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -281,47 +286,16 @@ class KnowledgeBaseController extends Controller
                 [
                     "success" => false,
                     "message" =>
-                        "Ошибка валидации: " .
-                        implode(
-                            ", ",
-                            $e->errors()["image"] ?? ["Неверное изображение"],
-                        ),
+                        $e->errors()["image"][0] ?? "Неверное изображение",
                 ],
                 422,
             );
         }
 
         try {
-            // Get the uploaded file
             $file = $request->file("image");
 
-            \Log::info("Попытка загрузки изображения", [
-                "file_exists" => (bool) $file,
-                "original_name" => $file
-                    ? $file->getClientOriginalName()
-                    : null,
-                "size" => $file ? $file->getSize() : null,
-                "mime" => $file ? $file->getMimeType() : null,
-            ]);
-
-            if (!$file || !$file->isValid()) {
-                \Log::error("Файл недействителен", [
-                    "is_valid" => $file ? $file->isValid() : false,
-                    "error" => $file ? $file->getError() : "Файл не найден",
-                ]);
-
-                return response()->json(
-                    [
-                        "success" => false,
-                        "message" =>
-                            "Загруженный файл недействителен или поврежден",
-                    ],
-                    400,
-                );
-            }
-
-            // Generate a unique filename
-            $extension = $file->getClientOriginalExtension();
+            // Уникальное имя на основе исходного, чтобы не перезатирать файлы.
             $filename =
                 Str::slug(
                     pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
@@ -329,80 +303,16 @@ class KnowledgeBaseController extends Controller
                 "_" .
                 Str::random(10) .
                 "." .
-                $extension;
+                $file->getClientOriginalExtension();
 
-            // Ensure upload directory exists
-            $directory = "public/knowledge/images";
-            $storagePath = storage_path("app/{$directory}");
-            \Log::info("Проверка директории для загрузки", [
-                "directory" => $directory,
-                "storage_path" => $storagePath,
-                "exists" => file_exists($storagePath),
-            ]);
+            // Кладём на публичный диск (storage/app/public). Для отдачи по
+            // /storage нужен симлинк: php artisan storage:link.
+            $path = $file->storeAs(
+                "knowledge/images",
+                $filename,
+                "public",
+            );
 
-            if (!file_exists($storagePath)) {
-                try {
-                    File::makeDirectory($storagePath, 0755, true, true);
-                    \Log::info("Директория создана успешно");
-                } catch (\Exception $e) {
-                    \Log::error("Ошибка создания директории", [
-                        "error" => $e->getMessage(),
-                        "trace" => $e->getTraceAsString(),
-                    ]);
-                    throw new \Exception(
-                        "Не удалось создать директорию для загрузки: " .
-                            $e->getMessage(),
-                    );
-                }
-            }
-
-            // Store the file directly without processing
-            try {
-                // Проверяем существование директории еще раз
-                $uploadDir = storage_path("app/{$directory}");
-                if (!file_exists($uploadDir)) {
-                    echo "Директория {$uploadDir} не существует, пытаемся создать... ";
-                    if (!mkdir($uploadDir, 0755, true)) {
-                        echo "Не удалось создать директорию {$uploadDir}";
-                        throw new \Exception(
-                            "Не удалось создать директорию {$uploadDir}",
-                        );
-                    }
-                    echo "Директория создана успешно";
-                }
-
-                // Проверяем права на запись
-                if (!is_writable($uploadDir)) {
-                    echo "Директория {$uploadDir} недоступна для записи";
-                    throw new \Exception(
-                        "Директория {$uploadDir} недоступна для записи",
-                    );
-                }
-
-                // Пробуем сохранить файл напрямую
-                $uploadPath = $uploadDir . "/" . $filename;
-                if (move_uploaded_file($file->getPathname(), $uploadPath)) {
-                    $path = $directory . "/" . $filename;
-                    \Log::info("Файл успешно сохранен", [
-                        "path" => $path,
-                        "full_path" => $uploadPath,
-                    ]);
-                } else {
-                    throw new \Exception(
-                        "Не удалось переместить загруженный файл",
-                    );
-                }
-            } catch (\Exception $e) {
-                \Log::error("Ошибка сохранения файла", [
-                    "error" => $e->getMessage(),
-                    "trace" => $e->getTraceAsString(),
-                ]);
-                throw new \Exception(
-                    "Ошибка при сохранении файла: " . $e->getMessage(),
-                );
-            }
-
-            // If an article ID was provided, associate the image with the article
             if ($request->filled("article_id")) {
                 KnowledgeImage::create([
                     "knowledge_base_id" => $request->input("article_id"),
@@ -411,8 +321,10 @@ class KnowledgeBaseController extends Controller
                 ]);
             }
 
-            // Return the image URL and markdown for embedding
-            $url = url("storage/" . str_replace("public/", "", $path));
+            // Корень-относительный URL: не зависит от APP_URL и хоста,
+            // корректно работает при встраивании в тело статьи.
+            $url = "/storage/" . $path;
+
             return response()->json([
                 "success" => true,
                 "url" => $url,
@@ -420,25 +332,12 @@ class KnowledgeBaseController extends Controller
                     "![" . $file->getClientOriginalName() . "](" . $url . ")",
             ]);
         } catch (\Exception $e) {
-            // Log the error details
-            \Log::error("Image upload error", [
+            Log::error("Ошибка загрузки изображения в базу знаний", [
                 "error" => $e->getMessage(),
                 "file" => $e->getFile(),
                 "line" => $e->getLine(),
-                "trace" => $e->getTraceAsString(),
-                "request_data" => $request->all(),
-                "request_headers" => $request->headers->all(),
-                "php_version" => PHP_VERSION,
-                "storage_permissions" => [
-                    "public_writable" => is_writable(
-                        storage_path("app/public"),
-                    ),
-                    "storage_writable" => is_writable(storage_path()),
-                ],
             ]);
 
-            // Детали уже записаны в лог выше — клиенту не раскрываем
-            // внутренние пути, версию PHP и трассировку.
             return response()->json(
                 [
                     "success" => false,
@@ -447,6 +346,29 @@ class KnowledgeBaseController extends Controller
                 500,
             );
         }
+    }
+
+    /**
+     * Генерирует уникальный slug на основе заголовка. При коллизии
+     * добавляет числовой суффикс (-2, -3, ...). $ignoreId исключает
+     * саму статью при обновлении.
+     */
+    private function uniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title) ?: "article";
+        $slug = $base;
+        $suffix = 2;
+
+        while (
+            KnowledgeBase::where("slug", $slug)
+                ->when($ignoreId, fn($q) => $q->where("id", "!=", $ignoreId))
+                ->exists()
+        ) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     /**

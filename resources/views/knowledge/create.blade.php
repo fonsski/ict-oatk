@@ -228,13 +228,30 @@
     let autosaveTimer = null;
     const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 
+    // Флаг штатной отправки формы: при submit предупреждение об уходе
+    // со страницы показывать не нужно.
+    let formSubmitting = false;
+
     // Load draft on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadDraft();
         setupAutosave();
 
+        // Отправка формы — это не потеря данных: снимаем защиту и чистим черновик.
+        const form = document.getElementById('content').closest('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                formSubmitting = true;
+                localStorage.removeItem(AUTOSAVE_KEY);
+            });
+        }
+
         // Setup event listener for beforeunload
         window.addEventListener('beforeunload', function(e) {
+            if (formSubmitting) {
+                return;
+            }
+
             const contentField = document.getElementById('content');
             const titleField = document.getElementById('title');
 
