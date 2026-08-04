@@ -187,7 +187,7 @@ class ConsumableController extends Controller
         try {
             $consumable->recordOutcome($data["quantity"], [
                 "equipment_id" => $data["equipment_id"],
-                "reason" => $data["reason"] ?: "Выдано/установлено в оборудование",
+                "reason" => ($data["reason"] ?? null) ?: "Выдано/установлено в оборудование",
                 "moved_by_user_id" => Auth::id(),
                 "moved_at" => $data["moved_at"] ?? now(),
             ]);

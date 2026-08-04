@@ -74,7 +74,7 @@ class ConsumableWriteOffController extends Controller
                 foreach ($data["items"] as $itemData) {
                     $consumable = Consumable::findOrFail($itemData["consumable_id"]);
                     $consumable->recordOutcome($itemData["quantity"], [
-                        "reason" => $data["reason"] ?: "Массовое списание {$writeOff->number}",
+                        "reason" => ($data["reason"] ?? null) ?: "Массовое списание {$writeOff->number}",
                         "consumable_write_off_id" => $writeOff->id,
                         "moved_by_user_id" => Auth::id(),
                         "moved_at" => $data["written_off_at"],

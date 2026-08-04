@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SampleUsersSeeder::class,
             InventorySeeder::class,
             HomepageFAQSeeder::class,
+            SupplyDemoSeeder::class,
         ]);
     }
 }
