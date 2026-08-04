@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Детали заявки - ICT')
+@section('title', 'Детали заявки - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">
@@ -319,7 +319,7 @@
                                 </svg>
                                 @if($ticket->room)
                                 <div>
-                                    <div class="text-sm text-gray-900 text-wrap">{{ $ticket->room->number }} - {{ $ticket->room->name ?? $ticket->room->type_name }}</div>
+                                    <div class="text-sm text-gray-900 text-wrap">{{ $ticket->room->display_label }}</div>
                                     @if($ticket->room->building || $ticket->room->floor)
                                     <div class="text-xs text-gray-500 text-wrap">{{ $ticket->room->full_address }}</div>
                                     @endif

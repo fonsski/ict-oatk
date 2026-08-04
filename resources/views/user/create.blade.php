@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Создание пользователя - ICT')
+@section('title', 'Создание пользователя - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">

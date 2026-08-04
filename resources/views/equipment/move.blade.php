@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     @if($equipment->room)
-                        <p class="font-medium text-gray-900">{{ $equipment->room->number }} - {{ $equipment->room->name }}</p>
+                        <p class="font-medium text-gray-900">{{ $equipment->room->display_label }}</p>
                         <p class="text-sm text-gray-600">{{ $equipment->room->full_address }}</p>
                     @else
                         <p class="font-medium text-gray-900">Не указан</p>
@@ -48,7 +48,7 @@
                             <option value="">-- Не указывать кабинет --</option>
                             @foreach($rooms as $room)
                                 <option value="{{ $room->id }}" {{ $equipment->room_id == $room->id ? 'selected' : '' }}>
-                                    {{ $room->number }} - {{ $room->name }} ({{ $room->full_address }})
+                                    {{ $room->display_label }} ({{ $room->full_address }})
                                 </option>
                             @endforeach
                         </select>

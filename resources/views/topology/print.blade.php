@@ -78,7 +78,7 @@
                 <rect width="{{ $W }}" height="{{ $H }}" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
                 <text x="12" y="30" font-size="22">{{ $icons[$node->type] ?? $icons['other'] }}</text>
                 <text x="42" y="27" font-size="13" font-weight="600" fill="#0f172a">{{ \Illuminate\Support\Str::limit($node->label, 16) }}</text>
-                @php $sub = $node->ip_address ?: ($node->room ? trim($node->room->number . ' ' . ($node->room->name ?? '')) : ''); @endphp
+                @php $sub = $node->ip_address ?: ($node->room ? $node->room->display_label : ''); @endphp
                 @if($sub)
                 <text x="42" y="46" font-size="11" fill="#64748b">{{ \Illuminate\Support\Str::limit($sub, 18) }}</text>
                 @endif

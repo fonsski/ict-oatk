@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Создать кабинет - ICT')
+@section('title', 'Создать кабинет - ICT Help')
 
 @section('content')
 <div class="max-w-4xl mx-auto px-6 py-8">

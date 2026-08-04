@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     @if($equipment->room)
-                        <p class="font-medium text-gray-900">{{ $equipment->room->number }} - {{ $equipment->room->name }}</p>
+                        <p class="font-medium text-gray-900">{{ $equipment->room->display_label }}</p>
                         <p class="text-sm text-gray-600">{{ $equipment->room->full_address }}</p>
                     @else
                         <p class="font-medium text-gray-900">Не указан</p>
@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     @if($equipment->initialRoom)
-                        <p class="font-medium text-gray-900">{{ $equipment->initialRoom->number }} - {{ $equipment->initialRoom->name }}</p>
+                        <p class="font-medium text-gray-900">{{ $equipment->initialRoom->display_label }}</p>
                         <p class="text-sm text-gray-600">{{ $equipment->initialRoom->full_address }}</p>
                     @else
                         <p class="font-medium text-gray-900">Начальный кабинет удален</p>
@@ -108,13 +108,13 @@
                                         @if($record->from_room_id)
                                             <div class="text-sm text-gray-600">
                                                 <span class="font-medium">Откуда:</span>
-                                                {{ $record->fromRoom ? $record->fromRoom->number . ' - ' . $record->fromRoom->name : 'Кабинет удален' }}
+                                                {{ $record->fromRoom ? $record->fromRoom->display_label : 'Кабинет удален' }}
                                             </div>
                                         @endif
                                         @if($record->to_room_id)
                                             <div class="text-sm text-gray-600">
                                                 <span class="font-medium">Куда:</span>
-                                                {{ $record->toRoom ? $record->toRoom->number . ' - ' . $record->toRoom->name : 'Кабинет удален' }}
+                                                {{ $record->toRoom ? $record->toRoom->display_label : 'Кабинет удален' }}
                                             </div>
                                         @endif
                                     </div>

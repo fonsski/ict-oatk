@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Все заявки - ICT')
+@section('title', 'Все заявки - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">
@@ -126,7 +126,7 @@
                     <option value="">Все кабинеты</option>
                     @foreach($rooms ?? [] as $room)
                         <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room->number ?? 'б/н' }} - {{ $room->name ?? ($room->type_name ?? 'Без названия') }}
+                            {{ $room?->display_label ?? 'б/н' }}
                         </option>
                     @endforeach
                 </select>

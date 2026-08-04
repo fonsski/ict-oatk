@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $room->name . ' - ICT')
+@section('title', $room->name . ' - ICT Help')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-6 py-8">
@@ -8,7 +8,7 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
         <div class="mb-6 lg:mb-0">
             <div class="flex items-center space-x-4 mb-2">
-                <h1 class="text-3xl font-bold text-slate-900">{{ $room->number }} - {{ $room->name }}</h1>
+                <h1 class="text-3xl font-bold text-slate-900">{{ $room->display_label }}</h1>
                 {!! $room->status_badge !!}
                 @if(!$room->is_active)
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">

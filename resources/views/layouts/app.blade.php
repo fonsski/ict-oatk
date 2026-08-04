@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ICT')</title>
+    <title>@yield('title', 'ICT Help')</title>
     @vite(['resources/css/app.css', 'resources/css/layout.css', 'resources/js/app.js', 'resources/js/layout.js'])
 </head>
 
@@ -27,7 +27,7 @@
                             </path>
                         </svg>
                     </div>
-                    <span class="text-xl font-bold text-gray-900">ICT</span>
+                    <span class="text-xl font-bold text-gray-900">ICT Help</span>
                 </a>
 
                 <!-- Навигация -->
@@ -60,6 +60,10 @@
                             <a href="{{ route('knowledge.index') }}"
                                 class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                 База знаний
+                            </a>
+                            <a href="{{ route('consumables.index') }}"
+                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('consumables.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                Расходники
                             </a>
                             <a href="{{ route('topology.index') }}"
                                 class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('topology.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
@@ -252,6 +256,11 @@
                             class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                             База знаний
                         </a>
+                        <!-- Расходники -->
+                        <a href="{{ route('consumables.index') }}"
+                            class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('consumables.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                            Расходники
+                        </a>
                     @endif
 
                     @if (user_can_manage_users())
@@ -355,7 +364,7 @@
                                 </path>
                             </svg>
                         </div>
-                        <span class="text-xl font-bold text-gray-900">ICT</span>
+                        <span class="text-xl font-bold text-gray-900">ICT Help</span>
                     </div>
                     <p class="text-gray-600 mb-4 max-w-md">
                         Современная система технической поддержки для колледжа.

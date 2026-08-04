@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Пользователь ' . $user->name . ' - ICT')
+@section('title', 'Пользователь ' . $user->name . ' - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">

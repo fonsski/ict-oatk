@@ -223,7 +223,7 @@
 
 ## 👨‍💻 Разработчик
 
-ICT Support Team
+ICT Help Support Team
 
 **Дата выполнения:** 18 октября 2024
 

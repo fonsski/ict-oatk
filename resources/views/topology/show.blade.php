@@ -69,7 +69,7 @@
                     <select id="panel-room" class="form-input">
                         <option value="">Не указан</option>
                         @foreach($rooms as $room)
-                        <option value="{{ $room->id }}">{{ $room->number }} {{ $room->name }}</option>
+                        <option value="{{ $room->id }}">{{ $room->display_label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -86,7 +86,7 @@
     $nodesData = $diagram->nodes->map(fn($n) => [
         'id' => $n->id, 'label' => $n->label, 'type' => $n->type,
         'ip_address' => $n->ip_address, 'room_id' => $n->room_id,
-        'room_label' => $n->room ? trim($n->room->number . ' ' . ($n->room->name ?? '')) : null,
+        'room_label' => $n->room ? $n->room->display_label : null,
         'pos_x' => $n->pos_x, 'pos_y' => $n->pos_y,
     ])->values();
     $linksData = $diagram->links->map(fn($l) => [

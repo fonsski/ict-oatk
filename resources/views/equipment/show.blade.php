@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Детали оборудования - ICT')
+@section('title', 'Детали оборудования - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">
@@ -9,7 +9,7 @@
         <nav class="flex" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
-                    <a href="{{ route('dashboard') }}" class="text-sm text-slate-500 hover:text-slate-700 inline-flex items-center">
+                    <a href="{{ route('home') }}" class="text-sm text-slate-500 hover:text-slate-700 inline-flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                         Главная
                     </a>
@@ -63,7 +63,7 @@
             <div>
                 <dt class="text-sm font-medium text-slate-500 mb-1">Кабинет</dt>
                 <dd class="text-base text-slate-900">
-                    {{ $equipment->room ? $equipment->room->number . ' - ' . $equipment->room->name : 'Не указан' }}
+                    {{ $equipment->room ? $equipment->room->display_label : 'Не указан' }}
                     <a href="{{ route('equipment.location.history', $equipment) }}" class="ml-2 inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -120,6 +120,56 @@
             </div>
         </dl>
 
+    </div>
+
+    <!-- Расходники -->
+    <div class="card p-6 mb-8">
+        <h2 class="text-lg font-semibold text-slate-900 mb-4">Расходники</h2>
+
+        @if($equipment->consumableAllocations->isEmpty())
+        <p class="text-sm text-gray-500">В это оборудование расходники не устанавливались</p>
+        @else
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Документ списания</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($equipment->consumableAllocations as $allocation)
+                    <tr>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            <a href="{{ route('consumables.show', $allocation->consumable) }}" class="text-blue-600 hover:text-blue-800">
+                                {{ $allocation->consumable->name }}
+                            </a>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $allocation->quantity }} {{ $allocation->consumable->unit }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            @if($allocation->isInstalled())
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Установлен</span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Списан</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            @if($allocation->hasWriteOffDocument())
+                                <a href="{{ route('consumables.allocations.document.download', [$allocation->consumable, $allocation]) }}" class="text-blue-600 hover:text-blue-800">
+                                    {{ $allocation->write_off_document_original_name }}
+                                </a>
+                            @else
+                                —
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
     </div>
 
     <!-- Действия -->

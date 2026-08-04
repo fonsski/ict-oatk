@@ -65,6 +65,11 @@ class Equipment extends Model
         return $this->hasMany(EquipmentLocationHistory::class);
     }
 
+    public function consumableAllocations(): HasMany
+    {
+        return $this->hasMany(ConsumableAllocation::class);
+    }
+
     /**
      * Записывает перемещение оборудования при смене кабинета
      *

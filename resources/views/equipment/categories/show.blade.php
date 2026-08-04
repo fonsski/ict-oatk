@@ -83,7 +83,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                {{ $item->room ? $item->room->number . ' - ' . $item->room->name : 'Не указан' }}
+                                {{ $item->room ? $item->room->display_label : 'Не указан' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($item->has_warranty)

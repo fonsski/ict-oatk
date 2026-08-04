@@ -204,6 +204,27 @@ class Room extends Model
     }
 
     /**
+     * Номер с названием, без дублирования — когда название всего лишь
+     * повторяет номер (например, "1-ка" / "1-ка") или собрано по шаблону
+     * "Кабинет {номер}", показывать его не нужно.
+     */
+    public function getDisplayLabelAttribute(): string
+    {
+        $number = trim((string) $this->number);
+        $name = trim((string) ($this->name ?? ""));
+
+        if ($name === "") {
+            $name = $this->type_name;
+        }
+
+        if ($name === $number || $name === "Кабинет {$number}") {
+            return $number;
+        }
+
+        return "{$number} - {$name}";
+    }
+
+    /**
      * Получение полного адреса кабинета
      */
     public function getFullAddressAttribute(): string

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Добавление записи об обслуживании - ICT')
+@section('title', 'Добавление записи об обслуживании - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">
@@ -66,7 +66,7 @@
                 <h3 class="text-sm font-medium text-slate-500 mb-1">Текущее расположение</h3>
                 <p class="text-lg font-semibold text-slate-900">
                     @if($equipment->room)
-                        Кабинет {{ $equipment->room->number }} - {{ $equipment->room->name ?? $equipment->room->type_name }}
+                        Кабинет {{ $equipment->room->display_label }}
                     @else
                         Не указано
                     @endif

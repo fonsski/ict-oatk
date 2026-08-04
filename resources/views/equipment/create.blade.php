@@ -164,7 +164,7 @@
                         <option value="">Выберите кабинет</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}">
-                                {{ $room->number }} - {{ $room->name }}
+                                {{ $room->display_label }}
                             </option>
                         @endforeach
                     </select>
@@ -182,7 +182,7 @@
                         <option value="">Такой же как текущий</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('initial_room_id') == $room->id ? 'selected' : '' }}">
-                                {{ $room->number }} - {{ $room->name }}
+                                {{ $room->display_label }}
                             </option>
                         @endforeach
                     </select>

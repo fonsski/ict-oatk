@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
             KnowledgeCategorySeeder::class,
             AdminUserSeeder::class,
             SampleUsersSeeder::class,
-            RoomSeeder::class,
+            InventorySeeder::class,
             HomepageFAQSeeder::class,
         ]);
     }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Управление кабинетами - ICT')
+@section('title', 'Управление кабинетами - ICT Help')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-6 py-8">
@@ -186,7 +186,7 @@
                                     <div class="flex flex-col">
                                         <div class="flex items-center">
                                             <div class="text-sm font-medium text-slate-900 mb-1">
-                                                {{ $room->number }} - {{ $room->name }}
+                                                {{ $room->display_label }}
                                             </div>
                                             @if(!$room->is_active)
                                                 <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">

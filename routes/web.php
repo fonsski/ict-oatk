@@ -3,6 +3,7 @@
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCategoryController;
 use App\Http\Controllers\EquipmentServiceController;
+use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\AllTicketsController;
 use App\Http\Controllers\UserController;
@@ -191,6 +192,11 @@ Route::middleware("auth")->group(function () {
             "search",
         ])->name("equipment.search");
 
+        Route::get("/equipment-picker", [
+            EquipmentController::class,
+            "picker",
+        ])->name("equipment.picker");
+
         // Маршруты для истории перемещений оборудования
         Route::get("/equipment/{equipment}/location-history", [
             EquipmentController::class,
@@ -256,6 +262,44 @@ Route::middleware("auth")->group(function () {
                 "as" => "equipment",
             ],
         );
+
+        // Маршруты для расходников
+        Route::resource("/consumables", ConsumableController::class);
+
+        Route::post("/consumables/{consumable}/install", [
+            ConsumableController::class,
+            "install",
+        ])->name("consumables.install");
+
+        Route::delete("/consumables/{consumable}/allocations/{allocation}", [
+            ConsumableController::class,
+            "destroyAllocation",
+        ])->name("consumables.allocations.destroy");
+
+        Route::post("/consumables/{consumable}/write-off", [
+            ConsumableController::class,
+            "writeOffStock",
+        ])->name("consumables.write-off");
+
+        Route::post(
+            "/consumables/{consumable}/allocations/{allocation}/write-off",
+            [ConsumableController::class, "writeOffAllocation"],
+        )->name("consumables.allocations.write-off");
+
+        Route::get(
+            "/consumables/{consumable}/purchase-document",
+            [ConsumableController::class, "downloadPurchaseDocument"],
+        )->name("consumables.purchase-document.download");
+
+        Route::delete(
+            "/consumables/{consumable}/purchase-document",
+            [ConsumableController::class, "destroyPurchaseDocument"],
+        )->name("consumables.purchase-document.destroy");
+
+        Route::get(
+            "/consumables/{consumable}/allocations/{allocation}/document",
+            [ConsumableController::class, "downloadWriteOffDocument"],
+        )->name("consumables.allocations.document.download");
     });
 
     // Управление пользователями (только для admin и master)

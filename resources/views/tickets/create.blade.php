@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Подать заявку - ICT')
+@section('title', 'Подать заявку - ICT Help')
 
 @section('content')
 <div class="container-width section-padding">
@@ -205,7 +205,7 @@
                                         style="font-weight: bold; background-color: #EFF6FF; color: #1E40AF;"
                                     @endif
                                     >
-                                    {{ $room->number }} - {{ $room->name ?? $room->type_name }}
+                                    {{ $room->display_label }}
                                     @if($room->building || $room->floor)
                                         ({{ $room->full_address }})
                                     @endif

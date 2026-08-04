@@ -155,6 +155,9 @@ class EquipmentController extends Controller
             "locationHistory.fromRoom",
             "locationHistory.toRoom",
             "locationHistory.movedByUser",
+            "consumableAllocations" => function ($query) {
+                $query->with("consumable")->latest();
+            },
         ]);
         return view("equipment.show", compact("equipment"));
     }
@@ -338,6 +341,35 @@ class EquipmentController extends Controller
         return redirect()
             ->route("equipment.show", $equipment)
             ->with("success", "Оборудование успешно перемещено");
+    }
+
+    /**
+     * Лёгкий JSON-поиск оборудования по инвентарному номеру/названию —
+     * используется для выбора оборудования при установке расходника.
+     */
+    public function picker(Request $request)
+    {
+        $search = trim((string) $request->input("q"));
+
+        $query = Equipment::query()->select(
+            "id",
+            "inventory_number",
+            "name",
+        );
+
+        if ($search !== "") {
+            $query->where(function ($q) use ($search) {
+                $q->where("inventory_number", "like", "%{$search}%")->orWhere(
+                    "name",
+                    "like",
+                    "%{$search}%",
+                );
+            });
+        }
+
+        $equipment = $query->orderBy("inventory_number")->limit(10)->get();
+
+        return response()->json(["data" => $equipment]);
     }
 
     /**

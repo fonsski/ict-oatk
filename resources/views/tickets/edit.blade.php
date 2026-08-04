@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Редактировать заявку - ICT')
+@section('title', 'Редактировать заявку - ICT Help')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -89,7 +89,7 @@
                         <option value="">Не указано</option>
                         @foreach(\App\Models\Room::active()->orderBy('number')->get() as $room)
                         <option value="{{ $room->id }}" {{ old('room_id', $ticket->room_id) == $room->id ? 'selected' : '' }}>
-                            {{ $room->number }} - {{ $room->name ?? $room->type_name }}
+                            {{ $room->display_label }}
                             @if($room->building || $room->floor)
                                 ({{ $room->full_address }})
                             @endif
