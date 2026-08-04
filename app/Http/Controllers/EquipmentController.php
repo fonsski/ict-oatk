@@ -158,6 +158,9 @@ class EquipmentController extends Controller
             "consumableAllocations" => function ($query) {
                 $query->with("consumable")->latest();
             },
+            "documents" => function ($query) {
+                $query->with("uploadedBy")->latest();
+            },
         ]);
         return view("equipment.show", compact("equipment"));
     }

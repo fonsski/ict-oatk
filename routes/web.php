@@ -4,6 +4,10 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCategoryController;
 use App\Http\Controllers\EquipmentServiceController;
 use App\Http\Controllers\ConsumableController;
+use App\Http\Controllers\ConsumableWriteOffController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\WriteOffController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\AllTicketsController;
 use App\Http\Controllers\UserController;
@@ -262,6 +266,27 @@ Route::middleware("auth")->group(function () {
                 "as" => "equipment",
             ],
         );
+
+        // Маршруты для документов (акты списания, договоры, накладные и т.д.)
+        Route::get("/documents", [
+            DocumentController::class,
+            "index",
+        ])->name("documents.index");
+
+        Route::post("/documents/{type}/{id}", [
+            DocumentController::class,
+            "store",
+        ])->name("documents.store");
+
+        Route::get("/documents/{document}/download", [
+            DocumentController::class,
+            "download",
+        ])->name("documents.download");
+
+        Route::delete("/documents/{document}", [
+            DocumentController::class,
+            "destroy",
+        ])->name("documents.destroy");
 
         // Маршруты для расходников
         Route::resource("/consumables", ConsumableController::class);

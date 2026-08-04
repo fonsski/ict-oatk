@@ -172,6 +172,12 @@
         @endif
     </div>
 
+    @include('documents.partials.attach-list', [
+        'documentable' => $equipment,
+        'documentTypeSlug' => 'equipment',
+        'documents' => $equipment->documents,
+    ])
+
     <!-- Действия -->
     <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4">
         <a href="{{ route('equipment.index') }}" class="btn-outline w-full sm:w-auto">
