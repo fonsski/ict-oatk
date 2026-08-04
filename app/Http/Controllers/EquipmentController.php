@@ -152,6 +152,7 @@ class EquipmentController extends Controller
         $equipment->load([
             "status",
             "room",
+            "writeOff",
             "locationHistory.fromRoom",
             "locationHistory.toRoom",
             "locationHistory.movedByUser",

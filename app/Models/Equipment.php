@@ -28,11 +28,14 @@ class Equipment extends Model
         "service_comment",
         "known_issues",
         "initial_room_id",
+        "written_off_at",
+        "write_off_id",
     ];
 
     protected $casts = [
         "last_service_date" => "date",
         "warranty_end_date" => "date",
+        "written_off_at" => "date",
         "has_warranty" => "boolean",
     ];
 
@@ -73,6 +76,19 @@ class Equipment extends Model
     public function consumableMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    /**
+     * Акт, по которому единица была списана (заполняется при проведении акта).
+     */
+    public function writeOff(): BelongsTo
+    {
+        return $this->belongsTo(WriteOff::class);
+    }
+
+    public function isWrittenOff(): bool
+    {
+        return $this->write_off_id !== null;
     }
 
     /**

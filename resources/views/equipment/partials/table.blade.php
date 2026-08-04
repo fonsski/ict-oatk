@@ -2,6 +2,11 @@
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>
+                @if(auth()->check() && auth()->user()->hasRole(['admin', 'master']))
+                <th class="px-4 py-3 w-10">
+                    <input type="checkbox" id="select-all-equipment" class="rounded border-gray-300" title="Выбрать все на странице">
+                </th>
+                @endif
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Инв. номер / Название
                 </th>
@@ -29,6 +34,12 @@
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($items as $item)
             <tr>
+                @if(auth()->check() && auth()->user()->hasRole(['admin', 'master']))
+                <td class="px-4 py-4">
+                    <input type="checkbox" class="equipment-checkbox rounded border-gray-300" value="{{ $item->id }}"
+                           {{ $item->isWrittenOff() ? 'disabled title=Уже списано' : '' }}>
+                </td>
+                @endif
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ $item->inventory_number }} @if($item->name) — <span class="text-gray-700">{{ $item->name }}</span>@endif</div>
                 </td>
@@ -86,7 +97,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                <td colspan="{{ auth()->check() && auth()->user()->hasRole(['admin', 'master']) ? 8 : 7 }}" class="px-6 py-12 text-center text-gray-500">
                     <div class="flex flex-col items-center">
                         <svg class="w-12 h-12 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>

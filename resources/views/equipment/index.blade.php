@@ -1,20 +1,42 @@
 @extends('layouts.app')
 
-@section('title', 'Оборудование')
+@section('title', 'Оборудование - ICT Help')
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-900">Оборудование</h1>
 
-        <a href="{{ route('equipment.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            Добавить оборудование
-        </a>
+        <div class="flex gap-2">
+            @if(auth()->user()->hasRole(['admin', 'master']))
+            <a href="{{ route('write-offs.index') }}" class="btn-secondary">Акты списания</a>
+            @endif
+            <a href="{{ route('equipment.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Добавить оборудование
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
         {{ session('success') }}
+    </div>
+    @endif
+    @if ($errors->any())
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+    </div>
+    @endif
+
+    @if(auth()->user()->hasRole(['admin', 'master']))
+    <div id="bulk-actions-bar" class="hidden bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
+        <span class="text-sm text-blue-900">Выбрано единиц: <span id="bulk-selected-count" class="font-semibold">0</span></span>
+        <div class="flex items-center gap-3">
+            <button type="button" id="bulk-clear" class="text-sm text-blue-700 hover:text-blue-900 underline">Снять выделение</button>
+            <a href="#" id="bulk-write-off-link" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm">
+                Списать выбранные
+            </a>
+        </div>
     </div>
     @endif
 
@@ -114,6 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const equipmentTable = document.getElementById('equipment-table');
                         if (equipmentTable) {
                             equipmentTable.innerHTML = data.html;
+                            // Таблица перерисована — вернуть отметки выбранных единиц
+                            document.dispatchEvent(new CustomEvent('equipment-table-rendered'));
                         }
                     } else {
                         console.error('API вернул ошибку:', data.message);
@@ -174,6 +198,72 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+@if(auth()->user()->hasRole(['admin', 'master']))
+<script>
+// Массовый выбор оборудования для списания. Выбор хранится в Set, чтобы
+// переживать перерисовку таблицы живым поиском и переключение страниц.
+document.addEventListener('DOMContentLoaded', function () {
+    const selected = new Set();
+    const bar = document.getElementById('bulk-actions-bar');
+    const counter = document.getElementById('bulk-selected-count');
+    const link = document.getElementById('bulk-write-off-link');
+    const clearButton = document.getElementById('bulk-clear');
+    const tableContainer = document.getElementById('equipment-table');
+
+    function refreshBar() {
+        counter.textContent = selected.size;
+        bar.classList.toggle('hidden', selected.size === 0);
+        link.href = '{{ route('write-offs.create') }}?equipment_ids=' + Array.from(selected).join(',');
+    }
+
+    function syncCheckboxes() {
+        tableContainer.querySelectorAll('.equipment-checkbox').forEach(function (checkbox) {
+            checkbox.checked = selected.has(checkbox.value);
+        });
+
+        const selectAll = document.getElementById('select-all-equipment');
+        if (selectAll) {
+            const boxes = tableContainer.querySelectorAll('.equipment-checkbox:not(:disabled)');
+            selectAll.checked = boxes.length > 0 &&
+                Array.from(boxes).every(function (box) { return box.checked; });
+        }
+    }
+
+    tableContainer.addEventListener('change', function (event) {
+        if (event.target.classList.contains('equipment-checkbox')) {
+            event.target.checked ? selected.add(event.target.value) : selected.delete(event.target.value);
+            refreshBar();
+            syncCheckboxes();
+        }
+
+        if (event.target.id === 'select-all-equipment') {
+            tableContainer.querySelectorAll('.equipment-checkbox:not(:disabled)').forEach(function (checkbox) {
+                checkbox.checked = event.target.checked;
+                event.target.checked ? selected.add(checkbox.value) : selected.delete(checkbox.value);
+            });
+            refreshBar();
+        }
+    });
+
+    clearButton.addEventListener('click', function () {
+        selected.clear();
+        refreshBar();
+        syncCheckboxes();
+    });
+
+    link.addEventListener('click', function (event) {
+        if (selected.size === 0) {
+            event.preventDefault();
+        }
+    });
+
+    document.addEventListener('equipment-table-rendered', syncCheckboxes);
+
+    refreshBar();
+});
+</script>
+@endif
 @endpush
 
 @endsection

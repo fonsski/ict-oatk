@@ -288,6 +288,37 @@ Route::middleware("auth")->group(function () {
             "destroy",
         ])->name("documents.destroy");
 
+        // Маршруты для актов списания оборудования
+        Route::get("/write-offs", [
+            WriteOffController::class,
+            "index",
+        ])->name("write-offs.index");
+
+        Route::get("/write-offs/create", [
+            WriteOffController::class,
+            "create",
+        ])->name("write-offs.create");
+
+        Route::post("/write-offs", [
+            WriteOffController::class,
+            "store",
+        ])->name("write-offs.store");
+
+        Route::get("/write-offs/{writeOff}", [
+            WriteOffController::class,
+            "show",
+        ])->name("write-offs.show");
+
+        Route::post("/write-offs/{writeOff}/post", [
+            WriteOffController::class,
+            "post",
+        ])->name("write-offs.post");
+
+        Route::delete("/write-offs/{writeOff}", [
+            WriteOffController::class,
+            "destroy",
+        ])->name("write-offs.destroy");
+
         // Маршруты для закупок
         Route::resource("/purchases", PurchaseController::class);
 

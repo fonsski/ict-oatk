@@ -50,9 +50,21 @@
             <div>
                 <dt class="text-sm font-medium text-slate-500 mb-1">Статус</dt>
                 <dd class="text-base text-slate-900">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        {{ $equipment->isWrittenOff() ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' }}">
                         {{ $equipment->status->name }}
                     </span>
+                    @if($equipment->isWrittenOff())
+                    <div class="mt-1 text-xs text-slate-500">
+                        Списано {{ optional($equipment->written_off_at)->format('d.m.Y') }} по акту
+                        <a href="{{ route('write-offs.show', $equipment->writeOff) }}" class="text-blue-600 hover:text-blue-800">
+                            {{ $equipment->writeOff->number }}
+                        </a>
+                        @if($equipment->writeOff->reason)
+                        <div>Причина: {{ $equipment->writeOff->reason }}</div>
+                        @endif
+                    </div>
+                    @endif
                 </dd>
             </div>
             <div>
