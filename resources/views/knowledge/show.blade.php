@@ -162,6 +162,26 @@
                 </div>
                 @endif
 
+                <!-- Связанное оборудование -->
+                @if($article->equipment->count())
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Связанное оборудование</h3>
+                    <ul class="space-y-2">
+                        @foreach($article->equipment as $item)
+                        <li class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                            </svg>
+                            <a href="{{ route('equipment.show', $item) }}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                {{ $item->inventory_number }}@if($item->name) — {{ $item->name }}@endif
+                            </a>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
                 <!-- Article Footer -->
                 <!-- Tags Section -->
                 @if($article->tags)

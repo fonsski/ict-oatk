@@ -60,6 +60,19 @@ class KnowledgeBase extends Model
         return $this->belongsTo(KnowledgeCategory::class, "category_id");
     }
 
+    /**
+     * Оборудование, к которому привязана статья (инструкция/регламент).
+     */
+    public function equipment()
+    {
+        return $this->belongsToMany(
+            Equipment::class,
+            "equipment_knowledge_base",
+            "knowledge_base_id",
+            "equipment_id",
+        )->withTimestamps();
+    }
+
     public function scopePublished($query)
     {
         return $query->where("status", self::STATUS_PUBLISHED);

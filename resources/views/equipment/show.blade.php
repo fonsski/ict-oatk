@@ -184,6 +184,53 @@
         @endif
     </div>
 
+    <!-- Связанные статьи базы знаний -->
+    <div class="card p-6 mb-8">
+        <h2 class="text-lg font-semibold text-slate-900 mb-4">Связанные статьи</h2>
+        <p class="text-sm text-gray-500 mb-4">Инструкции и регламенты по этому оборудованию.</p>
+
+        @if($equipment->knowledgeArticles->isEmpty())
+        <p class="text-sm text-gray-500 mb-4">Статьи пока не привязаны</p>
+        @else
+        <ul class="divide-y divide-gray-200 mb-4">
+            @foreach($equipment->knowledgeArticles as $article)
+            <li class="flex items-center justify-between py-3">
+                <div class="min-w-0">
+                    <a href="{{ route('knowledge.show', $article) }}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        {{ $article->title }}
+                    </a>
+                    @if($article->category)
+                    <div class="text-xs text-gray-400">{{ $article->category->name }}</div>
+                    @endif
+                </div>
+                @if(auth()->user()->canManageEquipment())
+                <form action="{{ route('equipment.knowledge.destroy', [$equipment, $article]) }}" method="POST"
+                      onsubmit="return confirm('Отвязать статью «{{ $article->title }}»?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-800 ml-3 whitespace-nowrap">Отвязать</button>
+                </form>
+                @endif
+            </li>
+            @endforeach
+        </ul>
+        @endif
+
+        @if(auth()->user()->canManageEquipment())
+        <form action="{{ route('equipment.knowledge.store', $equipment) }}" method="POST" class="flex flex-wrap items-end gap-3">
+            @csrf
+            <div class="relative">
+                <label class="block text-xs text-gray-500 mb-1">Найти статью</label>
+                <input type="text" id="article-picker-input" autocomplete="off" placeholder="Начните вводить название..."
+                       class="rounded border-gray-300 px-3 py-2 w-80">
+                <input type="hidden" name="knowledge_base_id" id="article-picker-id" required>
+                <div id="article-picker-results" class="hidden absolute z-20 mt-1 w-80 bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto"></div>
+            </div>
+            <button type="submit" class="btn-primary">Привязать</button>
+        </form>
+        @endif
+    </div>
+
     @include('documents.partials.attach-list', [
         'documentable' => $equipment,
         'documentTypeSlug' => 'equipment',
@@ -240,3 +287,59 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Автодополнение статей базы знаний для привязки к оборудованию.
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('article-picker-input');
+    const hiddenId = document.getElementById('article-picker-id');
+    const results = document.getElementById('article-picker-results');
+    if (!input) return;
+
+    let timeout;
+
+    function loadResults(query) {
+        fetch('{{ route('equipment.knowledge.search', $equipment) }}?q=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(data => {
+                results.innerHTML = '';
+                if (!data.data || data.data.length === 0) {
+                    results.classList.add('hidden');
+                    return;
+                }
+                data.data.forEach(function (article) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-100';
+                    button.textContent = article.title;
+                    button.addEventListener('click', function () {
+                        input.value = article.title;
+                        hiddenId.value = article.id;
+                        results.classList.add('hidden');
+                    });
+                    results.appendChild(button);
+                });
+                results.classList.remove('hidden');
+            });
+    }
+
+    input.addEventListener('input', function () {
+        hiddenId.value = '';
+        clearTimeout(timeout);
+        timeout = setTimeout(() => loadResults(input.value.trim()), 250);
+    });
+
+    // Показать первые варианты сразу по клику, не заставляя печатать.
+    input.addEventListener('focus', function () {
+        if (!input.value.trim()) loadResults('');
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!results.contains(event.target) && event.target !== input) {
+            results.classList.add('hidden');
+        }
+    });
+});
+</script>
+@endpush

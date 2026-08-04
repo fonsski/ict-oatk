@@ -165,6 +165,7 @@ class EquipmentController extends Controller
             "documents" => function ($query) {
                 $query->with("uploadedBy")->latest();
             },
+            "knowledgeArticles.category",
         ]);
         return view("equipment.show", compact("equipment"));
     }

@@ -239,7 +239,7 @@ class KnowledgeBaseController extends Controller
             ->take(4)
             ->get();
 
-        $article->load("images", "attachments");
+        $article->load("images", "attachments", "equipment");
 
         // If content is empty (for records created outside controller), render markdown and sanitize
         if (empty($article->content) && !empty($article->markdown)) {

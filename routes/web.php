@@ -3,6 +3,7 @@
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCategoryController;
 use App\Http\Controllers\EquipmentServiceController;
+use App\Http\Controllers\EquipmentKnowledgeController;
 use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\ConsumableWriteOffController;
 use App\Http\Controllers\DocumentController;
@@ -287,6 +288,22 @@ Route::middleware("auth")->group(function () {
             DocumentController::class,
             "destroy",
         ])->name("documents.destroy");
+
+        // Привязка статей базы знаний к оборудованию
+        Route::get("/equipment/{equipment}/knowledge-search", [
+            EquipmentKnowledgeController::class,
+            "search",
+        ])->name("equipment.knowledge.search");
+
+        Route::post("/equipment/{equipment}/knowledge", [
+            EquipmentKnowledgeController::class,
+            "store",
+        ])->name("equipment.knowledge.store");
+
+        Route::delete("/equipment/{equipment}/knowledge/{knowledge}", [
+            EquipmentKnowledgeController::class,
+            "destroy",
+        ])->name("equipment.knowledge.destroy");
 
         // Маршруты для актов списания оборудования
         Route::get("/write-offs", [

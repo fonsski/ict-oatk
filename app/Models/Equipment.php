@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\HasDocuments;
@@ -89,6 +90,19 @@ class Equipment extends Model
     public function isWrittenOff(): bool
     {
         return $this->write_off_id !== null;
+    }
+
+    /**
+     * Статьи базы знаний (инструкции, регламенты), привязанные к оборудованию.
+     */
+    public function knowledgeArticles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            KnowledgeBase::class,
+            "equipment_knowledge_base",
+            "equipment_id",
+            "knowledge_base_id",
+        )->withTimestamps();
     }
 
     /**
