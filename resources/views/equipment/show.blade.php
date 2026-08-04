@@ -71,6 +71,19 @@
                 <dt class="text-sm font-medium text-slate-500 mb-1">Категория</dt>
                 <dd class="text-base text-slate-900">{{ $equipment->category ? $equipment->category->name : 'Не указана' }}</dd>
             </div>
+            @if($equipment->purchase)
+            <div>
+                <dt class="text-sm font-medium text-slate-500 mb-1">Поступило по закупке</dt>
+                <dd class="text-base text-slate-900">
+                    <a href="{{ route('purchases.show', $equipment->purchase) }}" class="text-blue-600 hover:text-blue-800">
+                        {{ $equipment->purchase->number }}
+                    </a>
+                    <div class="text-xs text-slate-500">
+                        {{ $equipment->purchase->date->format('d.m.Y') }} · {{ $equipment->purchase->supplier }}
+                    </div>
+                </dd>
+            </div>
+            @endif
             <!-- Информация о локации удалена, так как она больше не используется -->
             <div>
                 <dt class="text-sm font-medium text-slate-500 mb-1">Кабинет</dt>

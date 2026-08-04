@@ -102,7 +102,7 @@ class SupplyDemoSeeder extends Seeder
                 "sum" => 24500.00,
             ]);
 
-            $purchase->items()->create([
+            $monitors = $purchase->items()->create([
                 "item_type" => PurchaseItem::TYPE_EQUIPMENT,
                 "equipment_category_id" => EquipmentCategory::where("name", "Монитор")->value("id"),
                 "name" => "Монитор Dell P2422H",
@@ -112,8 +112,33 @@ class SupplyDemoSeeder extends Seeder
             ]);
 
             $purchase->recalculateTotal();
-            $purchase->post();
+
+            // Инвентарные номера обычно вводит человек на шаге проведения —
+            // для демо берём свободные номера из того же диапазона.
+            $purchase->post([
+                $monitors->id => $this->freeInventoryNumbers(2),
+            ]);
         });
+    }
+
+    /**
+     * Подобрать свободные инвентарные номера для демо-закупки.
+     *
+     * @return array<int, string>
+     */
+    private function freeInventoryNumbers(int $count): array
+    {
+        $numbers = [];
+        $candidate = 9900000001;
+
+        while (count($numbers) < $count) {
+            if (!Equipment::where("inventory_number", (string) $candidate)->exists()) {
+                $numbers[] = (string) $candidate;
+            }
+            $candidate++;
+        }
+
+        return $numbers;
     }
 
     private function seedConsumableWriteOff(User $author, array $consumables): void

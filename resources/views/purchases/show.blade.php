@@ -35,10 +35,7 @@
         <div class="flex gap-2">
             @if($purchase->isDraft())
                 <a href="{{ route('purchases.edit', $purchase) }}" class="btn-secondary">Изменить</a>
-                <form action="{{ route('purchases.post', $purchase) }}" method="POST" onsubmit="return confirm('Провести закупку? Оборудование будет заведено в инвентарь, остатки расходников — увеличены. Действие необратимо.')">
-                    @csrf
-                    <button type="submit" class="btn-primary">Провести</button>
-                </form>
+                <a href="{{ route('purchases.post.form', $purchase) }}" class="btn-primary">Провести</a>
                 <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" onsubmit="return confirm('Удалить закупку «{{ $purchase->number }}»?')">
                     @csrf
                     @method('DELETE')

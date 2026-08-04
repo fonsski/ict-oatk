@@ -32,6 +32,7 @@ class Equipment extends Model
         "initial_room_id",
         "written_off_at",
         "write_off_id",
+        "purchase_id",
     ];
 
     protected $casts = [
@@ -91,6 +92,14 @@ class Equipment extends Model
     public function isWrittenOff(): bool
     {
         return $this->write_off_id !== null;
+    }
+
+    /**
+     * Закупка, по которой единица поступила (если заведена через закупку).
+     */
+    public function purchase(): BelongsTo
+    {
+        return $this->belongsTo(Purchase::class);
     }
 
     /**

@@ -153,6 +153,7 @@ class EquipmentController extends Controller
             "status",
             "room",
             "writeOff",
+            "purchase",
             "locationHistory.fromRoom",
             "locationHistory.toRoom",
             "locationHistory.movedByUser",

@@ -83,7 +83,10 @@ class PurchasePostingTest extends TestCase
         $this->assertTrue($purchase->refresh()->isPosted());
     }
 
-    public function test_posting_creates_one_inventory_unit_per_equipment_item(): void
+    /**
+     * Позиция с оборудованием и её id — для передачи введённых номеров.
+     */
+    private function equipmentPurchase(int $quantity = 3): Purchase
     {
         $category = EquipmentCategory::firstOrCreate(
             ['name' => 'Монитор'],
@@ -94,18 +97,110 @@ class PurchasePostingTest extends TestCase
             'item_type' => PurchaseItem::TYPE_EQUIPMENT,
             'equipment_category_id' => $category->id,
             'name' => 'Монитор Dell 24"',
-            'quantity' => 3,
+            'quantity' => $quantity,
             'unit_price' => 15000,
-            'sum' => 45000,
+            'sum' => 15000 * $quantity,
         ]);
 
-        $this->actingAs($this->master())->post(route('purchases.post', $purchase));
+        return $purchase;
+    }
+
+    public function test_posting_creates_units_with_the_inventory_numbers_entered_by_hand(): void
+    {
+        $purchase = $this->equipmentPurchase();
+        $item = $purchase->items()->first();
+
+        $this->actingAs($this->master())
+            ->post(route('purchases.post', $purchase), [
+                'inventory_numbers' => [
+                    $item->id => ['1001', '1002', '1003'],
+                ],
+            ])
+            ->assertRedirect();
 
         $created = Equipment::where('name', 'Монитор Dell 24"')->get();
         $this->assertCount(3, $created);
-        $this->assertTrue($created->every(fn ($item) => $item->category_id === $category->id));
-        // Инвентарные номера — заглушки, но обязаны быть уникальными.
-        $this->assertCount(3, $created->pluck('inventory_number')->unique());
+        $this->assertEqualsCanonicalizing(
+            ['1001', '1002', '1003'],
+            $created->pluck('inventory_number')->all(),
+        );
+        // Каждая единица помнит, по какой закупке пришла.
+        $this->assertTrue($created->every(fn ($unit) => $unit->purchase_id === $purchase->id));
+    }
+
+    public function test_posting_requires_a_number_for_every_unit(): void
+    {
+        $purchase = $this->equipmentPurchase();
+        $item = $purchase->items()->first();
+
+        $this->actingAs($this->master())
+            ->post(route('purchases.post', $purchase), [
+                'inventory_numbers' => [$item->id => ['1001', '1002']],
+            ])
+            ->assertSessionHasErrors("inventory_numbers.{$item->id}");
+
+        $this->assertSame(0, Equipment::count());
+        $this->assertTrue($purchase->refresh()->isDraft());
+    }
+
+    public function test_posting_rejects_non_numeric_inventory_number(): void
+    {
+        $purchase = $this->equipmentPurchase(1);
+        $item = $purchase->items()->first();
+
+        $this->actingAs($this->master())
+            ->post(route('purchases.post', $purchase), [
+                'inventory_numbers' => [$item->id => ['ABC-1']],
+            ])
+            ->assertSessionHasErrors("inventory_numbers.{$item->id}.0");
+
+        $this->assertSame(0, Equipment::count());
+    }
+
+    public function test_posting_rejects_number_already_used_in_inventory(): void
+    {
+        $existing = Equipment::factory()->create(['inventory_number' => '5005']);
+        $purchase = $this->equipmentPurchase(1);
+        $item = $purchase->items()->first();
+
+        $this->actingAs($this->master())
+            ->post(route('purchases.post', $purchase), [
+                'inventory_numbers' => [$item->id => ['5005']],
+            ])
+            ->assertSessionHasErrors("inventory_numbers.{$item->id}.0");
+
+        $this->assertSame(1, Equipment::count());
+        $this->assertSame($existing->id, Equipment::first()->id);
+    }
+
+    public function test_posting_rejects_duplicate_numbers_within_one_purchase(): void
+    {
+        $purchase = $this->equipmentPurchase(2);
+        $item = $purchase->items()->first();
+
+        $this->actingAs($this->master())
+            ->post(route('purchases.post', $purchase), [
+                'inventory_numbers' => [$item->id => ['7007', '7007']],
+            ])
+            ->assertSessionHasErrors('inventory_numbers');
+
+        $this->assertSame(0, Equipment::count());
+    }
+
+    public function test_posting_form_lists_a_field_per_unit(): void
+    {
+        $purchase = $this->equipmentPurchase(2);
+        $item = $purchase->items()->first();
+
+        $response = $this->actingAs($this->master())
+            ->get(route('purchases.post.form', $purchase))
+            ->assertOk()
+            ->assertSee('Монитор Dell 24&quot;', false);
+
+        $this->assertSame(
+            2,
+            substr_count($response->getContent(), "inventory_numbers[{$item->id}][]"),
+        );
     }
 
     public function test_purchase_cannot_be_posted_twice(): void

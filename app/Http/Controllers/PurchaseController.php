@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PostPurchaseRequest;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Consumable;
@@ -157,16 +158,35 @@ class PurchaseController extends Controller
     }
 
     /**
+     * Форма проведения: здесь вручную вводятся инвентарные номера,
+     * выданные бухгалтерией, — по одному на каждую единицу оборудования.
+     */
+    public function postForm(Purchase $purchase)
+    {
+        $this->authorizeManage();
+
+        if (!$purchase->isDraft()) {
+            return redirect()
+                ->route("purchases.show", $purchase)
+                ->withErrors(["purchase" => "Закупка уже проведена"]);
+        }
+
+        $purchase->load(["items.consumable", "items.equipmentCategory"]);
+
+        return view("purchases.post", compact("purchase"));
+    }
+
+    /**
      * Провести закупку: пополнить инвентарь/остатки.
      */
-    public function post(Purchase $purchase)
+    public function post(PostPurchaseRequest $request, Purchase $purchase)
     {
         $this->authorizeManage();
 
         try {
-            $purchase->post();
+            $purchase->post($request->validated()["inventory_numbers"] ?? []);
         } catch (\RuntimeException $e) {
-            return back()->withErrors(["purchase" => $e->getMessage()]);
+            return back()->withInput()->withErrors(["purchase" => $e->getMessage()]);
         }
 
         return redirect()

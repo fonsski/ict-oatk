@@ -75,14 +75,20 @@ class Purchase extends Model
      * Провести закупку: оборудование заводится в инвентарь (по позициям
      * "equipment"), расходники пополняют остаток движением прихода
      * (позиции "consumable"). Всё — в одной транзакции.
+     *
+     * Инвентарные номера выдаёт бухгалтерия, поэтому их вводит человек на
+     * шаге проведения: массив вида [id позиции => ['101', '102']]. На каждую
+     * единицу нужен свой номер — иначе провести закупку нельзя.
+     *
+     * @param array<int, array<int, string>> $inventoryNumbers
      */
-    public function post(): void
+    public function post(array $inventoryNumbers = []): void
     {
         if (!$this->isDraft()) {
             throw new \RuntimeException("Провести можно только закупку в статусе «Черновик»");
         }
 
-        DB::transaction(function () {
+        DB::transaction(function () use ($inventoryNumbers) {
             $workingStatusId = EquipmentStatus::where("slug", "working")->value("id")
                 ?? EquipmentStatus::query()->value("id");
 
@@ -94,18 +100,29 @@ class Purchase extends Model
                         "moved_by_user_id" => Auth::id(),
                         "moved_at" => $this->date,
                     ]);
-                } else {
-                    for ($i = 0; $i < $item->quantity; $i++) {
-                        Equipment::create([
-                            "name" => $item->name,
-                            "category_id" => $item->equipment_category_id,
-                            "status_id" => $workingStatusId,
-                            // Инвентарный номер выдаётся бухгалтерией — до его
-                            // присвоения используем понятную заглушку с цифрами,
-                            // которую нужно заменить перед дальнейшим редактированием.
-                            "inventory_number" => $this->generatePlaceholderInventoryNumber($item->id, $i),
-                        ]);
-                    }
+
+                    continue;
+                }
+
+                $numbers = array_values(array_filter(
+                    $inventoryNumbers[$item->id] ?? [],
+                    fn($number) => trim((string) $number) !== "",
+                ));
+
+                if (count($numbers) !== $item->quantity) {
+                    throw new \RuntimeException(
+                        "Для позиции «{$item->name}» нужно указать {$item->quantity} инвентарных номеров",
+                    );
+                }
+
+                foreach ($numbers as $number) {
+                    Equipment::create([
+                        "name" => $item->name,
+                        "category_id" => $item->equipment_category_id,
+                        "status_id" => $workingStatusId,
+                        "inventory_number" => trim($number),
+                        "purchase_id" => $this->id,
+                    ]);
                 }
             }
 
@@ -117,14 +134,18 @@ class Purchase extends Model
     }
 
     /**
-     * Заглушка вместо реального инвентарного номера (его выдаёт бухгалтерия).
-     * Гарантированно уникальна за счёт id позиции закупки, но не проходит
-     * regex "только цифры" из StoreEquipmentRequest — это осознанно: пока
-     * реальный номер не проставлен, дальнейшее редактирование карточки
-     * через форму заблокировано валидацией, и это подсказывает, что делать.
+     * Позиции с оборудованием — для них на проведении запрашиваются номера.
      */
-    private function generatePlaceholderInventoryNumber(int $purchaseItemId, int $index): string
+    public function equipmentItems()
     {
-        return "NEW-{$purchaseItemId}-{$index}";
+        return $this->items()->where("item_type", PurchaseItem::TYPE_EQUIPMENT);
+    }
+
+    /**
+     * Оборудование, заведённое по этой закупке.
+     */
+    public function equipment(): HasMany
+    {
+        return $this->hasMany(Equipment::class);
     }
 }
