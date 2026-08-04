@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\HasDocuments;
@@ -67,9 +66,13 @@ class Equipment extends Model
         return $this->hasMany(EquipmentLocationHistory::class);
     }
 
-    public function consumableAllocations(): HasMany
+    /**
+     * Движения расходников, выданных/установленных в это оборудование
+     * (StockMovement с типом "outcome" и заполненным equipment_id).
+     */
+    public function consumableMovements(): HasMany
     {
-        return $this->hasMany(ConsumableAllocation::class);
+        return $this->hasMany(StockMovement::class);
     }
 
     /**

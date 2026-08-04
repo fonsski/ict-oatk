@@ -85,9 +85,10 @@ class Document extends Model
 
         return match ($this->documentable_type) {
             Equipment::class => "Оборудование " . $this->documentable->inventory_number,
+            Consumable::class => "Расходник «" . $this->documentable->name . "»",
             Purchase::class => "Закупка " . $this->documentable->number,
             WriteOff::class => "Акт списания " . $this->documentable->number,
-            ConsumableWriteOff::class => "Списание расходников №" . $this->documentable->id,
+            ConsumableWriteOff::class => "Списание расходников " . $this->documentable->number,
             default => class_basename($this->documentable_type) . " #" . $this->documentable_id,
         };
     }
@@ -103,6 +104,7 @@ class Document extends Model
 
         return match ($this->documentable_type) {
             Equipment::class => route("equipment.show", $this->documentable),
+            Consumable::class => route("consumables.show", $this->documentable),
             Purchase::class => Route::has("purchases.show")
                 ? route("purchases.show", $this->documentable)
                 : null,

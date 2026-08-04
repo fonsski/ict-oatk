@@ -288,43 +288,47 @@ Route::middleware("auth")->group(function () {
             "destroy",
         ])->name("documents.destroy");
 
+        // Маршруты для закупок
+        Route::resource("/purchases", PurchaseController::class);
+
+        Route::post("/purchases/{purchase}/post", [
+            PurchaseController::class,
+            "post",
+        ])->name("purchases.post");
+
         // Маршруты для расходников
         Route::resource("/consumables", ConsumableController::class);
 
-        Route::post("/consumables/{consumable}/install", [
+        Route::post("/consumables/{consumable}/issue", [
             ConsumableController::class,
-            "install",
-        ])->name("consumables.install");
-
-        Route::delete("/consumables/{consumable}/allocations/{allocation}", [
-            ConsumableController::class,
-            "destroyAllocation",
-        ])->name("consumables.allocations.destroy");
-
-        Route::post("/consumables/{consumable}/write-off", [
-            ConsumableController::class,
-            "writeOffStock",
-        ])->name("consumables.write-off");
-
-        Route::post(
-            "/consumables/{consumable}/allocations/{allocation}/write-off",
-            [ConsumableController::class, "writeOffAllocation"],
-        )->name("consumables.allocations.write-off");
-
-        Route::get(
-            "/consumables/{consumable}/purchase-document",
-            [ConsumableController::class, "downloadPurchaseDocument"],
-        )->name("consumables.purchase-document.download");
+            "issue",
+        ])->name("consumables.issue");
 
         Route::delete(
-            "/consumables/{consumable}/purchase-document",
-            [ConsumableController::class, "destroyPurchaseDocument"],
-        )->name("consumables.purchase-document.destroy");
+            "/consumables/{consumable}/movements/{movement}",
+            [ConsumableController::class, "destroyMovement"],
+        )->name("consumables.movements.destroy");
 
-        Route::get(
-            "/consumables/{consumable}/allocations/{allocation}/document",
-            [ConsumableController::class, "downloadWriteOffDocument"],
-        )->name("consumables.allocations.document.download");
+        // Маршруты для актов массового списания расходников
+        Route::get("/consumable-write-offs", [
+            ConsumableWriteOffController::class,
+            "index",
+        ])->name("consumable-write-offs.index");
+
+        Route::get("/consumable-write-offs/create", [
+            ConsumableWriteOffController::class,
+            "create",
+        ])->name("consumable-write-offs.create");
+
+        Route::post("/consumable-write-offs", [
+            ConsumableWriteOffController::class,
+            "store",
+        ])->name("consumable-write-offs.store");
+
+        Route::get("/consumable-write-offs/{consumableWriteOff}", [
+            ConsumableWriteOffController::class,
+            "show",
+        ])->name("consumable-write-offs.show");
     });
 
     // Управление пользователями (только для admin и master)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Consumable;
 use App\Models\ConsumableWriteOff;
 use App\Models\Document;
 use App\Models\Equipment;
@@ -19,6 +20,7 @@ class DocumentController extends Controller
      */
     private const SUBJECT_MAP = [
         "equipment" => Equipment::class,
+        "consumable" => Consumable::class,
         "purchase" => Purchase::class,
         "write-off" => WriteOff::class,
         "consumable-write-off" => ConsumableWriteOff::class,

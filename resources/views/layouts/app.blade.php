@@ -116,6 +116,10 @@
                                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('documents.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                                             Документы
                                         </a>
+                                        <a href="{{ route('purchases.index') }}"
+                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('purchases.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                                            Закупки
+                                        </a>
 
                                     </div>
                                 </div>
@@ -299,6 +303,10 @@
                             <a href="{{ route('documents.index') }}"
                                 class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('documents.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                 Документы
+                            </a>
+                            <a href="{{ route('purchases.index') }}"
+                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('purchases.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                Закупки
                             </a>
                         </div>
                     @endif

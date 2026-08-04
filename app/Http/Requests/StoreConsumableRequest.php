@@ -17,10 +17,11 @@ class StoreConsumableRequest extends FormRequest
             "name" => "required|string|min:2|max:255",
             "category" => "nullable|string|max:255",
             "unit" => "nullable|string|max:20",
-            "quantity_total" => "required|integer|min:1",
+            "quantity" => "required|integer|min:0",
+            "min_quantity" => "nullable|integer|min:0",
+            "room_id" => "nullable|exists:rooms,id",
             "responsible_user_id" => "nullable|exists:users,id",
             "notes" => "nullable|string|max:1000",
-            "purchase_document" => "nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,png,jpg,jpeg,gif",
         ];
     }
 
@@ -29,12 +30,12 @@ class StoreConsumableRequest extends FormRequest
         return [
             "name.required" => "Пожалуйста, укажите название расходника",
             "name.min" => "Название должно содержать не менее 2 символов",
-            "quantity_total.required" => "Пожалуйста, укажите количество",
-            "quantity_total.integer" => "Количество должно быть целым числом",
-            "quantity_total.min" => "Количество должно быть не менее 1",
+            "quantity.required" => "Пожалуйста, укажите начальный остаток",
+            "quantity.integer" => "Остаток должен быть целым числом",
+            "quantity.min" => "Остаток не может быть отрицательным",
+            "min_quantity.integer" => "Минимальный остаток должен быть целым числом",
+            "room_id.exists" => "Выбранный кабинет не существует в системе",
             "responsible_user_id.exists" => "Выбранный ответственный не существует в системе",
-            "purchase_document.max" => "Файл документа закупки не должен превышать 10 МБ",
-            "purchase_document.mimes" => "Недопустимый формат документа закупки",
         ];
     }
 
@@ -44,10 +45,11 @@ class StoreConsumableRequest extends FormRequest
             "name" => "название",
             "category" => "категория",
             "unit" => "единица измерения",
-            "quantity_total" => "количество",
+            "quantity" => "начальный остаток",
+            "min_quantity" => "минимальный остаток",
+            "room_id" => "кабинет (место хранения)",
             "responsible_user_id" => "ответственный",
             "notes" => "примечания",
-            "purchase_document" => "документ закупки",
         ];
     }
 }

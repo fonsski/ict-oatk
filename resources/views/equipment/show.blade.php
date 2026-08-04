@@ -124,10 +124,10 @@
 
     <!-- Расходники -->
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-semibold text-slate-900 mb-4">Расходники</h2>
+        <h2 class="text-lg font-semibold text-slate-900 mb-4">Выданные расходники</h2>
 
-        @if($equipment->consumableAllocations->isEmpty())
-        <p class="text-sm text-gray-500">В это оборудование расходники не устанавливались</p>
+        @if($equipment->consumableMovements->isEmpty())
+        <p class="text-sm text-gray-500">В это оборудование расходники не выдавались</p>
         @else
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -135,33 +135,33 @@
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Документ списания</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Основание</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($equipment->consumableAllocations as $allocation)
+                    @foreach($equipment->consumableMovements as $movement)
                     <tr>
                         <td class="px-4 py-3 whitespace-nowrap text-sm">
-                            <a href="{{ route('consumables.show', $allocation->consumable) }}" class="text-blue-600 hover:text-blue-800">
-                                {{ $allocation->consumable->name }}
+                            @if($movement->consumable)
+                            <a href="{{ route('consumables.show', $movement->consumable) }}" class="text-blue-600 hover:text-blue-800">
+                                {{ $movement->consumable->name }}
                             </a>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $allocation->quantity }} {{ $allocation->consumable->unit }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm">
-                            @if($allocation->isInstalled())
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Установлен</span>
                             @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Списан</span>
+                            <span class="text-gray-500">Расходник удалён</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm">
-                            @if($allocation->hasWriteOffDocument())
-                                <a href="{{ route('consumables.allocations.document.download', [$allocation->consumable, $allocation]) }}" class="text-blue-600 hover:text-blue-800">
-                                    {{ $allocation->write_off_document_original_name }}
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $movement->quantity }} {{ $movement->consumable->unit ?? '' }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $movement->moved_at->format('d.m.Y') }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            {{ $movement->reason ?: '—' }}
+                            @if($movement->consumableWriteOff)
+                            <div class="text-xs text-gray-400">
+                                Акт:
+                                <a href="{{ route('consumable-write-offs.show', $movement->consumableWriteOff) }}" class="text-blue-600 hover:text-blue-800">
+                                    {{ $movement->consumableWriteOff->number }}
                                 </a>
-                            @else
-                                —
+                            </div>
                             @endif
                         </td>
                     </tr>

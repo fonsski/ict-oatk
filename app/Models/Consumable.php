@@ -2,31 +2,33 @@
 
 namespace App\Models;
 
+use App\Traits\HasDocuments;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Consumable extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDocuments, HasFactory;
 
     protected $fillable = [
         "name",
         "category",
         "unit",
-        "quantity_total",
+        "quantity",
+        "min_quantity",
+        "room_id",
         "responsible_user_id",
         "notes",
-        "purchase_document_path",
-        "purchase_document_original_name",
-        "purchase_document_mime_type",
-        "purchase_document_size",
     ];
 
     protected $casts = [
-        "quantity_total" => "integer",
-        "purchase_document_size" => "integer",
+        "quantity" => "integer",
+        "min_quantity" => "integer",
     ];
 
     public function responsibleUser(): BelongsTo
@@ -34,67 +36,78 @@ class Consumable extends Model
         return $this->belongsTo(User::class, "responsible_user_id");
     }
 
-    public function allocations(): HasMany
+    public function room(): BelongsTo
     {
-        return $this->hasMany(ConsumableAllocation::class);
+        return $this->belongsTo(Room::class);
     }
 
-    public function installedAllocations(): HasMany
+    public function movements(): HasMany
     {
-        return $this->allocations()->where(
-            "status",
-            ConsumableAllocation::STATUS_INSTALLED,
-        );
+        return $this->hasMany(StockMovement::class);
     }
 
-    public function writtenOffAllocations(): HasMany
+    public function scopeLowStock(Builder $query): void
     {
-        return $this->allocations()->where(
-            "status",
-            ConsumableAllocation::STATUS_WRITTEN_OFF,
-        );
+        $query
+            ->whereNotNull("min_quantity")
+            ->whereColumn("quantity", "<=", "min_quantity");
     }
 
-    public function getQuantityInstalledAttribute(): int
+    public function isLowStock(): bool
     {
-        return (int) $this->allocations
-            ->where("status", ConsumableAllocation::STATUS_INSTALLED)
-            ->sum("quantity");
+        return $this->min_quantity !== null && $this->quantity <= $this->min_quantity;
     }
 
-    public function getQuantityWrittenOffAttribute(): int
+    /**
+     * Зафиксировать приход (например, по закупке) и увеличить остаток.
+     * Строка блокируется на время операции, чтобы параллельные приходы/
+     * расходы не потеряли друг друга.
+     */
+    public function recordIncome(int $quantity, array $attributes = []): StockMovement
     {
-        return (int) $this->allocations
-            ->where("status", ConsumableAllocation::STATUS_WRITTEN_OFF)
-            ->sum("quantity");
+        return DB::transaction(function () use ($quantity, $attributes) {
+            $consumable = self::whereKey($this->id)->lockForUpdate()->firstOrFail();
+            $consumable->increment("quantity", $quantity);
+            $this->quantity = $consumable->quantity;
+
+            return $consumable->movements()->create(array_merge(
+                [
+                    "type" => StockMovement::TYPE_INCOME,
+                    "quantity" => $quantity,
+                    "moved_at" => now(),
+                ],
+                $attributes,
+            ));
+        });
     }
 
-    public function getQuantityInStockAttribute(): int
+    /**
+     * Зафиксировать расход/списание и уменьшить остаток.
+     *
+     * @throws \RuntimeException если запрошенное количество больше остатка
+     */
+    public function recordOutcome(int $quantity, array $attributes = []): StockMovement
     {
-        return $this->quantity_total -
-            $this->quantity_installed -
-            $this->quantity_written_off;
-    }
+        return DB::transaction(function () use ($quantity, $attributes) {
+            $consumable = self::whereKey($this->id)->lockForUpdate()->firstOrFail();
 
-    public function hasPurchaseDocument(): bool
-    {
-        return !empty($this->purchase_document_path);
-    }
+            if ($quantity > $consumable->quantity) {
+                throw new \RuntimeException(
+                    "На складе недостаточно «{$consumable->name}» (в наличии: {$consumable->quantity})",
+                );
+            }
 
-    public function getPurchaseDocumentHumanSizeAttribute(): string
-    {
-        return self::formatBytes($this->purchase_document_size);
-    }
+            $consumable->decrement("quantity", $quantity);
+            $this->quantity = $consumable->quantity;
 
-    public static function formatBytes(int $bytes): string
-    {
-        $units = ["Б", "КБ", "МБ", "ГБ"];
-        $i = 0;
-        while ($bytes >= 1024 && $i < count($units) - 1) {
-            $bytes /= 1024;
-            $i++;
-        }
-
-        return round($bytes, $i === 0 ? 0 : 1) . " " . $units[$i];
+            return $consumable->movements()->create(array_merge(
+                [
+                    "type" => StockMovement::TYPE_OUTCOME,
+                    "quantity" => $quantity,
+                    "moved_at" => now(),
+                ],
+                $attributes,
+            ));
+        });
     }
 }

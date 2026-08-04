@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Добавить расходник')
+@section('title', 'Добавить расходник - ICT Help')
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
@@ -18,7 +18,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('consumables.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('consumables.store') }}" method="POST">
                 @csrf
 
                 <div class="mb-4">
@@ -43,13 +43,23 @@
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-3 gap-4 mb-4">
                     <div>
-                        <label for="quantity_total" class="block text-gray-700 text-sm font-bold mb-2">Количество *</label>
-                        <input type="number" name="quantity_total" id="quantity_total" min="1"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('quantity_total') border-red-500 @enderror"
-                               value="{{ old('quantity_total') }}" required>
-                        @error('quantity_total')
+                        <label for="quantity" class="block text-gray-700 text-sm font-bold mb-2">Начальный остаток *</label>
+                        <input type="number" name="quantity" id="quantity" min="0"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('quantity') border-red-500 @enderror"
+                               value="{{ old('quantity', 0) }}" required>
+                        @error('quantity')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="min_quantity" class="block text-gray-700 text-sm font-bold mb-2">Мин. остаток</label>
+                        <input type="number" name="min_quantity" id="min_quantity" min="0"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('min_quantity') border-red-500 @enderror"
+                               value="{{ old('min_quantity') }}">
+                        @error('min_quantity')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -63,6 +73,22 @@
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="room_id" class="block text-gray-700 text-sm font-bold mb-2">Место хранения (кабинет)</label>
+                    <select name="room_id" id="room_id"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('room_id') border-red-500 @enderror">
+                        <option value="">Не указано</option>
+                        @foreach($rooms as $room)
+                            <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                {{ $room->display_label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('room_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mb-4">
@@ -82,21 +108,11 @@
                     @enderror
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-6">
                     <label for="notes" class="block text-gray-700 text-sm font-bold mb-2">Примечания</label>
                     <textarea name="notes" id="notes" rows="3" maxlength="1000"
                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('notes') border-red-500 @enderror">{{ old('notes') }}</textarea>
                     @error('notes')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="mb-6">
-                    <label for="purchase_document" class="block text-gray-700 text-sm font-bold mb-2">Документ закупки</label>
-                    <input type="file" name="purchase_document" id="purchase_document"
-                           class="text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                    <p class="text-xs text-gray-500 mt-1">До 10 МБ. Допустимо: pdf, doc(x), xls(x), ppt(x), txt, csv, zip, изображения.</p>
-                    @error('purchase_document')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>

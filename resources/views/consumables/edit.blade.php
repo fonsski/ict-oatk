@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Изменить расходник')
+@section('title', 'Изменить расходник - ICT Help')
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
@@ -18,7 +18,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('consumables.update', $consumable) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('consumables.update', $consumable) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -44,12 +44,12 @@
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label for="quantity_total" class="block text-gray-700 text-sm font-bold mb-2">Количество *</label>
-                        <input type="number" name="quantity_total" id="quantity_total" min="{{ $consumable->quantity_installed + $consumable->quantity_written_off }}"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('quantity_total') border-red-500 @enderror"
-                               value="{{ old('quantity_total', $consumable->quantity_total) }}" required>
-                        <p class="text-xs text-gray-500 mt-1">Не менее {{ $consumable->quantity_installed + $consumable->quantity_written_off }} (уже установлено/списано)</p>
-                        @error('quantity_total')
+                        <label for="min_quantity" class="block text-gray-700 text-sm font-bold mb-2">Мин. остаток</label>
+                        <input type="number" name="min_quantity" id="min_quantity" min="0"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('min_quantity') border-red-500 @enderror"
+                               value="{{ old('min_quantity', $consumable->min_quantity) }}">
+                        <p class="text-xs text-gray-500 mt-1">Текущий остаток: {{ $consumable->quantity }} {{ $consumable->unit }} — меняется только через приход/расход</p>
+                        @error('min_quantity')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -63,6 +63,22 @@
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="room_id" class="block text-gray-700 text-sm font-bold mb-2">Место хранения (кабинет)</label>
+                    <select name="room_id" id="room_id"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('room_id') border-red-500 @enderror">
+                        <option value="">Не указано</option>
+                        @foreach($rooms as $room)
+                            <option value="{{ $room->id }}" {{ old('room_id', $consumable->room_id) == $room->id ? 'selected' : '' }}>
+                                {{ $room->display_label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('room_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mb-4">
@@ -100,46 +116,6 @@
                     </a>
                 </div>
             </form>
-        </div>
-
-        <!-- Документ закупки (отдельно от формы) -->
-        <div class="bg-white shadow-md rounded-lg p-6 mt-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Документ закупки</h2>
-
-            @if($consumable->hasPurchaseDocument())
-            <div class="flex items-center justify-between py-3 border-b border-gray-200 mb-4">
-                <div class="min-w-0">
-                    <a href="{{ route('consumables.purchase-document.download', $consumable) }}"
-                       class="text-sm font-medium text-blue-600 hover:text-blue-800 truncate block">
-                        {{ $consumable->purchase_document_original_name }}
-                    </a>
-                    <span class="text-xs text-gray-400">{{ $consumable->purchase_document_human_size }}</span>
-                </div>
-                <form action="{{ route('consumables.purchase-document.destroy', $consumable) }}" method="POST"
-                      onsubmit="return confirm('Удалить документ закупки?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-800">Удалить</button>
-                </form>
-            </div>
-            @else
-            <p class="text-sm text-gray-500 mb-4">Документ пока не загружен</p>
-            @endif
-
-            <form action="{{ route('consumables.update', $consumable) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="name" value="{{ $consumable->name }}">
-                <input type="hidden" name="category" value="{{ $consumable->category }}">
-                <input type="hidden" name="unit" value="{{ $consumable->unit }}">
-                <input type="hidden" name="quantity_total" value="{{ $consumable->quantity_total }}">
-                <input type="hidden" name="responsible_user_id" value="{{ $consumable->responsible_user_id }}">
-                <input type="hidden" name="notes" value="{{ $consumable->notes }}">
-                <input type="file" name="purchase_document" required
-                       class="text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                <button type="submit" class="btn-primary py-2 text-sm">{{ $consumable->hasPurchaseDocument() ? 'Заменить файл' : 'Загрузить файл' }}</button>
-            </form>
-            <p class="mt-2 text-xs text-gray-500">До 10 МБ. Допустимо: pdf, doc(x), xls(x), ppt(x), txt, csv, zip, изображения.</p>
         </div>
     </div>
 </div>

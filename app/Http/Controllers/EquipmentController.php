@@ -155,8 +155,11 @@ class EquipmentController extends Controller
             "locationHistory.fromRoom",
             "locationHistory.toRoom",
             "locationHistory.movedByUser",
-            "consumableAllocations" => function ($query) {
-                $query->with("consumable")->latest();
+            "consumableMovements" => function ($query) {
+                $query
+                    ->with(["consumable", "consumableWriteOff"])
+                    ->latest("moved_at")
+                    ->latest("id");
             },
             "documents" => function ($query) {
                 $query->with("uploadedBy")->latest();
