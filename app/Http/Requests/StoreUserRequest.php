@@ -23,6 +23,7 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:2|max:255',
+            'position' => 'nullable|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'phone' => 'required|string|max:20|unique:users|regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
             'role_id' => 'required|exists:roles,id',
@@ -68,6 +69,7 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'имя пользователя',
+            'position' => 'должность',
             'email' => 'email адрес',
             'phone' => 'номер телефона',
             'role_id' => 'роль',

@@ -28,6 +28,9 @@
                 <div class="flex items-start space-x-6">
                     <div class="flex-1">
                         <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ $user->name }}</h2>
+                        @if($user->position)
+                        <p class="text-slate-700 mb-1">{{ $user->position }}</p>
+                        @endif
                         <p class="text-slate-600 mb-4">{{ $user->formatted_phone }}</p>
 
                         <div class="grid grid-cols-2 gap-4">

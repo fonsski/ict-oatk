@@ -1,0 +1,20 @@
+[Unit]
+Description=ICT Help — обработчик очереди (письма, уведомления)
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ict-help
+# --max-time перезапускает воркер раз в час: так он подхватывает новый код
+# после деплоя и не накапливает утечки памяти.
+ExecStart=/usr/bin/php /var/www/ict-help/artisan queue:work --queue=default --sleep=3 --tries=3 --max-time=3600
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/www/ict-help/storage/logs/queue.log
+StandardError=append:/var/www/ict-help/storage/logs/queue.log
+
+[Install]
+WantedBy=multi-user.target

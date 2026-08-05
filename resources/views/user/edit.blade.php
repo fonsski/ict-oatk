@@ -43,6 +43,22 @@
                         @enderror
                     </div>
 
+                    <!-- Position -->
+                    <div class="mb-6">
+                        <label for="position" class="form-label">Должность</label>
+                        <input type="text"
+                               id="position"
+                               name="position"
+                               value="{{ old('position', $user->position) }}"
+                               class="form-input @error('position') border-red-500 @enderror"
+                               placeholder="Например: Техник первой категории"
+                               maxlength="255">
+                        <p class="mt-1 text-sm text-gray-500">Должность в штатном расписании. Права в системе задаёт роль.</p>
+                        @error('position')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Phone -->
                     <div class="mb-6">
                         <label for="phone" class="form-label">Номер телефона <span class="text-red-500">*</span></label>

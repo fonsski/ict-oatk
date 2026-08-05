@@ -24,6 +24,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:2|max:255',
+            'position' => 'nullable|string|max:255',
             'email' => [
                 'required',
                 'email',
@@ -75,6 +76,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => 'имя пользователя',
+            'position' => 'должность',
             'email' => 'email адрес',
             'phone' => 'номер телефона',
             'role_id' => 'роль',

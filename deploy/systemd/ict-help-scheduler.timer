@@ -1,0 +1,12 @@
+[Unit]
+Description=ICT Help — запуск планировщика раз в минуту
+
+[Timer]
+# Первый запуск через минуту после загрузки виртуалки, дальше — каждую минуту.
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
