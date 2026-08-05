@@ -19,6 +19,11 @@ class EquipmentCategory extends Model
         'name',
         'slug',
         'description',
+        'has_operating_system',
+    ];
+
+    protected $casts = [
+        'has_operating_system' => 'boolean',
     ];
 
     /**

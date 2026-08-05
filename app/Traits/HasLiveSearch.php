@@ -144,10 +144,26 @@ trait HasLiveSearch
             $baseQuery = $this->applyCommonFilters($baseQuery, $request, $config['filters']);
         }
 
+        // Apply sorting (controllers may override applySorting)
+        $baseQuery = $this->applySorting($baseQuery, $request);
+
         // Get paginated results
-        $items = $baseQuery->latest()->paginate($config['per_page'])->withQueryString();
+        $items = $baseQuery->paginate($config['per_page'])->withQueryString();
 
         return $this->renderSearchResponse($items, $partialView, []);
+    }
+
+    /**
+     * Default ordering for live search results.
+     * Override in a controller to support user-selectable sorting.
+     *
+     * @param mixed $query
+     * @param Request $request
+     * @return mixed
+     */
+    protected function applySorting($query, Request $request)
+    {
+        return $query->latest();
     }
 
     /**

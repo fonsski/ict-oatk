@@ -43,6 +43,7 @@ class UpdateEquipmentRequest extends FormRequest
                 Rule::unique('equipment', 'accounting_number')->ignore($this->route('equipment'))
             ],
             'category_id' => 'sometimes|nullable|exists:equipment_categories,id',
+            'operating_system_id' => 'sometimes|nullable|exists:operating_systems,id',
             'status_id' => 'sometimes|required|exists:equipment_statuses,id',
             'room_id' => 'sometimes|nullable|exists:rooms,id',
             'initial_room_id' => 'sometimes|nullable|exists:rooms,id',
@@ -81,6 +82,9 @@ class UpdateEquipmentRequest extends FormRequest
             
             // Категория
             'category_id.exists' => 'Выбранная категория оборудования не существует в системе',
+
+            // Операционная система
+            'operating_system_id.exists' => 'Выбранная операционная система не существует в системе',
             
             // Статус
             'status_id.required' => 'Пожалуйста, выберите статус оборудования',
@@ -119,6 +123,7 @@ class UpdateEquipmentRequest extends FormRequest
             'name' => 'название оборудования',
             'inventory_number' => 'инвентарный номер',
             'category_id' => 'категория оборудования',
+            'operating_system_id' => 'операционная система',
             'status_id' => 'статус оборудования',
             'room_id' => 'текущий кабинет',
             'initial_room_id' => 'начальный кабинет',

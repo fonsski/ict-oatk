@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Equipment;
 use App\Models\EquipmentStatus;
 use App\Models\EquipmentCategory;
+use App\Models\OperatingSystem;
 use App\Models\Room;
 use App\Models\EquipmentLocationHistory;
 use App\Traits\HasLiveSearch;
@@ -23,7 +24,7 @@ class EquipmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Equipment::with(["status", "room"]);
+        $query = Equipment::with(["status", "room", "category", "operatingSystem"]);
 
         // Filters
         if ($request->filled("status_id")) {
@@ -33,6 +34,22 @@ class EquipmentController extends Controller
         // Filter by category
         if ($request->filled("category_id")) {
             $query->where("category_id", $request->input("category_id"));
+        }
+
+        // Filter by operating system ("none" — техника без указанной ОС)
+        if ($request->filled("operating_system_id")) {
+            $operatingSystemId = $request->input("operating_system_id");
+            $operatingSystemId === "none"
+                ? $query->whereNull("operating_system_id")
+                : $query->where("operating_system_id", $operatingSystemId);
+        }
+
+        // Filter by room ("none" — техника без кабинета)
+        if ($request->filled("room_id")) {
+            $roomId = $request->input("room_id");
+            $roomId === "none"
+                ? $query->whereNull("room_id")
+                : $query->where("room_id", $roomId);
         }
 
         // Добавляем фильтр по гарантии
@@ -72,14 +89,81 @@ class EquipmentController extends Controller
             }
         }
 
-        $equipment = $query->latest()->paginate(15)->withQueryString();
+        $equipment = $this->applySorting($query, $request)
+            ->paginate(15)
+            ->withQueryString();
 
         $statuses = EquipmentStatus::all();
         $categories = EquipmentCategory::orderBy("name")->get();
+        $operatingSystems = OperatingSystem::ordered()->get();
+        $rooms = Room::orderBy("number")->get();
+
         return view(
             "equipment.index",
-            compact("equipment", "statuses", "categories"),
+            compact(
+                "equipment",
+                "statuses",
+                "categories",
+                "operatingSystems",
+                "rooms",
+            ),
         );
+    }
+
+    /**
+     * Доступные варианты сортировки списка оборудования.
+     */
+    public const SORTS = [
+        "latest" => "Сначала новые",
+        "room" => "По кабинетам",
+        "operating_system" => "По операционной системе",
+        "inventory_number" => "По инвентарному номеру",
+        "category" => "По категории",
+    ];
+
+    /**
+     * Сортировка списка. Для «по кабинетам» и «по ОС» задаём порядок и
+     * внутри группы — иначе строки внутри кабинета шли бы вперемешку.
+     * Кабинет/ОС могут быть не указаны — такие строки уходят в конец.
+     */
+    protected function applySorting($query, Request $request)
+    {
+        return match ($request->input("sort")) {
+            "room" => $query
+                ->leftJoin("rooms", "equipment.room_id", "=", "rooms.id")
+                ->orderByRaw("equipment.room_id is null")
+                ->orderBy("rooms.building")
+                ->orderBy("rooms.floor")
+                ->orderBy("rooms.number")
+                ->orderBy("equipment.inventory_number")
+                ->select("equipment.*"),
+            "operating_system" => $query
+                ->leftJoin(
+                    "operating_systems",
+                    "equipment.operating_system_id",
+                    "=",
+                    "operating_systems.id",
+                )
+                ->orderByRaw("equipment.operating_system_id is null")
+                ->orderBy("operating_systems.family")
+                ->orderBy("operating_systems.sort_order")
+                ->orderBy("operating_systems.name")
+                ->orderBy("equipment.inventory_number")
+                ->select("equipment.*"),
+            "inventory_number" => $query->orderBy("inventory_number"),
+            "category" => $query
+                ->leftJoin(
+                    "equipment_categories",
+                    "equipment.category_id",
+                    "=",
+                    "equipment_categories.id",
+                )
+                ->orderByRaw("equipment.category_id is null")
+                ->orderBy("equipment_categories.name")
+                ->orderBy("equipment.inventory_number")
+                ->select("equipment.*"),
+            default => $query->latest(),
+        };
     }
 
     /**
@@ -94,10 +178,11 @@ class EquipmentController extends Controller
         $statuses = EquipmentStatus::all();
         $rooms = Room::active()->orderBy("number")->get();
         $categories = EquipmentCategory::orderBy("name")->get();
+        $operatingSystems = OperatingSystem::active()->ordered()->get();
 
         return view(
             "equipment.create",
-            compact("statuses", "rooms", "categories"),
+            compact("statuses", "rooms", "categories", "operatingSystems"),
         );
     }
 
@@ -116,7 +201,7 @@ class EquipmentController extends Controller
             );
         }
 
-        $data = $request->validated();
+        $data = $this->clearOperatingSystemIfUnsupported($request->validated());
 
         // Всегда используем текущий кабинет как начальный при создании оборудования
         if (!empty($data["room_id"])) {
@@ -152,6 +237,8 @@ class EquipmentController extends Controller
         $equipment->load([
             "status",
             "room",
+            "category",
+            "operatingSystem",
             "writeOff",
             "purchase",
             "locationHistory.fromRoom",
@@ -183,10 +270,17 @@ class EquipmentController extends Controller
         $statuses = EquipmentStatus::all();
         $rooms = Room::active()->orderBy("number")->get();
         $categories = EquipmentCategory::orderBy("name")->get();
+        $operatingSystems = OperatingSystem::active()->ordered()->get();
 
         return view(
             "equipment.edit",
-            compact("equipment", "statuses", "rooms", "categories"),
+            compact(
+                "equipment",
+                "statuses",
+                "rooms",
+                "categories",
+                "operatingSystems",
+            ),
         );
     }
 
@@ -205,7 +299,10 @@ class EquipmentController extends Controller
             );
         }
 
-        $data = $request->validated();
+        $data = $this->clearOperatingSystemIfUnsupported(
+            $request->validated(),
+            $equipment,
+        );
 
         // Проверяем, изменился ли кабинет и статус
         $oldRoomId = $equipment->room_id;
@@ -281,9 +378,35 @@ class EquipmentController extends Controller
                 "status_id" => "status_id",
                 "category_id" => "category_id",
             ],
-            "relations" => ["status", "room", "category"],
+            "relations" => ["status", "room", "category", "operatingSystem"],
             "per_page" => 15,
         ];
+    }
+
+    /**
+     * ОС хранится только у техники, чья категория это допускает (ПК,
+     * ноутбуки). Если категорию сменили на «Монитор», привязку снимаем,
+     * чтобы в базе не оставалось поле, которого нет в форме.
+     */
+    private function clearOperatingSystemIfUnsupported(
+        array $data,
+        ?Equipment $equipment = null,
+    ): array {
+        $categoryId = array_key_exists("category_id", $data)
+            ? $data["category_id"]
+            : $equipment?->category_id;
+
+        $supportsOs = $categoryId
+            ? (bool) EquipmentCategory::whereKey($categoryId)->value(
+                "has_operating_system",
+            )
+            : false;
+
+        if (!$supportsOs) {
+            $data["operating_system_id"] = null;
+        }
+
+        return $data;
     }
 
     /**
@@ -419,6 +542,22 @@ class EquipmentController extends Controller
             // Добавляем фильтр по категории
             if ($request->filled("category_id")) {
                 $query->where("category_id", $request->input("category_id"));
+            }
+
+            // Добавляем фильтр по ОС
+            if ($request->filled("operating_system_id")) {
+                $operatingSystemId = $request->input("operating_system_id");
+                $operatingSystemId === "none"
+                    ? $query->whereNull("operating_system_id")
+                    : $query->where("operating_system_id", $operatingSystemId);
+            }
+
+            // Добавляем фильтр по кабинету
+            if ($request->filled("room_id")) {
+                $roomId = $request->input("room_id");
+                $roomId === "none"
+                    ? $query->whereNull("room_id")
+                    : $query->where("room_id", $roomId);
             }
 
             // Добавляем фильтр по гарантии

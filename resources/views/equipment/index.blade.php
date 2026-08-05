@@ -70,7 +70,34 @@
                         @endforeach
                     </select>
                 </div>
-                <!-- Фильтр по локации удален -->
+                <div>
+                    <select name="operating_system_id" class="rounded border-gray-300 px-3 py-2">
+                        <option value="">Все ОС</option>
+                        <option value="none" {{ request('operating_system_id') === 'none' ? 'selected' : '' }}>ОС не указана</option>
+                        @foreach($operatingSystems->groupBy('family') as $family => $group)
+                            @if($family)
+                            <optgroup label="{{ $family }}">
+                                @foreach($group as $os)
+                                <option value="{{ $os->id }}" {{ request('operating_system_id') == $os->id ? 'selected' : '' }}>{{ $os->name }}</option>
+                                @endforeach
+                            </optgroup>
+                            @else
+                                @foreach($group as $os)
+                                <option value="{{ $os->id }}" {{ request('operating_system_id') == $os->id ? 'selected' : '' }}>{{ $os->name }}</option>
+                                @endforeach
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <select name="room_id" class="rounded border-gray-300 px-3 py-2">
+                        <option value="">Все кабинеты</option>
+                        <option value="none" {{ request('room_id') === 'none' ? 'selected' : '' }}>Кабинет не указан</option>
+                        @foreach($rooms as $room)
+                        <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>{{ $room->display_label }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <select name="warranty" class="rounded border-gray-300 px-3 py-2">
                         <option value="">Все гарантии</option>
@@ -79,7 +106,14 @@
                         <option value="none" {{ request('warranty') == 'none' ? 'selected' : '' }}>Без гарантии</option>
                     </select>
                 </div>
-                <!-- Фильтр по локации удален -->
+                <div class="flex items-center gap-2">
+                    <label for="sort" class="text-sm text-gray-600 whitespace-nowrap">Сортировка:</label>
+                    <select name="sort" id="sort" class="rounded border-gray-300 px-3 py-2">
+                        @foreach(\App\Http\Controllers\EquipmentController::SORTS as $value => $label)
+                        <option value="{{ $value }}" {{ request('sort', 'latest') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <button type="submit" class="bg-gray-800 text-white px-3 py-2 rounded">Применить</button>
                 </div>
@@ -112,6 +146,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusSelect = document.querySelector('select[name="status_id"]');
     const categorySelect = document.querySelector('select[name="category_id"]');
     const warrantySelect = document.querySelector('select[name="warranty"]');
+    const osSelect = document.querySelector('select[name="operating_system_id"]');
+    const roomSelect = document.querySelector('select[name="room_id"]');
+    const sortSelect = document.querySelector('select[name="sort"]');
     // Селектор локации удален
     const form = document.getElementById('filters-form');
 
@@ -184,6 +221,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (categorySelect) {
         categorySelect.addEventListener('change', performSearch);
+    }
+
+    if (osSelect) {
+        osSelect.addEventListener('change', performSearch);
+    }
+
+    if (roomSelect) {
+        roomSelect.addEventListener('change', performSearch);
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', performSearch);
     }
 
     // Обработчик события для локации удален

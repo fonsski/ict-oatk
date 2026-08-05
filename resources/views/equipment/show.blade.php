@@ -71,6 +71,21 @@
                 <dt class="text-sm font-medium text-slate-500 mb-1">Категория</dt>
                 <dd class="text-base text-slate-900">{{ $equipment->category ? $equipment->category->name : 'Не указана' }}</dd>
             </div>
+            @if($equipment->supportsOperatingSystem())
+            <div>
+                <dt class="text-sm font-medium text-slate-500 mb-1">Операционная система</dt>
+                <dd class="text-base text-slate-900">
+                    @if($equipment->operatingSystem)
+                        {{ $equipment->operatingSystem->name }}
+                        @if($equipment->operatingSystem->family)
+                        <span class="text-xs text-slate-500">({{ $equipment->operatingSystem->family }})</span>
+                        @endif
+                    @else
+                        Не указана
+                    @endif
+                </dd>
+            </div>
+            @endif
             @if($equipment->purchase)
             <div>
                 <dt class="text-sm font-medium text-slate-500 mb-1">Поступило по закупке</dt>

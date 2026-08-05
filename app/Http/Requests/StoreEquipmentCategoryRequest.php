@@ -24,6 +24,7 @@ class StoreEquipmentCategoryRequest extends FormRequest
         return [
             'name' => 'required|string|min:2|max:255|unique:equipment_categories,name',
             'description' => 'nullable|string|min:5|max:1000',
+            'has_operating_system' => 'boolean',
         ];
     }
 
@@ -57,6 +58,7 @@ class StoreEquipmentCategoryRequest extends FormRequest
         return [
             'name' => 'название категории',
             'description' => 'описание категории',
+            'has_operating_system' => 'признак наличия ОС',
         ];
     }
 }

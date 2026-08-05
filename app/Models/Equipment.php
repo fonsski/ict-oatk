@@ -22,6 +22,7 @@ class Equipment extends Model
         "inventory_number",
         "accounting_number",
         "category_id",
+        "operating_system_id",
         "status_id",
         "room_id",
         "has_warranty",
@@ -50,6 +51,19 @@ class Equipment extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(EquipmentCategory::class);
+    }
+
+    public function operatingSystem(): BelongsTo
+    {
+        return $this->belongsTo(OperatingSystem::class);
+    }
+
+    /**
+     * Нужно ли для этой единицы указывать ОС — определяется категорией.
+     */
+    public function supportsOperatingSystem(): bool
+    {
+        return (bool) $this->category?->has_operating_system;
     }
 
     public function room(): BelongsTo

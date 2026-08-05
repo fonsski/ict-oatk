@@ -33,6 +33,7 @@ class StoreEquipmentRequest extends FormRequest
                 'regex:/^[АБ][1-5]-(студент|преподаватель|администрация|сотрудник)-[0-9]{3}$/'
             ],
             'category_id' => 'nullable|exists:equipment_categories,id',
+            'operating_system_id' => 'nullable|exists:operating_systems,id',
             'status_id' => 'required|exists:equipment_statuses,id',
             'room_id' => 'nullable|exists:rooms,id',
             'initial_room_id' => 'nullable|exists:rooms,id',
@@ -71,6 +72,9 @@ class StoreEquipmentRequest extends FormRequest
             
             // Категория
             'category_id.exists' => 'Выбранная категория оборудования не существует в системе',
+
+            // Операционная система
+            'operating_system_id.exists' => 'Выбранная операционная система не существует в системе',
             
             // Статус
             'status_id.required' => 'Пожалуйста, выберите статус оборудования',
@@ -109,6 +113,7 @@ class StoreEquipmentRequest extends FormRequest
             'name' => 'название оборудования',
             'inventory_number' => 'инвентарный номер',
             'category_id' => 'категория оборудования',
+            'operating_system_id' => 'операционная система',
             'status_id' => 'статус оборудования',
             'room_id' => 'текущий кабинет',
             'initial_room_id' => 'начальный кабинет',

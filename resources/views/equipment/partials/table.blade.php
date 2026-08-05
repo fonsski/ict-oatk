@@ -18,6 +18,9 @@
                     Категория
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ОС
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Кабинет
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -53,6 +56,15 @@
                 <!-- Ячейка локации удалена, так как она не используется в системе -->
                 <td class="px-6 py-4 whitespace-nowrap">
                     {{ $item->category ? $item->category->name : 'Не указана' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if($item->operatingSystem)
+                        {{ $item->operatingSystem->name }}
+                    @elseif($item->supportsOperatingSystem())
+                        <span class="text-gray-400">Не указана</span>
+                    @else
+                        <span class="text-gray-300">—</span>
+                    @endif
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     {{ $item->room ? $item->room->display_label : 'Не указан' }}
@@ -97,7 +109,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="{{ auth()->check() && auth()->user()->hasRole(['admin', 'master']) ? 8 : 7 }}" class="px-6 py-12 text-center text-gray-500">
+                <td colspan="{{ auth()->check() && auth()->user()->hasRole(['admin', 'master']) ? 9 : 8 }}" class="px-6 py-12 text-center text-gray-500">
                     <div class="flex flex-col items-center">
                         <svg class="w-12 h-12 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>

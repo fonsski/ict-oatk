@@ -108,12 +108,19 @@
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="">Выберите категорию</option>
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                            <option value="{{ $category->id }}"
+                                    data-has-os="{{ $category->has_operating_system ? '1' : '0' }}"
+                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
+
+                @include('equipment.partials.operating-system-field', [
+                    'operatingSystems' => $operatingSystems,
+                    'selected' => old('operating_system_id'),
+                ])
 
                 <div class="mb-4">
                     <label for="name" class="block text-gray-700 text-sm font-bold mb-2">

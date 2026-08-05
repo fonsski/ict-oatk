@@ -4,6 +4,7 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentCategoryController;
 use App\Http\Controllers\EquipmentServiceController;
 use App\Http\Controllers\EquipmentKnowledgeController;
+use App\Http\Controllers\OperatingSystemController;
 use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\ConsumableWriteOffController;
 use App\Http\Controllers\DocumentController;
@@ -288,6 +289,14 @@ Route::middleware("auth")->group(function () {
             DocumentController::class,
             "destroy",
         ])->name("documents.destroy");
+
+        // Справочник операционных систем
+        Route::resource(
+            "/operating-systems",
+            OperatingSystemController::class,
+        )->except(["show"])->parameters([
+            "operating-systems" => "operating_system",
+        ]);
 
         // Привязка статей базы знаний к оборудованию
         Route::get("/equipment/{equipment}/knowledge-search", [

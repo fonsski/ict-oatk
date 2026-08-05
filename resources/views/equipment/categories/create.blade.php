@@ -53,6 +53,18 @@
                     @enderror
                 </div>
 
+                <div class="mb-6">
+                    <label class="flex items-center text-gray-700 text-sm font-bold">
+                        <input type="hidden" name="has_operating_system" value="0">
+                        <input type="checkbox" name="has_operating_system" value="1" class="mr-2"
+                               {{ old('has_operating_system') ? 'checked' : '' }}>
+                        Указывать операционную систему
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Включите для ПК, ноутбуков и серверов — в карточке такой техники появится поле выбора ОС
+                    </p>
+                </div>
+
                 <div class="flex items-center justify-between">
                     <button type="submit"
                             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">

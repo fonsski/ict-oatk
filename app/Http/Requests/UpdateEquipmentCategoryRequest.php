@@ -31,6 +31,7 @@ class UpdateEquipmentCategoryRequest extends FormRequest
                 Rule::unique('equipment_categories', 'name')->ignore($this->route('equipmentCategory')->id)
             ],
             'description' => 'nullable|string|min:5|max:1000',
+            'has_operating_system' => 'boolean',
         ];
     }
 
@@ -64,6 +65,7 @@ class UpdateEquipmentCategoryRequest extends FormRequest
         return [
             'name' => 'название категории',
             'description' => 'описание категории',
+            'has_operating_system' => 'признак наличия ОС',
         ];
     }
 }
