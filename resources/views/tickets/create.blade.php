@@ -439,7 +439,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Запрос к API для получения оборудования по кабинету
         fetch(`/api/equipment/by-room?room_id=${roomId}`)
-            .then(response => response.json())
+            .then(response => {
+                // Без этой проверки страница логина или ошибка сервера
+                // приходит как HTML и падает уже на разборе JSON —
+                // в списке появляется невнятная «Ошибка загрузки».
+                if (!response.ok) {
+                    throw new Error(`Сервер вернул ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Очищаем текущие опции и добавляем пустую опцию

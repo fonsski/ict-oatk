@@ -95,6 +95,17 @@ Route::post("/tickets", [TicketController::class, "store"])
     ->middleware("throttle:5,1")
     ->name("tickets.store");
 
+// Список оборудования кабинета для формы заявки. Форма публичная, поэтому
+// и этот запрос должен работать без входа — иначе гость видит пустой список.
+// Отдаём только название и инвентарный номер, а throttle ограничивает
+// перебор кабинетов.
+Route::get("/api/equipment/by-room", [
+    \App\Http\Controllers\Api\Equipment\RoomEquipmentController::class,
+    "getByRoom",
+])
+    ->middleware("throttle:60,1")
+    ->name("api.equipment.by-room");
+
 // Защищенные маршруты
 Route::middleware("auth")->group(function () {
     // Создание заявки объявлено публично выше.
@@ -667,12 +678,6 @@ Route::middleware("auth")->group(function () {
             "markAllAsRead",
         ])->name("api.notifications.mark-all-as-read");
     });
-
-    // API для получения оборудования по кабинету
-    Route::get("/api/equipment/by-room", [
-        \App\Http\Controllers\Api\Equipment\RoomEquipmentController::class,
-        "getByRoom",
-    ])->name("api.equipment.by-room");
 
     // Маршруты для настроек
     Route::prefix("settings")->group(function () {
