@@ -8,11 +8,10 @@
 
 ```env
 MAIL_MAILER=smtp
-MAIL_HOST=mailhog
+MAIL_HOST=mailpit
 MAIL_PORT=1025
 MAIL_USERNAME=null
 MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
 MAIL_FROM_ADDRESS="ict@example.com"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
@@ -21,20 +20,19 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 ### 1. Разработка (локальная среда)
 
-Для локальной разработки удобно использовать Mailhog, который уже включен в Laravel Sail.
+Для локальной разработки удобно использовать Mailpit, который уже включен в Laravel Sail.
 
 ```env
 MAIL_MAILER=smtp
-MAIL_HOST=mailhog
+MAIL_HOST=mailpit
 MAIL_PORT=1025
 MAIL_USERNAME=null
 MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
 MAIL_FROM_ADDRESS="ict@example.com"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Чтобы проверить отправленные письма, перейдите в Mailhog по адресу: http://localhost:8025
+Чтобы проверить отправленные письма, перейдите в Mailpit по адресу: http://localhost:8025
 
 ### 2. Рабочая среда (production)
 
@@ -48,12 +46,15 @@ MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=your-gmail-address@gmail.com
 MAIL_PASSWORD=your-app-password
-MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="your-gmail-address@gmail.com"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
 Примечание: Для Gmail необходимо создать пароль приложения в настройках безопасности Google.
+
+О шифровании: на порту 587 STARTTLS включается автоматически и настраивать
+ничего не нужно; для порта 465 добавьте `MAIL_SCHEME=smtps`. Переменная
+`MAIL_ENCRYPTION` в Laravel 11+ больше не читается — её заменил `MAIL_SCHEME`.
 
 #### Yandex:
 
@@ -63,7 +64,7 @@ MAIL_HOST=smtp.yandex.ru
 MAIL_PORT=465
 MAIL_USERNAME=your-yandex-username
 MAIL_PASSWORD=your-yandex-password
-MAIL_ENCRYPTION=ssl
+MAIL_SCHEME=smtps
 MAIL_FROM_ADDRESS="your-email@yandex.ru"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
@@ -76,7 +77,7 @@ MAIL_HOST=smtp.mail.ru
 MAIL_PORT=465
 MAIL_USERNAME=your-mail-username
 MAIL_PASSWORD=your-mail-password
-MAIL_ENCRYPTION=ssl
+MAIL_SCHEME=smtps
 MAIL_FROM_ADDRESS="your-email@mail.ru"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
@@ -123,4 +124,4 @@ php artisan queue:work
 
 - Письма отправляются через классы уведомлений: `App\Notifications\PasswordResetNotification` и `App\Notifications\AccountActivationNotification`.
 - При необходимости шаблоны писем можно настроить, изменив методы `toMail` в этих классах.
-- Для тестирования функционала сброса пароля и активации учетной записи рекомендуется использовать локальное тестирование с Mailhog перед развертыванием в production.
+- Для тестирования функционала сброса пароля и активации учетной записи рекомендуется использовать локальное тестирование с Mailpit перед развертыванием в production.

@@ -15,9 +15,6 @@ class AppServiceProvider extends ServiceProvider
         // Регистрируем OptimizerServiceProvider
         $this->app->register(OptimizerServiceProvider::class);
 
-        // Регистрируем GmailServiceProvider
-        $this->app->register(GmailServiceProvider::class);
-
         // Регистрируем сервис оптимизатора как синглтон
         $this->app->singleton(AppOptimizer::class, function ($app) {
             return new AppOptimizer();

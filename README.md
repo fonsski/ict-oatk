@@ -119,9 +119,8 @@
 - [Laravel 12](https://laravel.com/) - PHP фреймворк
 - [MySQL 8.0](https://www.mysql.com/) - Система управления базами данных
 - [Laravel Sanctum](https://laravel.com/docs/sanctum) - Аутентификация API
-- [Laravel Socialite](https://laravel.com/docs/socialite) - Интеграция с OAuth провайдерами
 - [Parsedown](https://github.com/erusev/parsedown) - Парсер Markdown для базы знаний
-- [Google API Client](https://github.com/googleapis/google-api-php-client) - Клиент для интеграции с Google
+- [Laravel Reverb](https://laravel.com/docs/reverb) - WebSocket-сервер для живых уведомлений
 
 ### Frontend
 
