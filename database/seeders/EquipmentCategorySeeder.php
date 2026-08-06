@@ -19,11 +19,13 @@ class EquipmentCategorySeeder extends Seeder
         $categories = [
             [
                 'name' => 'Компьютер',
-                'description' => 'Настольные компьютеры, системные блоки, моноблоки'
+                'description' => 'Настольные компьютеры, системные блоки, моноблоки',
+                'has_operating_system' => true,
             ],
             [
                 'name' => 'Ноутбук',
-                'description' => 'Портативные компьютеры различных типов'
+                'description' => 'Портативные компьютеры различных типов',
+                'has_operating_system' => true,
             ],
             [
                 'name' => 'Принтер',
@@ -72,11 +74,27 @@ class EquipmentCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            EquipmentCategory::create([
-                'name' => $category['name'],
-                'slug' => Str::slug($category['name']),
-                'description' => $category['description'],
-            ]);
+            $hasOperatingSystem = $category['has_operating_system'] ?? false;
+
+            // firstOrCreate, а не create: сидер запускается и при обновлении
+            // уже работающей системы, повторный прогон не должен плодить
+            // дубли категорий.
+            $model = EquipmentCategory::firstOrCreate(
+                ['name' => $category['name']],
+                [
+                    'slug' => Str::slug($category['name']),
+                    'description' => $category['description'],
+                    'has_operating_system' => $hasOperatingSystem,
+                ],
+            );
+
+            // Признак «указывать ОС» выставляем и существующим категориям.
+            // Миграция, которая его добавила, отрабатывает раньше сидера, и
+            // при установке с нуля обновлять ей ещё нечего — поле осталось
+            // бы выключенным, а поле выбора ОС не появилось бы нигде.
+            if ($hasOperatingSystem && !$model->has_operating_system) {
+                $model->update(['has_operating_system' => true]);
+            }
         }
     }
 }

@@ -255,7 +255,11 @@ class EquipmentController extends Controller
             },
             "knowledgeArticles.category",
         ]);
-        return view("equipment.show", compact("equipment"));
+
+        // Список для выбора ОС прямо в карточке.
+        $operatingSystems = OperatingSystem::active()->ordered()->get();
+
+        return view("equipment.show", compact("equipment", "operatingSystems"));
     }
 
     /**
@@ -473,6 +477,34 @@ class EquipmentController extends Controller
         return redirect()
             ->route("equipment.show", $equipment)
             ->with("success", "Оборудование успешно перемещено");
+    }
+
+    /**
+     * Точечно сменить ОС из карточки оборудования: открывать всю форму
+     * редактирования ради одного поля неудобно.
+     */
+    public function updateOperatingSystem(Request $request, Equipment $equipment)
+    {
+        if (!Auth::check() || !Auth::user()->canManageEquipment()) {
+            abort(403);
+        }
+
+        if (!$equipment->supportsOperatingSystem()) {
+            return back()->withErrors([
+                "operating_system_id" => "Для этой категории оборудования ОС не указывается",
+            ]);
+        }
+
+        $data = $request->validate(
+            ["operating_system_id" => "nullable|exists:operating_systems,id"],
+            ["operating_system_id.exists" => "Выбранная операционная система не найдена"],
+        );
+
+        $equipment->update([
+            "operating_system_id" => $data["operating_system_id"] ?? null,
+        ]);
+
+        return back()->with("success", "Операционная система обновлена");
     }
 
     /**

@@ -75,13 +75,42 @@
             <div>
                 <dt class="text-sm font-medium text-slate-500 mb-1">Операционная система</dt>
                 <dd class="text-base text-slate-900">
-                    @if($equipment->operatingSystem)
-                        {{ $equipment->operatingSystem->name }}
-                        @if($equipment->operatingSystem->family)
-                        <span class="text-xs text-slate-500">({{ $equipment->operatingSystem->family }})</span>
-                        @endif
+                    @if(auth()->user()->canManageEquipment())
+                        {{-- Меняется прямо здесь: ради одной ОС незачем
+                             открывать всю форму редактирования. --}}
+                        <form action="{{ route('equipment.operating-system.update', $equipment) }}"
+                              method="POST" class="flex flex-wrap items-center gap-2">
+                            @csrf
+                            @method('PUT')
+                            <select name="operating_system_id"
+                                    class="rounded border-gray-300 py-1.5 text-sm max-w-xs"
+                                    onchange="this.form.querySelector('button').classList.remove('hidden')">
+                                <option value="">Не указана</option>
+                                @foreach($operatingSystems->groupBy('family') as $family => $group)
+                                    @if($family)
+                                    <optgroup label="{{ $family }}">
+                                        @foreach($group as $os)
+                                        <option value="{{ $os->id }}" {{ $equipment->operating_system_id == $os->id ? 'selected' : '' }}>{{ $os->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    @else
+                                        @foreach($group as $os)
+                                        <option value="{{ $os->id }}" {{ $equipment->operating_system_id == $os->id ? 'selected' : '' }}>{{ $os->name }}</option>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn-primary text-sm py-1.5 hidden">Сохранить</button>
+                        </form>
                     @else
-                        Не указана
+                        @if($equipment->operatingSystem)
+                            {{ $equipment->operatingSystem->name }}
+                            @if($equipment->operatingSystem->family)
+                            <span class="text-xs text-slate-500">({{ $equipment->operatingSystem->family }})</span>
+                            @endif
+                        @else
+                            Не указана
+                        @endif
                     @endif
                 </dd>
             </div>

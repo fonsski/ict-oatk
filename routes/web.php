@@ -309,6 +309,12 @@ Route::middleware("auth")->group(function () {
             "operating-systems" => "operating_system",
         ]);
 
+        // Смена ОС прямо из карточки оборудования
+        Route::put("/equipment/{equipment}/operating-system", [
+            EquipmentController::class,
+            "updateOperatingSystem",
+        ])->name("equipment.operating-system.update");
+
         // Привязка статей базы знаний к оборудованию
         Route::get("/equipment/{equipment}/knowledge-search", [
             EquipmentKnowledgeController::class,
