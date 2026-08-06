@@ -3,7 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Context;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     // и загружает определения каналов из routes/channels.php.
     ->withBroadcasting(__DIR__ . "/../routes/channels.php")
     ->withMiddleware(function (Middleware $middleware): void {
+        // Идентификатор запроса нужен раньше всего: он попадает в журнал
+        // и на страницу ошибки, чтобы по номеру можно было найти причину.
+        $middleware->prepend(\App\Http\Middleware\AssignRequestId::class);
+
         // Автоматический выход по истечении времени неактивности сессии.
         $middleware->web(append: [
             \App\Http\Middleware\SessionTimeout::class,
@@ -76,7 +80,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     "message" =>
                         $e->getMessage() ?:
                         "Произошла ошибка при обработке запроса",
-                    "id" => Str::random(8),
+                    "id" => Context::get("request_id"),
                 ],
                 $e->getStatusCode(),
             );
@@ -88,7 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->view(
                     "errors.500",
                     [
-                        "id" => Str::random(8),
+                        "id" => Context::get("request_id"),
                     ],
                     500,
                 );

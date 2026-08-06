@@ -23,7 +23,11 @@ class NotificationService
                 "message" => "Вы были сняты с заявки #{$ticket->id}: \"{$ticket->title}\"",
                 "icon" => "info",
                 "color" => "blue",
-                "link" => route("tickets.show", $ticket),
+                // Относительный путь, а не полный URL: уведомление часто
+                // создаётся в обработчике очереди, где хост берётся из
+                // APP_URL. Если система открыта по другому имени или IP,
+                // сохранённая ссылка уводит на чужой адрес и переход падает.
+                "link" => route("tickets.show", $ticket, false),
             ];
 
             // Отправляем уведомление в базу данных
@@ -115,7 +119,7 @@ class NotificationService
                         "reporter_name" => $ticket->reporter_name,
                         "recipient_role" => $recipient->role->slug,
                     ],
-                    "url" => route("tickets.show", $ticket),
+                    "url" => route("tickets.show", $ticket, false),
                 ]);
             }
 
@@ -229,7 +233,7 @@ class NotificationService
                         "is_author" => $isAuthor,
                         "is_assignee" => $isAssignee,
                     ],
-                    "url" => route("tickets.show", $ticket),
+                    "url" => route("tickets.show", $ticket, false),
                 ]);
             }
 
@@ -263,7 +267,7 @@ class NotificationService
                     "ticket_priority" => $ticket->priority,
                     "reporter_name" => $ticket->reporter_name,
                 ],
-                "url" => route("tickets.show", $ticket),
+                "url" => route("tickets.show", $ticket, false),
             ]);
 
             Log::info(

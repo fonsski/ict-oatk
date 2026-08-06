@@ -56,7 +56,10 @@
 
         <div class="mt-10 border-t border-gray-200 pt-8">
             <div class="text-center text-gray-500 text-sm">
-                <p>Идентификатор ошибки: {{ Str::random(8) }}</p>
+                {{-- Тот же идентификатор попадает в журнал, поэтому по нему
+                     можно найти саму ошибку:
+                     grep <номер> storage/logs/laravel.log --}}
+                <p>Идентификатор ошибки: {{ $id ?? \Illuminate\Support\Facades\Context::get('request_id', '—') }}</p>
                 <p class="mt-1">Время: {{ now()->format('d.m.Y H:i:s') }}</p>
             </div>
         </div>
