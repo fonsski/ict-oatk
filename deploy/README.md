@@ -125,6 +125,38 @@ FAQ главной — **в production не заливаются**. Они пр�
 
 ---
 
+## Если после обновления посыпались ошибки 500
+
+Чаще всего причина одна: код обновили вручную (`git pull` из-под своей
+учётной записи), а не через `deploy/update.sh`. Новые файлы шаблонов
+достаются владельцу, который их скачал, кэш скомпилированных представлений
+не пересобран — и `www-data` не может дописать в `storage/`. Любая страница,
+чей шаблон изменился, падает с 500.
+
+Сначала посмотрите настоящую причину. На странице ошибки есть
+«Идентификатор ошибки» — тот же номер лежит в журнале:
+
+```bash
+grep <идентификатор> /var/www/ict-help/storage/logs/laravel.log
+```
+
+Строка вида `Failed to open stream: Permission denied` подтверждает догадку.
+Лечится так:
+
+```bash
+cd /var/www/ict-help
+sudo chown -R www-data:www-data /var/www/ict-help
+sudo chmod -R 775 storage bootstrap/cache
+sudo -u www-data php artisan view:cache
+sudo -u www-data php artisan config:cache
+sudo -u www-data php artisan route:cache
+```
+
+Чтобы это не повторялось, обновляйтесь через `sudo bash deploy/update.sh` —
+он и права выставляет, и кэш пересобирает.
+
+---
+
 ## Частые задачи
 
 **Посмотреть логи:**
