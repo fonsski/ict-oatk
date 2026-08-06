@@ -189,6 +189,9 @@ class AllTicketsController extends Controller
                 "assigned_to_name" => $ticket->assignedTo
                     ? $ticket->assignedTo->name
                     : null,
+                // Нужен интерфейсу, чтобы исключить текущего исполнителя
+                // из списка при переназначении.
+                "assigned_to_id" => $ticket->assigned_to_id,
                 "assigned_to_role" => $ticket->assignedTo && $ticket->assignedTo->role
                     ? $ticket->assignedTo->role->name
                     : null,

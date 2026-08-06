@@ -676,7 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         ${ticket.status !== 'in_progress' && ticket.status !== 'closed' && !ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
                                         ${ticket.status === 'in_progress' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить решённой</button>` : ''}
                                         ${ticket.status === 'resolved' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
-                                        ${ticket.status !== 'closed' ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="assign-to" data-id="${ticket.id}">Назначить исполнителя</button>` : ''}
+                                        ${ticket.status !== 'closed' ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="assign-to" data-id="${ticket.id}" data-assigned-id="${ticket.assigned_to_id || ''}" data-assigned-name="${ticket.assigned_to_name || ''}">${ticket.assigned_to_name ? 'Переназначить исполнителя' : 'Назначить исполнителя'}</button>` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -779,7 +779,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (action === 'change-status' && status) {
                 changeTicketStatus(ticketId, status);
             } else if (action === 'assign-to') {
-                assignTicket(ticketId);
+                assignTicket(
+                    ticketId,
+                    button.getAttribute('data-assigned-id') || '',
+                    button.getAttribute('data-assigned-name') || '',
+                );
             }
         }
     });
@@ -879,9 +883,10 @@ if (action === 'change-status' && status) {
     }
 
     // Функция назначения исполнителя для заявки
-    function assignTicket(ticketId) {
+    function assignTicket(ticketId, assignedId, assignedName) {
         // Показываем индикатор загрузки
         window.currentActionTicketId = ticketId;
+        const isReassign = Boolean(assignedName);
         showNotification(`<span class="font-medium">Заявка #${ticketId}:</span> загрузка списка исполнителей...`, 'info', 2000);
 
         // Создаем модальное окно для выбора исполнителя
@@ -890,7 +895,12 @@ if (action === 'change-status' && status) {
         modal.id = 'assign-modal';
 
         // Получаем список доступных исполнителей
-        fetch('{{ route("api.users.technicians") }}')
+        // Уже назначенного исполнителя в списке быть не должно —
+        // выбирать его повторно бессмысленно.
+        const techniciansUrl = '{{ route("api.users.technicians") }}'
+            + (assignedId ? ('?exclude=' + encodeURIComponent(assignedId)) : '');
+
+        fetch(techniciansUrl)
             .then(response => response.json())
             .then(data => {
                 const technicians = data.technicians || [];
@@ -898,7 +908,7 @@ if (action === 'change-status' && status) {
                 modal.innerHTML = `
                     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Назначение исполнителя</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">${isReassign ? 'Переназначение исполнителя' : 'Назначение исполнителя'}</h3>
                             <button type="button" class="text-gray-400 hover:text-gray-500" id="close-modal">
                                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -906,6 +916,7 @@ if (action === 'change-status' && status) {
                             </button>
                         </div>
                         <div class="mb-6">
+                            ${isReassign ? `<p class="text-sm text-gray-600 mb-3">Сейчас назначен: <span class="font-medium text-gray-900">${assignedName}</span></p>` : ''}
                             <label for="technician-select" class="block text-sm font-medium text-gray-700 mb-2">Выберите исполнителя</label>
                             <select id="technician-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Не назначен</option>
@@ -917,7 +928,7 @@ if (action === 'change-status' && status) {
                                 Отмена
                             </button>
                             <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition" id="confirm-assign">
-                                Назначить
+                                ${isReassign ? 'Переназначить' : 'Назначить'}
                             </button>
                         </div>
                     </div>
