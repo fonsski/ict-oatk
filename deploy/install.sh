@@ -171,9 +171,15 @@ fi
 
 if [[ "${NEW_ENV:-0}" == "1" ]]; then
     warn "Осталось сделать вручную:"
-    echo "  1. Укажите APP_URL в ${APP_DIR}/.env (сейчас заглушка)."
-    echo "  2. Впишите телефоны сотрудников в STAFF_*_PHONE и выполните:"
-    echo "       cd ${APP_DIR} && sudo -u ${APP_USER} php artisan db:seed --class=StaffUserSeeder --force"
-    echo "     Команда покажет пароли для входа — сохраните их."
-    echo "  3. После правки .env: sudo -u ${APP_USER} php artisan config:cache"
+    echo "  1. Откройте ${APP_DIR}/.env и заполните:"
+    echo "       APP_URL          — адрес системы (сейчас заглушка)"
+    echo "       STAFF_*_PHONE    — телефоны сотрудников, это логины для входа"
+    echo
+    echo "  2. Перечитайте конфигурацию — ОБЯЗАТЕЛЬНО до сидирования."
+    echo "     Пока конфигурация закэширована, Laravel не читает .env,"
+    echo "     и сидер не увидит вписанные телефоны:"
+    echo "       cd ${APP_DIR} && sudo -u ${APP_USER} php artisan config:cache"
+    echo
+    echo "  3. Заведите учётные записи (команда один раз покажет пароли):"
+    echo "       sudo -u ${APP_USER} php artisan db:seed --class=StaffUserSeeder --force"
 fi

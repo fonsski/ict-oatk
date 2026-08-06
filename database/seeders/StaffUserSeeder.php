@@ -123,11 +123,26 @@ class StaffUserSeeder extends Seeder
 
         if ($missingPhone) {
             $this->command->error(
-                "Не заведены — не указан телефон в .env: " . implode(", ", $missingPhone),
+                "Не заведены — нет телефона: " . implode(", ", $missingPhone),
             );
-            $this->command->line(
-                "Заполните переменные STAFF_*_PHONE в .env и повторите: php artisan db:seed --class=StaffUserSeeder --force",
-            );
+
+            // Самая частая причина на боевом сервере: телефоны в .env уже
+            // вписаны, но конфигурация закэширована. При закэшированном
+            // конфиге Laravel вообще не читает .env, поэтому сюда приходят
+            // старые (пустые) значения, и подсказка «заполните .env»
+            // отправляет чинить то, что уже сделано.
+            if (app()->configurationIsCached()) {
+                $this->command->warn(
+                    "Конфигурация закэширована, поэтому правки в .env пока не видны.",
+                );
+                $this->command->line("Выполните по порядку:");
+                $this->command->line("  php artisan config:cache");
+                $this->command->line("  php artisan db:seed --class=StaffUserSeeder --force");
+            } else {
+                $this->command->line(
+                    "Заполните переменные STAFF_*_PHONE в .env и повторите: php artisan db:seed --class=StaffUserSeeder --force",
+                );
+            }
         }
     }
 }

@@ -89,6 +89,41 @@ class ProductionSeedingTest extends TestCase
     }
 
     /**
+     * При закэшированной конфигурации Laravel не читает .env, поэтому
+     * вписанные телефоны сидеру не видны. Подсказка должна вести к
+     * config:cache, а не отправлять заполнять уже заполненный файл.
+     */
+    public function test_cached_config_is_named_as_the_reason_phones_are_missing(): void
+    {
+        $source = file_get_contents(
+            (new \ReflectionClass(StaffUserSeeder::class))->getFileName(),
+        );
+
+        $this->assertStringContainsString("configurationIsCached()", $source);
+        $this->assertStringContainsString("php artisan config:cache", $source);
+    }
+
+    /**
+     * В инструкции по развёртыванию config:cache обязан идти до сидирования,
+     * иначе первый же запуск упирается в пустые телефоны.
+     */
+    public function test_deploy_docs_put_config_cache_before_seeding(): void
+    {
+        $readme = file_get_contents(base_path("deploy/README.md"));
+
+        $configCache = strpos($readme, "php artisan config:cache");
+        $seedStaff = strpos($readme, "db:seed --class=StaffUserSeeder");
+
+        $this->assertNotFalse($configCache);
+        $this->assertNotFalse($seedStaff);
+        $this->assertLessThan(
+            $seedStaff,
+            $configCache,
+            "config:cache должен быть описан раньше запуска StaffUserSeeder",
+        );
+    }
+
+    /**
      * Повторный деплой не должен сбрасывать пароли работающим людям.
      */
     public function test_reseeding_keeps_existing_passwords(): void

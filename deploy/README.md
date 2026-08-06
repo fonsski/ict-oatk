@@ -37,13 +37,18 @@ STAFF_GREBENSHCHIKOV_PHONE=+79001234569
 STAFF_KUNGFU_PHONE=+79001234570
 ```
 
-Затем завести учётные записи:
+Затем **сначала** перечитать конфигурацию и **только потом** заводить учётки:
 
 ```bash
 cd /var/www/ict-help
-sudo -u www-data php artisan db:seed --class=StaffUserSeeder --force
 sudo -u www-data php artisan config:cache
+sudo -u www-data php artisan db:seed --class=StaffUserSeeder --force
 ```
+
+> Порядок важен. Пока конфигурация закэширована, Laravel не читает `.env`
+> вовсе — сидер увидит пустые телефоны и напишет «не заведены», хотя номера
+> в файле уже стоят. `config:cache` перечитывает `.env` и складывает новые
+> значения в кэш.
 
 Команда **один раз** покажет таблицу с паролями — сохраните её и раздайте
 сотрудникам. Повторный запуск пароли не меняет.
