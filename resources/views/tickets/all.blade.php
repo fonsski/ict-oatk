@@ -1243,35 +1243,53 @@ if (action === 'change-status' && status) {
             return;
         }
 
-        // Базовые стили
-        menu.style.position = 'absolute';
+        positionActionsMenu(menu, button);
+    }
+
+    // Меню лежит внутри карточки с overflow-hidden и обёртки с
+    // overflow-x-auto — при position: absolute они его обрезают, и меню
+    // выглядит съехавшим и обрубленным. Поэтому позиционируем его
+    // относительно окна: fixed не подчиняется overflow предков.
+    function positionActionsMenu(menu, button) {
+        const gap = 8;
+
+        menu.style.position = 'fixed';
         menu.style.zIndex = '1000';
         menu.style.maxHeight = '80vh';
         menu.style.overflowY = 'auto';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
 
         const rect = button.getBoundingClientRect();
-
-        // Горизонтальное позиционирование
-        if (window.innerWidth - rect.right < 200) {
-            menu.style.left = 'auto';
-            menu.style.right = '0';
-        } else {
-            menu.style.left = '0';
-            menu.style.right = 'auto';
-        }
-
-        // Если снизу не хватает места — открываем вверх, чтобы меню не
-        // выходило за экран и не удлиняло страницу (лишняя прокрутка).
+        const menuWidth = menu.offsetWidth || 192;
         const menuHeight = menu.offsetHeight;
+
+        // По горизонтали прижимаем правый край меню к кнопке и следим,
+        // чтобы оно не вылезло за края окна.
+        let left = rect.right - menuWidth;
+        left = Math.max(gap, Math.min(left, window.innerWidth - menuWidth - gap));
+        menu.style.left = left + 'px';
+
+        // Если снизу не хватает места — открываем вверх.
         const spaceBelow = window.innerHeight - rect.bottom;
-        if (spaceBelow < menuHeight + 16 && rect.top > menuHeight + 16) {
-            menu.style.top = 'auto';
-            menu.style.bottom = 'calc(100% + 0.5rem)';
-        } else {
-            menu.style.bottom = 'auto';
-            menu.style.top = 'calc(100% + 0.5rem)';
-        }
+        menu.style.top = (spaceBelow < menuHeight + gap && rect.top > menuHeight + gap)
+            ? (rect.top - menuHeight - gap) + 'px'
+            : (rect.bottom + gap) + 'px';
     }
+
+    // Меню закреплено за окном, поэтому при прокрутке или изменении размера
+    // оно бы «отклеилось» от своей кнопки — просто закрываем его.
+    function closeAllActionsMenus() {
+        document.querySelectorAll('.actions-menu').forEach(function(menu) {
+            menu.classList.add('hidden');
+        });
+        document.querySelectorAll('.actions-btn').forEach(function(btn) {
+            btn.classList.remove('bg-slate-100');
+        });
+    }
+
+    window.addEventListener('scroll', closeAllActionsMenus, true);
+    window.addEventListener('resize', closeAllActionsMenus);
 
     // Инициализация LiveUpdates
     initLiveUpdates();
