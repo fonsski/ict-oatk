@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
+use App\Support\GuestTicketOwner;
 use Illuminate\Http\Request;
 use App\Models\TicketComment;
 use Illuminate\Support\Facades\Auth;
@@ -86,6 +87,10 @@ class TicketController extends Controller
                     );
                 });
             }
+        } else {
+            // Гость видит только свои обращения — те, что помечены его
+            // меткой. Без метки список пуст, чужие заявки не покажем.
+            $query->ownedByGuest(GuestTicketOwner::token($request));
         }
 
         $tickets = $this->paginateQuery($query->latest(), $request, 'tickets');
@@ -144,19 +149,31 @@ class TicketController extends Controller
 
         $ticket = Ticket::create($data);
 
+        // Гостю выдаём метку владельца: по ней он потом найдёт свои заявки
+        // и сможет их поправить. Метку ставит только сервер, поэтому
+        // присваиваем её отдельно от проверенных данных формы.
+        $guestToken = null;
+        if (!$user) {
+            $guestToken = GuestTicketOwner::tokenForNewTicket($request);
+            $ticket->guest_token = $guestToken;
+            $ticket->save();
+        }
+
         // Отправляем событие о создании заявки
         event(new TicketCreated($ticket, $user));
 
         // Отправляем уведомление о новой заявке
         $this->notificationService->notifyNewTicket($ticket);
 
-        // Гость не имеет доступа к странице заявки, поэтому возвращаем его
-        // на главную с подтверждением.
+        // Гостя ведём в его список заявок — там он сразу видит поданное
+        // обращение и может исправить опечатку, не заводя вторую заявку.
         if (!$user) {
-            return Redirect::route("home")->with(
-                "success",
-                "Заявка отправлена! Наши специалисты свяжутся с вами.",
-            );
+            return Redirect::route("tickets.index")
+                ->withCookie(GuestTicketOwner::cookie($guestToken))
+                ->with(
+                    "success",
+                    "Заявка отправлена! Наши специалисты свяжутся с вами.",
+                );
         }
 
         return Redirect::route("tickets.show", $ticket)->with(
@@ -220,9 +237,10 @@ class TicketController extends Controller
      */
     public function edit(Ticket $ticket)
     {
-        if (!$this->canModify($ticket)) {
+        if (!$this->canModify($ticket) && !$this->authorCanEdit($ticket)) {
             abort(403);
         }
+
         return view("tickets.edit", compact("ticket"));
     }
 
@@ -231,11 +249,36 @@ class TicketController extends Controller
      */
     public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
-        if (!$this->canModify($ticket)) {
+        $isStaff = $this->canModify($ticket);
+
+        if (!$isStaff && !$this->authorCanEdit($ticket)) {
             abort(403);
         }
 
         $data = $request->validated();
+
+        // Автор правит только своё обращение и свои контакты. Статус,
+        // исполнитель и прочее — не его дело, даже если поля подставлены
+        // в запрос вручную.
+        if (!$isStaff) {
+            $data = array_intersect_key(
+                $data,
+                array_flip([
+                    "title",
+                    "description",
+                    "category",
+                    "priority",
+                    "room_id",
+                    "equipment_id",
+                    "reporter_name",
+                    "reporter_phone",
+                ]),
+            );
+
+            if (array_key_exists("reporter_phone", $data)) {
+                $data["reporter_phone"] = clean_phone($data["reporter_phone"]);
+            }
+        }
 
         $ticket->update($data);
         return Redirect::route("tickets.show", $ticket)->with(
@@ -714,9 +757,38 @@ class TicketController extends Controller
         // любому вошедшему сотруднику.
         $user = Auth::user();
 
-        return $user &&
+        if (
+            $user &&
             $user->role &&
-            in_array($user->role->slug, ["admin", "master", "technician"]);
+            in_array($user->role->slug, ["admin", "master", "technician"])
+        ) {
+            return true;
+        }
+
+        // Гость видит своё обращение — по метке из cookie.
+        return GuestTicketOwner::owns(request(), $ticket);
+    }
+
+    /**
+     * Может ли автор сам поправить заявку.
+     *
+     * Смысл — исправить опечатку, а не переписать обращение задним числом:
+     * как только заявку взяли в работу, текст фиксируется, иначе исполнитель
+     * будет чинить одно, а в заявке окажется другое.
+     */
+    private function authorCanEdit(Ticket $ticket): bool
+    {
+        if ($ticket->status !== "open") {
+            return false;
+        }
+
+        $user = Auth::user();
+
+        if ($user && $ticket->user_id === $user->id) {
+            return true;
+        }
+
+        return GuestTicketOwner::owns(request(), $ticket);
     }
 
     /**

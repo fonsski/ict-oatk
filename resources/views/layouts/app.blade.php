@@ -200,6 +200,13 @@
                         </div>
                     @else
                         <div class="flex items-center space-x-4">
+                            {{-- Гость тоже видит свои обращения: они закреплены
+                                 за ним долгоживущей cookie. --}}
+                            <a href="{{ route('tickets.index') }}"
+                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('tickets.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                Мои заявки
+                            </a>
+
                             <!-- Войти -->
                             <a href="{{ route('login') }}"
                                 class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">

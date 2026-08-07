@@ -47,8 +47,11 @@ class TicketGuestSubmissionTest extends TestCase
     {
         $response = $this->post(route('tickets.store'), $this->validPayload());
 
-        $response->assertRedirect(route('home'));
+        // Гостя ведём в его список заявок, а не на главную: он сразу
+        // видит поданное обращение и может поправить опечатку.
+        $response->assertRedirect(route('tickets.index'));
         $response->assertSessionHas('success');
+        $response->assertCookie(\App\Support\GuestTicketOwner::COOKIE);
 
         $ticket = Ticket::first();
         $this->assertNotNull($ticket);
@@ -125,7 +128,7 @@ class TicketGuestSubmissionTest extends TestCase
         // Публичный маршрут ограничен throttle:5,1 — шестая заявка отклоняется.
         for ($i = 0; $i < 5; $i++) {
             $this->post(route('tickets.store'), $this->validPayload())
-                ->assertRedirect(route('home'));
+                ->assertRedirect(route('tickets.index'));
         }
 
         $this->post(route('tickets.store'), $this->validPayload())

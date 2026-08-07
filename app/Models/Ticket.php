@@ -27,7 +27,30 @@ class Ticket extends Model
         "room_id",
         "assigned_to_id",
         "equipment_id",
+        // guest_token намеренно не здесь: метку владельца выставляет только
+        // сервер. Попади она в fillable — её можно было бы подменить обычным
+        // полем формы и присвоить себе чужую заявку.
     ];
+
+    /**
+     * Метка гостя — секрет: кто её предъявил, тот и видит заявку.
+     * Прячем, чтобы не утекла ни в JSON, ни в отладочный вывод.
+     */
+    protected $hidden = ["guest_token"];
+
+    /**
+     * Заявки, поданные гостем с этой меткой.
+     */
+    public function scopeOwnedByGuest($query, ?string $token)
+    {
+        // Без метки не должно находиться ничего: пустой токен не может
+        // совпасть с «любой заявкой без владельца».
+        if (!$token) {
+            return $query->whereRaw("1 = 0");
+        }
+
+        return $query->where("guest_token", $token);
+    }
 
     public function comments(): HasMany
     {

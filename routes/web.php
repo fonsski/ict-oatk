@@ -106,13 +106,26 @@ Route::get("/api/equipment/by-room", [
     ->middleware("throttle:60,1")
     ->name("api.equipment.by-room");
 
+// Заявка гостя закреплена за ним долгоживущей cookie, поэтому список,
+// просмотр и правка своего обращения доступны без входа. Права проверяются
+// в контроллере: посторонний ничего чужого не увидит.
+Route::get("/tickets", [TicketController::class, "index"])->name(
+    "tickets.index",
+);
+Route::get("/tickets/{ticket}", [TicketController::class, "show"])->name(
+    "tickets.show",
+);
+Route::get("/tickets/{ticket}/edit", [TicketController::class, "edit"])->name(
+    "tickets.edit",
+);
+Route::put("/tickets/{ticket}", [TicketController::class, "update"])->name(
+    "tickets.update",
+);
+
 // Защищенные маршруты
 Route::middleware("auth")->group(function () {
-    // Создание заявки объявлено публично выше.
-    Route::resource("/tickets", TicketController::class)->except([
-        "create",
-        "store",
-    ]);
+    // Создание, просмотр и правка заявки объявлены публично выше.
+    Route::resource("/tickets", TicketController::class)->only(["destroy"]);
     // Дополнительные действия для заявок
     Route::post("/tickets/{ticket}/start", [
         TicketController::class,

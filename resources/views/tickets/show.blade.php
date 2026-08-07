@@ -81,6 +81,17 @@
                 </div>
 
                 <div class="mt-4 lg:mt-0 flex flex-wrap gap-2">
+                    {{-- Автор может поправить обращение, пока его не взяли
+                         в работу: опечатка не повод заводить вторую заявку. --}}
+                    @if(!can_manage_ticket($ticket)
+                        && $ticket->status === 'open'
+                        && \App\Support\GuestTicketOwner::owns(request(), $ticket))
+                    <a href="{{ route('tickets.edit', $ticket) }}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Редактировать заявку
+                    </a>
+                    @endif
+
                     <!-- Action Buttons -->
                     @if(can_manage_ticket($ticket))
                     @if($ticket->status === 'open' && !$ticket->assignedTo && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))

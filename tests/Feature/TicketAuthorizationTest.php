@@ -40,18 +40,24 @@ class TicketAuthorizationTest extends TestCase
         ]);
     }
 
-    public function test_guest_cannot_view_ticket(): void
+    public function test_guest_cannot_view_someone_elses_ticket(): void
     {
         $ticket = $this->makeTicket();
 
-        // Приложение не редиректит гостя, а отдаёт страницу 401 —
-        // см. обработчик AuthenticationException в bootstrap/app.php.
-        $this->get(route('tickets.show', $ticket))->assertUnauthorized();
+        // Своё обращение гость открыть может — по метке из cookie.
+        // Чужое остаётся закрытым.
+        $this->get(route('tickets.show', $ticket))->assertForbidden();
     }
 
-    public function test_guest_cannot_open_ticket_list(): void
+    public function test_guest_ticket_list_is_empty_without_a_token(): void
     {
-        $this->get(route('tickets.index'))->assertUnauthorized();
+        $this->makeTicket();
+
+        // Список открывается всем, но без метки в нём ничего нет:
+        // чужие обращения гостю не показываем.
+        $response = $this->get(route('tickets.index'))->assertOk();
+
+        $this->assertCount(0, $response->viewData('tickets'));
     }
 
     public function test_technician_can_view_any_ticket(): void
