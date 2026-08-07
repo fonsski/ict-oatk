@@ -9,6 +9,17 @@
 #
 set -euo pipefail
 
+# Скрипт обновляет в том числе сам себя: git reset ниже перезаписывает этот
+# файл, а bash дочитывает его с диска по ходу выполнения — так можно
+# получить обрывок команды из новой версии. Поэтому сразу продолжаем работу
+# с копии во временном каталоге.
+if [[ "${ICT_HELP_SELF_COPY:-0}" != "1" ]]; then
+    SELF_COPY="$(mktemp)"
+    cp "${BASH_SOURCE[0]}" "${SELF_COPY}"
+    trap 'rm -f "${SELF_COPY}"' EXIT
+    ICT_HELP_SELF_COPY=1 exec bash "${SELF_COPY}" "$@"
+fi
+
 APP_DIR="${APP_DIR:-/var/www/ict-help}"
 APP_USER="${APP_USER:-www-data}"
 
