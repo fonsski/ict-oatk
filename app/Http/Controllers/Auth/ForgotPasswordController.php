@@ -8,11 +8,19 @@ use App\Notifications\PasswordResetNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordController extends Controller
 {
+    /** Ключ, под которым в сессии живут данные сброса. */
+    private const SESSION_KEY = "password_reset";
+
+    /** Сколько живёт код. Полчаса для шестизначного кода — многовато. */
+    private const CODE_TTL_MINUTES = 15;
+
+    /** Сколько раз можно ошибиться в коде, прежде чем он аннулируется. */
+    private const MAX_ATTEMPTS = 5;
+
     /**
      * Показать форму для запроса сброса пароля
      */
@@ -22,7 +30,7 @@ class ForgotPasswordController extends Controller
     }
 
     /**
-     * Отправить ссылку для сброса пароля
+     * Отправить код для сброса пароля
      */
     public function sendResetCode(Request $request)
     {
@@ -32,52 +40,48 @@ class ForgotPasswordController extends Controller
 
         $user = User::where("email", $request->email)->first();
 
-        if (!$user) {
-            throw ValidationException::withMessages([
-                "email" => [
-                    "Не найден пользователь с указанным email адресом.",
-                ],
+        if ($user) {
+            $code = (string) random_int(100000, 999999);
+
+            $request->session()->put(self::SESSION_KEY, [
+                // В сессии держим только хеш: даже если её содержимое
+                // куда-то утечёт, восстановить код по нему нельзя.
+                "code_hash" => Hash::make($code),
+                "user_id" => $user->id,
+                "email" => $user->email,
+                "created_at" => now(),
+                "attempts" => 0,
+                // Ключевой признак: пароль меняем только после того, как
+                // код действительно введён и проверен.
+                "verified" => false,
             ]);
-        }
 
-        // Генерируем код сброса пароля
-        $resetCode = mt_rand(100000, 999999); // 6-значный код
+            try {
+                $user->notify(new PasswordResetNotification($code));
 
-        // Сохраняем код и время создания в сессии
-        $request->session()->put("password_reset_code", [
-            "code" => $resetCode,
-            "email" => $request->email,
-            "created_at" => now(),
-            "user_id" => $user->id,
-        ]);
-
-        try {
-            // Отправляем уведомление с кодом сброса пароля
-            $user->notify(new PasswordResetNotification($resetCode));
-
-            // Логируем успешную отправку
-            Log::info(
-                "Код сброса пароля отправлен для пользователя {$user->id}: {$resetCode}",
-                [
-                    "email" => $user->email,
-                ],
-            );
-        } catch (\Exception $e) {
-            // Логируем ошибку отправки
-            Log::error(
-                "Ошибка отправки кода сброса пароля для пользователя {$user->id}",
-                [
-                    "email" => $user->email,
+                // Сам код в журнал не пишем: у кого доступ к логам, тот
+                // иначе может сменить пароль любому сотруднику.
+                Log::info("Отправлен код сброса пароля", [
+                    "user_id" => $user->id,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error("Не удалось отправить код сброса пароля", [
+                    "user_id" => $user->id,
                     "error" => $e->getMessage(),
-                    "trace" => $e->getTraceAsString(),
-                ],
-            );
+                ]);
+            }
+        } else {
+            // Отвечаем одинаково независимо от того, есть такой адрес или
+            // нет: иначе форма превращается в проверку «а кто у вас есть».
+            Log::info("Запрошен сброс пароля для неизвестного адреса");
         }
 
-        // Показываем пользователю страницу для ввода кода
         return redirect()
             ->route("password.code")
-            ->with("status", "Код подтверждения отправлен на ваш email.");
+            ->with(
+                "status",
+                "Если такой адрес зарегистрирован, код подтверждения отправлен на почту.",
+            );
     }
 
     /**
@@ -85,10 +89,8 @@ class ForgotPasswordController extends Controller
      */
     public function showResetCodeForm()
     {
-        if (!session()->has("password_reset_code")) {
-            return redirect()->route("password.request");
-        }
-
+        // Форму показываем всегда: скрывать её при отсутствии сессии значило
+        // бы подсказывать, существует ли введённый адрес.
         return view("auth.passwords.code");
     }
 
@@ -101,46 +103,47 @@ class ForgotPasswordController extends Controller
             "code" => "required|numeric|digits:6",
         ]);
 
-        $resetData = session("password_reset_code");
+        $reset = $this->activeReset($request);
 
-        if (!$resetData) {
+        if (!$reset) {
+            return $this->expired();
+        }
+
+        // Считаем попытки: шестизначный код без ограничения перебирается.
+        $reset["attempts"]++;
+
+        if ($reset["attempts"] > self::MAX_ATTEMPTS) {
+            $request->session()->forget(self::SESSION_KEY);
+
             return redirect()
                 ->route("password.request")
                 ->withErrors([
-                    "code" =>
-                        "Срок действия кода истек. Пожалуйста, запросите новый код.",
+                    "code" => "Слишком много неверных попыток. Запросите новый код.",
                 ]);
         }
 
-        // Проверяем, не истек ли срок действия кода (30 минут)
-        $expiry = now()->subMinutes(30);
-        if ($expiry->gt($resetData["created_at"])) {
-            session()->forget("password_reset_code");
-            return redirect()
-                ->route("password.request")
-                ->withErrors([
-                    "code" =>
-                        "Срок действия кода истек. Пожалуйста, запросите новый код.",
-                ]);
-        }
+        if (!Hash::check($request->code, $reset["code_hash"])) {
+            $request->session()->put(self::SESSION_KEY, $reset);
 
-        // Проверяем код
-        if ($request->code != $resetData["code"]) {
             return back()->withErrors([
                 "code" => "Неверный код подтверждения.",
             ]);
         }
 
-        // Перенаправляем на форму создания нового пароля
+        $reset["verified"] = true;
+        $request->session()->put(self::SESSION_KEY, $reset);
+
         return redirect()->route("password.reset");
     }
 
     /**
      * Показать форму для создания нового пароля
      */
-    public function showResetForm()
+    public function showResetForm(Request $request)
     {
-        if (!session()->has("password_reset_code")) {
+        $reset = $this->activeReset($request);
+
+        if (!$reset || !$reset["verified"]) {
             return redirect()->route("password.request");
         }
 
@@ -156,35 +159,33 @@ class ForgotPasswordController extends Controller
             "password" => "required|string|min:8|confirmed",
         ]);
 
-        $resetData = session("password_reset_code");
+        $reset = $this->activeReset($request);
 
-        if (!$resetData) {
+        if (!$reset) {
+            return $this->expired();
+        }
+
+        // Без этой проверки код можно было просто пропустить: достаточно
+        // было запросить сброс на чужой адрес и сразу отправить новый
+        // пароль на этот маршрут.
+        if (!$reset["verified"]) {
+            Log::warning("Попытка сменить пароль без подтверждения кодом", [
+                "user_id" => $reset["user_id"],
+            ]);
+
             return redirect()
                 ->route("password.request")
                 ->withErrors([
-                    "general" =>
-                        "Срок действия кода истек. Пожалуйста, запросите новый код.",
+                    "general" => "Сначала подтвердите код из письма.",
                 ]);
         }
 
-        // Находим пользователя
-        $user = User::find($resetData["user_id"]);
+        $user = User::find($reset["user_id"]);
 
-        if (!$user) {
-            session()->forget("password_reset_code");
-            return redirect()
-                ->route("password.request")
-                ->withErrors(["general" => "Пользователь не найден."]);
-        }
+        // Адрес мог смениться, пока код был на руках.
+        if (!$user || $user->email !== $reset["email"]) {
+            $request->session()->forget(self::SESSION_KEY);
 
-        // Проверяем совпадение email
-        if ($user->email !== $resetData["email"]) {
-            session()->forget("password_reset_code");
-            Log::warning("Попытка сброса пароля с несовпадающим email", [
-                "user_id" => $resetData["user_id"],
-                "session_email" => $resetData["email"],
-                "user_email" => $user->email,
-            ]);
             return redirect()
                 ->route("password.request")
                 ->withErrors([
@@ -192,24 +193,51 @@ class ForgotPasswordController extends Controller
                 ]);
         }
 
-        // Обновляем пароль
         $user->password = Hash::make($request->password);
         $user->save();
 
-        // Логируем успешный сброс пароля
-        Log::info("Пароль успешно сброшен для пользователя", [
-            "user_id" => $user->id,
-            "email" => $user->email,
-        ]);
+        Log::info("Пароль сброшен", ["user_id" => $user->id]);
 
-        // Очищаем данные сброса пароля
-        session()->forget("password_reset_code");
+        // Код одноразовый: второй раз им воспользоваться нельзя.
+        $request->session()->forget(self::SESSION_KEY);
 
-        // Автоматически входим пользователя
         auth()->login($user);
+
+        // Новый идентификатор сессии после смены пароля — иначе выданный
+        // ранее идентификатор остался бы годным (session fixation).
+        $request->session()->regenerate();
 
         return redirect()
             ->route("home")
             ->with("status", "Ваш пароль был успешно изменен.");
+    }
+
+    /**
+     * Данные сброса, если они есть и не просрочены.
+     */
+    private function activeReset(Request $request): ?array
+    {
+        $reset = $request->session()->get(self::SESSION_KEY);
+
+        if (!is_array($reset)) {
+            return null;
+        }
+
+        if ($reset["created_at"]->lt(now()->subMinutes(self::CODE_TTL_MINUTES))) {
+            $request->session()->forget(self::SESSION_KEY);
+
+            return null;
+        }
+
+        return $reset;
+    }
+
+    private function expired()
+    {
+        return redirect()
+            ->route("password.request")
+            ->withErrors([
+                "code" => "Срок действия кода истёк. Запросите новый код.",
+            ]);
     }
 }

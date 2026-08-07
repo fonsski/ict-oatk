@@ -39,10 +39,14 @@ Route::middleware("guest")->group(function () {
         ForgotPasswordController::class,
         "showLinkRequestForm",
     ])->name("password.request");
+    // Ограничения частоты: рассылка кодов на чужие адреса и перебор
+    // шестизначного кода без них делаются в лоб.
     Route::post("password/email", [
         ForgotPasswordController::class,
         "sendResetCode",
-    ])->name("password.send");
+    ])
+        ->middleware("throttle:5,10")
+        ->name("password.send");
     Route::get("password/code", [
         ForgotPasswordController::class,
         "showResetCodeForm",
@@ -50,7 +54,9 @@ Route::middleware("guest")->group(function () {
     Route::post("password/code", [
         ForgotPasswordController::class,
         "validateResetCode",
-    ])->name("password.code.check");
+    ])
+        ->middleware("throttle:10,10")
+        ->name("password.code.check");
     Route::get("password/reset/confirm", [
         ForgotPasswordController::class,
         "showResetForm",
@@ -58,7 +64,9 @@ Route::middleware("guest")->group(function () {
     Route::post("password/reset", [
         ForgotPasswordController::class,
         "reset",
-    ])->name("password.update");
+    ])
+        ->middleware("throttle:10,10")
+        ->name("password.update");
 });
 
 Route::post("logout", [LoginController::class, "logout"])
