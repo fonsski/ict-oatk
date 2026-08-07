@@ -53,6 +53,35 @@ sudo -u www-data php artisan db:seed --class=StaffUserSeeder --force
 Команда **один раз** покажет таблицу с паролями — сохраните её и раздайте
 сотрудникам. Повторный запуск пароли не меняет.
 
+### Почта — до того, как понадобится восстановить пароль
+
+В `.env` заполните SMTP-доступ:
+
+```ini
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.college.local
+MAIL_PORT=587
+MAIL_USERNAME=support@oatk.org
+MAIL_PASSWORD=...
+MAIL_FROM_ADDRESS=support@oatk.org
+```
+
+Без этого восстановление пароля работать не будет: письмо уходит через
+очередь, и ошибка отправки останется в `storage/logs/queue.log`, а
+пользователь так и будет ждать код.
+
+Отдельно про `MAIL_MAILER=log` — им удобно проверять шаблоны писем, но на
+боевом сервере ставить его нельзя. Драйвер пишет письмо в
+`storage/logs/laravel.log` целиком, вместе с кодом подтверждения: у любого,
+кто читает журналы, появляется способ сменить пароль кому угодно.
+
+Проверить отправку после настройки:
+
+```bash
+cd /var/www/ict-help
+sudo -u www-data php artisan tinker --execute="Illuminate\Support\Facades\Mail::raw('проверка', fn(\$m) => \$m->to('вы@oatk.org')->subject('ICT Help'));"
+```
+
 ---
 
 ## Автозапуск при включении виртуалки
