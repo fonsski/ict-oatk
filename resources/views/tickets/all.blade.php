@@ -379,6 +379,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // (событие realtime:tickets), поэтому частый поллинг не нужен.
     const REFRESH_INTERVAL = 30000;
 
+    // Кто смотрит страницу: техник распоряжается только своими заявками,
+    // руководитель — любыми. От этого зависят пункты меню.
+    const CURRENT_USER_ID = {{ Auth::id() ?? 'null' }};
+    const CAN_ASSIGN_OTHERS = @json(in_array(Auth::user()->role->slug ?? '', ['admin', 'master']));
+
     // Инициализируем таблицу с начальными данными
     const initialTicketsData = @json($tickets);
     console.log('Начальные данные заявок:', initialTicketsData);
@@ -676,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         ${ticket.status !== 'in_progress' && ticket.status !== 'closed' && !ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
                                         ${ticket.status === 'in_progress' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="resolved">Отметить решённой</button>` : ''}
                                         ${ticket.status === 'resolved' && ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="closed">Закрыть заявку</button>` : ''}
-                                        ${ticket.status !== 'closed' ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="assign-to" data-id="${ticket.id}" data-assigned-id="${ticket.assigned_to_id || ''}" data-assigned-name="${ticket.assigned_to_name || ''}">${ticket.assigned_to_name ? 'Переназначить исполнителя' : 'Назначить исполнителя'}</button>` : ''}
+                                        ${assignMenuItem(ticket)}
                                     </div>
                                 </div>
                             </div>
@@ -684,6 +689,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
             </tr>
         `;
+    }
+
+    // Пункт меню назначения зависит от роли и от того, чья это заявка.
+    function assignMenuItem(ticket) {
+        if (ticket.status === 'closed') {
+            return '';
+        }
+
+        const base = 'block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action';
+        const attrs = `class="${base}" data-action="assign-to" data-id="${ticket.id}"`
+            + ` data-assigned-id="${ticket.assigned_to_id || ''}" data-assigned-name="${ticket.assigned_to_name || ''}"`;
+
+        if (CAN_ASSIGN_OTHERS) {
+            const label = ticket.assigned_to_name ? 'Переназначить исполнителя' : 'Назначить исполнителя';
+            return `<button type="button" ${attrs}>${label}</button>`;
+        }
+
+        // Техник: свободную заявку берёт себе, от своей может отказаться,
+        // чужую не трогает — сервер такой запрос всё равно отклонит.
+        if (!ticket.assigned_to_id) {
+            return `<button type="button" ${attrs} data-self-assign="take">Взять себе</button>`;
+        }
+
+        if (ticket.assigned_to_id === CURRENT_USER_ID) {
+            return `<button type="button" ${attrs} data-self-assign="release">Отказаться от заявки</button>`;
+        }
+
+        return '';
     }
 
     // События
@@ -779,11 +812,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (action === 'change-status' && status) {
                 changeTicketStatus(ticketId, status);
             } else if (action === 'assign-to') {
-                assignTicket(
-                    ticketId,
-                    button.getAttribute('data-assigned-id') || '',
-                    button.getAttribute('data-assigned-name') || '',
-                );
+                const selfAssign = button.getAttribute('data-self-assign');
+
+                if (selfAssign) {
+                    // Технику выбирать не из кого: он либо берёт заявку
+                    // себе, либо отказывается от своей.
+                    setTicketAssignee(
+                        ticketId,
+                        selfAssign === 'take' ? CURRENT_USER_ID : null,
+                    );
+                } else {
+                    assignTicket(
+                        ticketId,
+                        button.getAttribute('data-assigned-id') || '',
+                        button.getAttribute('data-assigned-name') || '',
+                    );
+                }
             }
         }
     });
@@ -879,6 +923,40 @@ if (action === 'change-status' && status) {
         .catch(error => {
             console.error('Error:', error);
             showNotification(`<span class="font-medium">Ошибка:</span> не удалось изменить статус заявки #${ticketId}`, 'error', 5000);
+        });
+    }
+
+    // Прямое назначение без окна выбора: техник берёт заявку себе или
+    // отказывается от своей — выбирать не из кого.
+    function setTicketAssignee(ticketId, assigneeId) {
+        window.currentActionTicketId = ticketId;
+
+        fetch(`{{ route('api.tickets.assign', ['ticket' => 0]) }}`.replace('0', ticketId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ assigned_to_id: assigneeId })
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok) {
+                throw new Error(data.message || 'Не удалось изменить исполнителя');
+            }
+
+            showNotification(
+                assigneeId
+                    ? `<span class="font-medium">Заявка #${ticketId}:</span> вы взяли её в работу`
+                    : `<span class="font-medium">Заявка #${ticketId}:</span> вы отказались от неё`,
+                'success',
+            );
+            refreshTickets();
+        })
+        .catch(error => {
+            showNotification(`<span class="font-medium">Ошибка:</span> ${error.message}`, 'error', 5000);
         });
     }
 

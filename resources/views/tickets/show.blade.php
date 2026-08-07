@@ -109,6 +109,19 @@
                         </button>
                     </form>
                     @endif
+
+                    {{-- Удаление «рофльных» обращений: только руководитель,
+                         и только через подтверждение словом. --}}
+                    @if(user_is_admin() || (Auth::user()->role->slug ?? null) === 'master')
+                    <span class="inline-flex items-center px-4 py-2 border border-red-200 rounded-md bg-white">
+                        @include('tickets.partials.delete-confirm', [
+                            'ticket' => $ticket,
+                            'action' => route('tickets.destroy', $ticket),
+                            'permanent' => false,
+                            'trigger' => 'Удалить заявку',
+                        ])
+                    </span>
+                    @endif
                 </div>
                 @endif
             </div>

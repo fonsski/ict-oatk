@@ -70,7 +70,9 @@ class TicketAuthorizationTest extends TestCase
         $ticket = $this->makeTicket();
 
         $this->actingAs($admin)
-            ->delete(route('tickets.destroy', $ticket))
+            ->delete(route('tickets.destroy', $ticket), [
+                'confirmation' => 'УДАЛИТЬ',
+            ])
             ->assertRedirect(route('tickets.index'));
 
         $this->assertSoftDeleted('tickets', ['id' => $ticket->id]);

@@ -41,7 +41,9 @@ class TicketSoftDeleteTest extends TestCase
         $admin = User::factory()->withRole('admin')->create();
         $ticket = $this->makeTicket();
 
-        $this->actingAs($admin)->delete(route('tickets.destroy', $ticket));
+        $this->actingAs($admin)->delete(route('tickets.destroy', $ticket), [
+            'confirmation' => 'УДАЛИТЬ',
+        ]);
 
         $this->assertSoftDeleted('tickets', ['id' => $ticket->id]);
         $this->assertNotNull(Ticket::withTrashed()->find($ticket->id));
@@ -172,6 +174,7 @@ class TicketSoftDeleteTest extends TestCase
 
         $this->actingAs($admin)->delete(
             route('tickets.force-delete', $ticket->id),
+            ['confirmation' => 'УДАЛИТЬ'],
         );
 
         $this->assertDatabaseMissing('tickets', ['id' => $ticket->id]);

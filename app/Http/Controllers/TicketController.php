@@ -247,16 +247,67 @@ class TicketController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Ticket $ticket)
+    /**
+     * Слово, которое нужно ввести, чтобы подтвердить удаление.
+     * Защита от случайного клика: одного «вы уверены?» мало.
+     */
+    public const DELETE_CONFIRMATION = "УДАЛИТЬ";
+
+    public function destroy(Request $request, Ticket $ticket)
     {
-        if (!$this->canModify($ticket)) {
-            abort(403);
+        // Удаление заявок — дело руководителя, а не любого сотрудника.
+        if (!$this->canDelete()) {
+            abort(403, "Удалять заявки может только администратор или заведующий");
         }
+
+        if ($error = $this->deleteConfirmationError($request)) {
+            return Redirect::back()->withErrors(["confirmation" => $error]);
+        }
+
         $ticket->delete();
+
         return Redirect::route("tickets.index")->with(
             "success",
-            "Заявка удалена",
+            "Заявка #{$ticket->id} перемещена в корзину",
         );
+    }
+
+    /**
+     * Удалять заявки могут только администратор и заведующий: техник
+     * не должен убирать чужие обращения из системы.
+     */
+    private function canDelete(): bool
+    {
+        $user = Auth::user();
+
+        return $user &&
+            $user->role &&
+            in_array($user->role->slug, ["admin", "master"]);
+    }
+
+    /**
+     * Проверка введённого слова подтверждения.
+     * Возвращает текст ошибки или null, если всё верно.
+     */
+    private function deleteConfirmationError(Request $request): ?string
+    {
+        $entered = trim((string) $request->input("confirmation"));
+
+        if ($entered === "") {
+            return "Введите слово " .
+                self::DELETE_CONFIRMATION .
+                ", чтобы подтвердить удаление";
+        }
+
+        // Регистр не важен: заглавные буквы — лишний повод ошибиться.
+        if (
+            mb_strtoupper($entered, "UTF-8") !== self::DELETE_CONFIRMATION
+        ) {
+            return "Слово подтверждения введено неверно. Нужно: " .
+                self::DELETE_CONFIRMATION;
+        }
+
+        return null;
     }
 
     /**
@@ -323,7 +374,7 @@ class TicketController extends Controller
     /**
      * Безвозвратное удаление. Только admin.
      */
-    public function forceDelete(Ticket $ticket)
+    public function forceDelete(Request $request, Ticket $ticket)
     {
         $user = Auth::user();
         if (!$user || !$user->role || $user->role->slug !== "admin") {
@@ -335,6 +386,13 @@ class TicketController extends Controller
                 "error",
                 "Сначала переместите заявку в корзину",
             );
+        }
+
+        // Безвозвратное удаление — тем более под подтверждение словом.
+        if ($error = $this->deleteConfirmationError($request)) {
+            return Redirect::route("tickets.trashed")->withErrors([
+                "confirmation" => $error,
+            ]);
         }
 
         $ticket->comments()->delete();
@@ -540,6 +598,13 @@ class TicketController extends Controller
         $data = $request->validated();
         $newAssignedId = $data["assigned_to_id"] ?? null;
 
+        if (!self::canAssignTo(Auth::user(), $ticket, $newAssignedId)) {
+            return Redirect::back()->with(
+                "error",
+                "Назначать заявку другому сотруднику может только администратор или заведующий. Свободную заявку вы можете взять себе.",
+            );
+        }
+
         $oldAssignedId = $ticket->assigned_to_id;
         $ticket->update(["assigned_to_id" => $newAssignedId]);
 
@@ -598,6 +663,36 @@ class TicketController extends Controller
         ) {
             abort(403);
         }
+    }
+
+    /**
+     * Кто кому может назначать заявку.
+     *
+     * Распоряжаться чужой работой — дело руководителя: администратор и
+     * заведующий (master) назначают кого угодно на что угодно. Техник
+     * разбирает заявки сам: берёт свободную себе и может от своей
+     * отказаться, но перекидывать заявки друг другу не может.
+     */
+    public static function canAssignTo(
+        ?User $user,
+        Ticket $ticket,
+        ?int $newAssignedId,
+    ): bool {
+        if (!$user || !$user->role) {
+            return false;
+        }
+
+        if (in_array($user->role->slug, ["admin", "master"])) {
+            return true;
+        }
+
+        $takesFreeTicket =
+            $newAssignedId === $user->id && $ticket->assigned_to_id === null;
+
+        $releasesOwnTicket =
+            $newAssignedId === null && $ticket->assigned_to_id === $user->id;
+
+        return $takesFreeTicket || $releasesOwnTicket;
     }
 
     private function canChangeStatus(Ticket $ticket): bool

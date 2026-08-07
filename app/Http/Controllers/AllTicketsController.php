@@ -256,8 +256,22 @@ class AllTicketsController extends Controller
             "assigned_to_id" => "nullable|exists:users,id",
         ]);
 
+        $newAssignedToId = $data["assigned_to_id"] ?? null;
+
+        // Перекидывать заявки друг другу техники не могут — это работа
+        // администратора или заведующего. Себе свободную заявку взять можно.
+        if (
+            !TicketController::canAssignTo(Auth::user(), $ticket, $newAssignedToId)
+        ) {
+            return response()->json([
+                "success" => false,
+                "message" =>
+                    "Назначать заявку другому сотруднику может только администратор или заведующий. Свободную заявку вы можете взять себе.",
+            ], 403);
+        }
+
         $oldAssignedToId = $ticket->assigned_to_id;
-        $ticket->update(["assigned_to_id" => $data["assigned_to_id"] ?? null]);
+        $ticket->update(["assigned_to_id" => $newAssignedToId]);
 
         // Добавление системного комментария о назначении
         if ($oldAssignedToId != $ticket->assigned_to_id) {

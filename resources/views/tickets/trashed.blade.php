@@ -85,14 +85,14 @@
                             </form>
 
                             @if(user_is_admin())
-                            <form method="POST" action="{{ route('tickets.force-delete', $ticket->id) }}" class="inline ml-4"
-                                  onsubmit="return confirm('Заявка #{{ $ticket->id }} будет удалена безвозвратно вместе с комментариями. Продолжить?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
-                                    Удалить навсегда
-                                </button>
-                            </form>
+                            <span class="inline ml-4">
+                                @include('tickets.partials.delete-confirm', [
+                                    'ticket' => $ticket,
+                                    'action' => route('tickets.force-delete', $ticket->id),
+                                    'permanent' => true,
+                                    'trigger' => 'Удалить навсегда',
+                                ])
+                            </span>
                             @endif
                         </td>
                     </tr>

@@ -112,8 +112,7 @@
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 bg-violet-500 rounded-lg flex items-center justify-center">
                             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                                <path d="M9 12h6m-6 3h6m2 5H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2m6 0h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2M9 4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path>
                             </svg>
                         </div>
                         <div class="flex-1">
@@ -318,10 +317,9 @@
             <div class="text-center">
                 <div class="mx-auto w-16 h-16 bg-emerald-500 rounded-xl flex items-center justify-center mb-6">
                     <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 12l2 2 4-4"></path>
-                        <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"></path>
-                        <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2z"></path>
-                        <path d="M12 3c0 1-1 2-2 2s-2 1-2 2 1 2 2 2 2 1 2 2 1-2 2-2 2-1 2-2-1-2-2-2-2-1-2-2z"></path>
+                        <path d="M22 10 12 5 2 10l10 5 10-5Z"></path>
+                        <path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"></path>
+                        <path d="M22 10v6"></path>
                     </svg>
                 </div>
                 <h3 class="text-xl font-semibold text-slate-900 mb-3">Экспертная поддержка</h3>
