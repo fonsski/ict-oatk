@@ -41,7 +41,6 @@
   - [Как добавить новую роль пользователя?](#как-добавить-новую-роль-пользователя)
   - [Как обновить систему?](#как-обновить-систему)
   - [Как подключить SSL сертификат для HTTPS?](#как-подключить-ssl-сертификат-для-https)
-  - [Как настроить авторизацию через Google?](#как-настроить-авторизацию-через-google)
   - [Как настроить отправку сообщений через очереди?](#как-настроить-отправку-сообщений-через-очереди)
 - [Безопасность](#безопасность)
 - [История изменений](#история-изменений)
@@ -100,7 +99,7 @@
 
 - Ролевая модель доступа (администратор, техник, пользователь)
 - Управление профилями пользователей
-- Авторизация через Google или стандартную форму
+- Вход по номеру телефона
 - Настраиваемые уведомления
 
 ### 📊 Дополнительные функции
@@ -423,20 +422,17 @@ DB_DATABASE=ict
 DB_USERNAME=ict_user
 DB_PASSWORD=your_password
 
-# Настройки почты
+# Настройки почты — на сервере их проще прописать через deploy/setup-mail.sh
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.example.com
 MAIL_PORT=587
 MAIL_USERNAME=your-email@example.com
 MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
+# Шифрование: пусто или smtp — STARTTLS (порт 587), smtps — SSL (порт 465).
+# MAIL_ENCRYPTION из прежних версий Laravel больше не читается.
+MAIL_SCHEME=smtp
 MAIL_FROM_ADDRESS=noreply@example.com
 MAIL_FROM_NAME="${APP_NAME}"
-
-# Настройки OAuth для Google
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 
 # Настройки очередей
 QUEUE_CONNECTION=database  # redis также поддерживается
@@ -579,6 +575,10 @@ php artisan test --filter=NameTest
 
 # Очистка базы данных и применение миграций заново
 php artisan migrate:fresh --seed
+
+# Проверка отправки почты: настройки, прямое письмо и письмо через очередь
+php artisan mail:test вы@example.com
+php artisan mail:test вы@example.com --queued
 ```
 
 ### Учетные записи по умолчанию
@@ -772,24 +772,42 @@ $user->save();
 
 ### Как настроить отправку уведомлений по email?
 
-Настройте параметры SMTP в файле .env и перезапустите сервер:
+На сервере — одной командой, она же всё проверит:
+
+```bash
+sudo bash deploy/setup-mail.sh
+```
+
+Вручную: пропишите SMTP в `.env`, перечитайте конфигурацию и **перезапустите
+очередь** — письма уходят через неё, а рабочий процесс держит настройки с
+момента запуска:
 
 ```
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=ваш_email@gmail.com
-MAIL_PASSWORD=ваш_пароль
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@ваш-домен.ru
+MAIL_PASSWORD=пароль_приложения
+MAIL_SCHEME=smtp
+MAIL_FROM_ADDRESS=ict@oatk.org
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-После этого выполните:
 ```bash
 php artisan config:clear
-php artisan cache:clear
+sudo systemctl restart ict-help-queue   # на сервере
 ```
+
+Проверить, что письма действительно уходят:
+
+```bash
+php artisan mail:test вы@example.com
+php artisan mail:test вы@example.com --queued
+```
+
+У Google и Яндекса обычный пароль от ящика не подойдёт — нужен пароль
+приложения. Драйвер `log` в продакшене использовать нельзя: он пишет письмо
+в `storage/logs/laravel.log` целиком, вместе с кодом восстановления пароля.
 
 ### Как добавить новую роль пользователя?
 
@@ -879,26 +897,6 @@ server {
 }
 ```
 
-### Как настроить авторизацию через Google?
-
-1. Создайте проект в [Google Cloud Console](https://console.cloud.google.com/)
-2. Настройте OAuth credentials и получите Client ID и Client Secret
-3. Добавьте авторизованный URI перенаправления: `https://your-domain.com/auth/google/callback`
-4. Добавьте настройки в файл `.env`:
-   ```
-   GOOGLE_CLIENT_ID=your-client-id
-   GOOGLE_CLIENT_SECRET=your-client-secret
-   GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
-   ```
-5. Убедитесь, что провайдер настроен в `config/services.php`:
-   ```php
-   'google' => [
-       'client_id' => env('GOOGLE_CLIENT_ID'),
-       'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-       'redirect' => env('GOOGLE_REDIRECT_URI'),
-   ],
-   ```
-
 ### Как настроить отправку сообщений через очереди?
 
 1. Убедитесь, что настроено соединение с очередями в `.env`:
@@ -946,7 +944,7 @@ server {
 - Расширены API-возможности
 
 ### v1.2.0 (2023-08-10)
-- Интеграция с Google для авторизации
+- Восстановление пароля по коду из письма
 - Обновлен дизайн интерфейса
 - Добавлены дополнительные отчеты
 - Улучшена производительность системы

@@ -182,4 +182,7 @@ if [[ "${NEW_ENV:-0}" == "1" ]]; then
     echo
     echo "  3. Заведите учётные записи (команда один раз покажет пароли):"
     echo "       sudo -u ${APP_USER} php artisan db:seed --class=StaffUserSeeder --force"
+    echo
+    echo "  4. Настройте почту — без неё не работает восстановление пароля:"
+    echo "       sudo bash ${SCRIPT_DIR}/setup-mail.sh"
 fi
