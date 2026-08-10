@@ -76,11 +76,15 @@ log "Откуда система будет отправлять письма"
 # ------------------------------------------------------------------
 cat <<'MENU'
 
-  1) Google Workspace / Gmail        smtp.gmail.com:587
-  2) Яндекс 360                      smtp.yandex.ru:465
-  3) Mail.ru для бизнеса             smtp.mail.ru:465
-  4) Другой SMTP-сервер              адрес укажу вручную
-  5) Почтовый сервер колледжа        через локальный Postfix, без пароля
+  1) Google Workspace / Gmail        smtp.gmail.com:587, пароль приложения
+  2) Google Workspace, ретранслятор  smtp-relay.gmail.com:587, по IP сервера
+  3) Яндекс 360                      smtp.yandex.ru:465
+  4) Mail.ru для бизнеса             smtp.mail.ru:465
+  5) Другой SMTP-сервер              адрес укажу вручную
+  6) Почтовый сервер колледжа        через локальный Postfix, без пароля
+
+  Вариант 2 — когда пароль приложения создать не дают: администратор
+  домена разрешает отправку с IP-адреса сервера, и пароль не нужен вовсе.
 
 MENU
 
@@ -89,21 +93,34 @@ CHOICE="$(ask "Ваш вариант" "1")"
 MAIL_HOST=""; MAIL_PORT=""; MAIL_SCHEME="smtp"
 MAIL_USERNAME=""; MAIL_PASSWORD=""
 APP_PASSWORD_HINT=""
+NEEDS_AUTH=1
 
 case "${CHOICE}" in
     1)
         MAIL_HOST="smtp.gmail.com"; MAIL_PORT="587"; MAIL_SCHEME="smtp"
-        APP_PASSWORD_HINT="Google не принимает обычный пароль от ящика. Включите двухэтапную проверку и создайте пароль приложения: https://myaccount.google.com/apppasswords — это 16 букв."
+        APP_PASSWORD_HINT="Google не принимает обычный пароль от ящика. Нужен пароль приложения: https://myaccount.google.com/apppasswords — 16 букв. Страница откроется, только если у ящика включена двухэтапная проверка и администратор домена не запретил пароли приложений. Если пишет «настройка недоступна» — берите вариант 2."
         ;;
     2)
+        MAIL_HOST="smtp-relay.gmail.com"; MAIL_PORT="587"; MAIL_SCHEME="smtp"
+        NEEDS_AUTH=0
+        cat <<'RELAY'
+
+  Ретранслятор пускает по адресу отправителя, а не по паролю. В консоли
+  администратора Google Workspace нужно завести службу ретрансляции SMTP
+  и внести туда внешний IP-адрес, с которого выходит этот сервер.
+  Отправитель должен быть в домене организации.
+
+RELAY
+        ;;
+    3)
         MAIL_HOST="smtp.yandex.ru"; MAIL_PORT="465"; MAIL_SCHEME="smtps"
         APP_PASSWORD_HINT="Яндекс требует пароль приложения (Почта → Пароли приложений) и включённый доступ по SMTP в настройках ящика."
         ;;
-    3)
+    4)
         MAIL_HOST="smtp.mail.ru"; MAIL_PORT="465"; MAIL_SCHEME="smtps"
         APP_PASSWORD_HINT="Mail.ru требует пароль для внешнего приложения — он создаётся в настройках ящика, обычный пароль не подойдёт."
         ;;
-    4)
+    5)
         MAIL_HOST="$(ask "Адрес SMTP-сервера")"
         [[ -n "${MAIL_HOST}" ]] || die "Адрес сервера обязателен"
         MAIL_PORT="$(ask "Порт" "587")"
@@ -112,9 +129,13 @@ case "${CHOICE}" in
         else
             MAIL_SCHEME="smtp"
         fi
+        # Внутренние серверы часто пускают по IP-адресу отправителя.
+        AUTH_ANSWER="$(ask "Сервер спрашивает логин и пароль? (д/н)" "д")"
+        [[ "${AUTH_ANSWER}" =~ ^[дДyY] ]] || NEEDS_AUTH=0
         ;;
-    5)
+    6)
         MAIL_HOST="127.0.0.1"; MAIL_PORT="25"; MAIL_SCHEME="smtp"
+        NEEDS_AUTH=0
         ;;
     *)
         die "Нет такого варианта: ${CHOICE}"
@@ -125,7 +146,7 @@ FROM_ADDRESS="$(ask "Адрес, от которого приходят пись
 [[ "${FROM_ADDRESS}" == *@*.* ]] || die "«${FROM_ADDRESS}» не похож на адрес почты"
 
 # ------------------------------------------------------------------
-if [[ "${CHOICE}" == "5" ]]; then
+if [[ "${CHOICE}" == "6" ]]; then
     log "Локальный Postfix"
     # ------------------------------------------------------------------
     RELAY_HOST="$(ask "Через какой сервер колледжа отправлять (relayhost)")"
@@ -150,7 +171,9 @@ if [[ "${CHOICE}" == "5" ]]; then
     systemctl enable --now postfix
     systemctl restart postfix
     echo "  Postfix отправляет через ${RELAY_HOST}"
-else
+fi
+
+if [[ "${NEEDS_AUTH}" == "1" ]]; then
     # ------------------------------------------------------------------
     log "Учётная запись почты"
     # ------------------------------------------------------------------
