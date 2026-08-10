@@ -16,8 +16,10 @@ set -euo pipefail
 if [[ "${ICT_HELP_SELF_COPY:-0}" != "1" ]]; then
     SELF_COPY="$(mktemp)"
     cp "${BASH_SOURCE[0]}" "${SELF_COPY}"
-    trap 'rm -f "${SELF_COPY}"' EXIT
-    ICT_HELP_SELF_COPY=1 exec bash "${SELF_COPY}" "$@"
+    # Убрать копию поручаем самой копии: exec подменяет процесс целиком, и
+    # trap на выходе здесь уже не отработает.
+    ICT_HELP_SELF_COPY=1 ICT_HELP_SELF_COPY_PATH="${SELF_COPY}" \
+        exec bash "${SELF_COPY}" "$@"
 fi
 
 APP_DIR="${APP_DIR:-/var/www/ict-help}"
@@ -26,6 +28,23 @@ APP_USER="${APP_USER:-www-data}"
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m!  %s\033[0m\n' "$*"; }
 die()  { printf '\033[1;31mОШИБКА: %s\033[0m\n' "$*" >&2; exit 1; }
+
+# Всё, что нужно сделать на выходе, — в одном месте: обработчик EXIT
+# бывает только один, и второй trap просто вытеснил бы первый.
+MAINTENANCE_ON=0
+
+cleanup() {
+    if [[ "${MAINTENANCE_ON}" == "1" ]]; then
+        # Что бы ни случилось выше, сайт не должен остаться закрытым.
+        sudo -u "${APP_USER}" php artisan up || true
+    fi
+
+    if [[ -n "${ICT_HELP_SELF_COPY_PATH:-}" ]]; then
+        rm -f "${ICT_HELP_SELF_COPY_PATH}"
+    fi
+}
+
+trap cleanup EXIT
 
 [[ $EUID -eq 0 ]] || die "Запустите с sudo: sudo bash deploy/update.sh"
 [[ -d "${APP_DIR}/.git" ]] || die "В ${APP_DIR} нет git-репозитория — сначала выполните install.sh"
@@ -52,15 +71,34 @@ else
 fi
 
 # ------------------------------------------------------------------
+log "Права на storage"
+# ------------------------------------------------------------------
+# Строго до artisan down: режим обслуживания — это файл, который создаёт
+# сам ${APP_USER} в storage/framework. Если права съехали (например, код
+# обновляли вручную из-под своей учётной записи), artisan down молча не
+# сработает, и обновление пойдёт на живом сайте.
+chown -R "${APP_USER}:${APP_USER}" storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+
+# ------------------------------------------------------------------
 log "Режим обслуживания"
 # ------------------------------------------------------------------
-sudo -u "${APP_USER}" php artisan down --retry=60 || true
-# Что бы дальше ни случилось — сайт не должен остаться закрытым.
-trap 'sudo -u "${APP_USER}" php artisan up || true' EXIT
+if sudo -u "${APP_USER}" php artisan down --retry=60; then
+    MAINTENANCE_ON=1
+else
+    warn "Не удалось включить режим обслуживания — обновление идёт на работающем сайте"
+fi
 
 # ------------------------------------------------------------------
 log "Получение нового кода"
 # ------------------------------------------------------------------
+# Каталог принадлежит ${APP_USER}, а git здесь работает от root и по
+# умолчанию отказывается трогать чужой репозиторий. Разрешаем явно —
+# иначе спотыкается и composer, который дёргает git для своих нужд.
+if ! git config --global --get-all safe.directory 2>/dev/null | grep -qxF "${APP_DIR}"; then
+    git config --global --add safe.directory "${APP_DIR}"
+fi
+
 git fetch --all --quiet
 git reset --hard origin/main
 chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
@@ -68,7 +106,11 @@ chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 # ------------------------------------------------------------------
 log "Зависимости и сборка фронтенда"
 # ------------------------------------------------------------------
-composer install --no-dev --optimize-autoloader --no-interaction
+# Composer знает, что работает от root, и на всякий случай выключает
+# плагины — в том числе те, что раскладывают файлы пакетов Laravel.
+# Здесь это осознанно: весь скрипт и так идёт под sudo.
+COMPOSER_ALLOW_SUPERUSER=1 composer install \
+    --no-dev --optimize-autoloader --no-interaction
 npm ci --silent
 npm run build
 
@@ -90,6 +132,9 @@ chmod -R 775 storage bootstrap/cache
 # ------------------------------------------------------------------
 log "Перезапуск сервисов"
 # ------------------------------------------------------------------
+# Без этого systemd ругается, что описания служб на диске новее его
+# собственных, и перезапускает их по устаревшим настройкам.
+systemctl daemon-reload
 systemctl restart ict-help-queue.service
 systemctl restart ict-help-reverb.service
 systemctl reload nginx
