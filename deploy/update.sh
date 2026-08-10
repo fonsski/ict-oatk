@@ -92,15 +92,21 @@ fi
 # ------------------------------------------------------------------
 log "Получение нового кода"
 # ------------------------------------------------------------------
-# Каталог принадлежит ${APP_USER}, а git здесь работает от root и по
-# умолчанию отказывается трогать чужой репозиторий. Разрешаем явно —
-# иначе спотыкается и composer, который дёргает git для своих нужд.
-if ! git config --global --get-all safe.directory 2>/dev/null | grep -qxF "${APP_DIR}"; then
-    git config --global --add safe.directory "${APP_DIR}"
-fi
+# Каталог принадлежит ${APP_USER}, а git здесь работает от root и чужой
+# репозиторий трогать отказывается. Разрешаем прямо в вызове: полагаться
+# на записанную настройку нельзя — она уходит в домашний каталог, а какой
+# он под sudo, зависит от настроек самого sudo.
+GIT=(git -c "safe.directory=${APP_DIR}")
 
-git fetch --all --quiet
-git reset --hard origin/main
+"${GIT[@]}" fetch --all --quiet
+"${GIT[@]}" reset --hard origin/main
+
+# То же разрешение, но записанное: composer запускает git сам, ключ ему не
+# передать. Если записать не выйдет — потеряем только тишину в выводе.
+if ! git config --global --get-all safe.directory 2>/dev/null | grep -qxF "${APP_DIR}"; then
+    git config --global --add safe.directory "${APP_DIR}" \
+        || warn "Не удалось записать safe.directory — composer будет ругаться на владельца каталога"
+fi
 chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 
 # ------------------------------------------------------------------

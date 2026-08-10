@@ -193,6 +193,24 @@ sudo bash /var/www/ict-help/deploy/update.sh
 Если что-то пойдёт не так, сайт всё равно выйдет из режима обслуживания —
 это гарантирует `trap` внутри скрипта.
 
+### `detected dubious ownership` при получении кода
+
+```
+fatal: detected dubious ownership in repository at '/var/www/ict-help'
+```
+
+Каталог принадлежит `www-data`, а git внутри скрипта работает от root и
+чужой репозиторий трогать отказывается. Свежие версии `update.sh` обходят
+это сами, но обновиться до них старая версия уже не может — код ей как раз
+и не даёт скачать эта ошибка. Разорвать круг разово:
+
+```bash
+sudo git config --global --add safe.directory /var/www/ict-help
+```
+
+Дальше `sudo bash deploy/update.sh` проходит как обычно, и повторять
+команду не нужно.
+
 ---
 
 ## Что попадает в базу при первой установке
