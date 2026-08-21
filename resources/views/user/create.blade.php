@@ -155,18 +155,8 @@
 
         <!-- Help Information -->
         <div class="card p-6 mt-6 bg-blue-50 border-blue-200">
-            <h3 class="text-lg font-semibold text-blue-900 mb-3">Информация о ролях</h3>
-            <div class="space-y-3">
-                @foreach($roles as $role)
-                    <div class="flex items-start space-x-3">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div>
-                            <div class="font-medium text-blue-900">{{ $role->name }}</div>
-                            <div class="text-sm text-blue-700">{{ $role->description }}</div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">Что разрешает каждая роль</h3>
+            @include('user.partials.roles-help')
         </div>
     </div>
 </div>
