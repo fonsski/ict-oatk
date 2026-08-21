@@ -67,9 +67,25 @@
                                name="phone"
                                value="{{ old('phone', $user->phone) }}"
                                class="form-input @error('phone') border-red-500 @enderror"
-                               placeholder="+7XXXXXXXXXX"
+                               placeholder="+7 (900) 123-45-67"
                                required>
+                        <p class="mt-1 text-sm text-gray-500">Это логин для входа. Формат записи любой — цифры распознаются сами.</p>
                         @error('phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-6">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               value="{{ old('email', $user->email) }}"
+                               class="form-input @error('email') border-red-500 @enderror"
+                               placeholder="Необязательно">
+                        <p class="mt-1 text-sm text-gray-500">Нужен для восстановления пароля по коду из письма.</p>
+                        @error('email')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

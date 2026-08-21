@@ -80,6 +80,39 @@ if (!function_exists("clean_phone")) {
     }
 }
 
+if (!function_exists("normalize_phone")) {
+    /**
+     * Приводит номер к тому единственному виду, в котором он лежит в базе:
+     * +7XXXXXXXXXX. Телефон служит логином, поэтому «+7 (900) 123-45-67»,
+     * «8 900 123 45 67» и «9001234567» должны становиться одной записью —
+     * иначе человек не войдёт под собственным номером, набранным иначе,
+     * а проверка уникальности пропустит двойника.
+     *
+     * @param string|null $phone Номер в любом виде
+     * @return string|null Номер вида +7XXXXXXXXXX или null, если это не он
+     */
+    function normalize_phone($phone)
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        $digits = preg_replace("/\D+/", "", $phone);
+
+        if (strlen($digits) === 11 && str_starts_with($digits, "8")) {
+            $digits = "7" . substr($digits, 1);
+        }
+
+        if (strlen($digits) === 10) {
+            $digits = "7" . $digits;
+        }
+
+        return strlen($digits) === 11 && str_starts_with($digits, "7")
+            ? "+" . $digits
+            : null;
+    }
+}
+
 if (!function_exists("user_has_role")) {
     /**
      * Проверить, имеет ли текущий пользователь определенную роль

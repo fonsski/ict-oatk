@@ -80,21 +80,8 @@ class StaffUserSeeder extends Seeder
      */
     private function normalizePhone(?string $phone): ?string
     {
-        if (!$phone) {
-            return null;
-        }
-
-        $digits = preg_replace("/\D+/", "", $phone);
-
-        if (strlen($digits) === 11 && str_starts_with($digits, "8")) {
-            $digits = "7" . substr($digits, 1);
-        }
-
-        if (strlen($digits) === 10) {
-            $digits = "7" . $digits;
-        }
-
-        return strlen($digits) === 11 ? "+" . $digits : null;
+        // Тот же вид, что и у номеров, заведённых через интерфейс.
+        return normalize_phone($phone);
     }
 
     private function report(array $created, array $skipped, array $missingPhone): void

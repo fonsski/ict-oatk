@@ -19,13 +19,29 @@ class StoreUserRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+    /**
+     * Телефон приводим к виду +7XXXXXXXXXX до проверок: именно так он
+     * лежит в базе, и только так проверка уникальности сравнит введённое
+     * с уже существующим.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('phone')) {
+            $this->merge([
+                'phone' => normalize_phone($this->input('phone')) ?? $this->input('phone'),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'name' => 'required|string|min:2|max:255',
             'position' => 'nullable|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'phone' => 'required|string|max:20|unique:users|regex:/^\+7 \([0-9]{3}\) [0-9]{3}-[0-9]{2}-[0-9]{2}$/',
+            // Почта нужна для восстановления пароля, но есть не у всех —
+            // в таблице колонка тоже пустоту допускает.
+            'email' => 'nullable|email|max:255|unique:users,email',
+            'phone' => 'required|string|regex:/^\+7[0-9]{10}$/|unique:users,phone',
             'role_id' => 'required|exists:roles,id',
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
             'is_active' => 'boolean',
@@ -43,14 +59,12 @@ class StoreUserRequest extends FormRequest
             'name.required' => 'Пожалуйста, укажите имя пользователя',
             'name.min' => 'Имя пользователя должно содержать не менее 2 символов',
             'name.max' => 'Имя пользователя не должно превышать 255 символов',
-            'email.required' => 'Пожалуйста, укажите email адрес',
             'email.email' => 'Введите корректный email адрес',
             'email.max' => 'Email не должен превышать 255 символов',
             'email.unique' => 'Пользователь с таким email уже существует',
             'phone.required' => 'Пожалуйста, укажите номер телефона',
-            'phone.max' => 'Номер телефона не должен превышать 20 символов',
             'phone.unique' => 'Пользователь с таким номером телефона уже существует',
-            'phone.regex' => 'Номер телефона должен быть в формате: +7 (999) 999-99-99',
+            'phone.regex' => 'Не похоже на российский номер. Подойдёт любая запись: +7 900 123-45-67, 8 (900) 123-45-67, 9001234567',
             'role_id.required' => 'Пожалуйста, выберите роль пользователя',
             'role_id.exists' => 'Выбранная роль не существует в системе',
             'password.required' => 'Пожалуйста, укажите пароль',

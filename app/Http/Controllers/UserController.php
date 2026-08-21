@@ -89,6 +89,8 @@ class UserController extends Controller
 
         $user = User::create([
             "name" => $data["name"],
+            "position" => $data["position"] ?? null,
+            "email" => $data["email"] ?? null,
             "phone" => $data["phone"],
             "role_id" => $data["role_id"],
             "password" => Hash::make($data["password"]),
@@ -160,6 +162,8 @@ class UserController extends Controller
 
         $user->update([
             "name" => $data["name"],
+            "position" => $data["position"] ?? null,
+            "email" => $data["email"] ?? null,
             "phone" => $data["phone"],
             "role_id" => $data["role_id"],
             "is_active" => $data["is_active"] ?? false,
