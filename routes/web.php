@@ -436,6 +436,17 @@ Route::middleware("auth")->group(function () {
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master",
     ])->group(function () {
+        // Строго до Route::resource. Ресурс объявляет GET /user/{user}, и
+        // при обратном порядке «export» и «statistics» попадают в него как
+        // имя пользователя — обе страницы отвечали 404.
+        Route::get("/user/export", [UserController::class, "export"])->name(
+            "user.export",
+        );
+        Route::get("/user/statistics", [
+            UserController::class,
+            "statistics",
+        ])->name("user.statistics");
+
         Route::resource("/user", UserController::class);
 
         // Дополнительные действия для пользователей
@@ -465,13 +476,6 @@ Route::middleware("auth")->group(function () {
             UserController::class,
             "bulkAction",
         ])->name("user.bulk-action");
-        Route::get("/user/export", [UserController::class, "export"])->name(
-            "user.export",
-        );
-        Route::get("/user/statistics", [
-            UserController::class,
-            "statistics",
-        ])->name("user.statistics");
     });
 
     // Управление кабинетами (только для admin и master)
