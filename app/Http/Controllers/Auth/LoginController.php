@@ -42,7 +42,7 @@ class LoginController extends Controller
             ->first();
 
         if (!$user) {
-            Log::warning("Попытка входа в несуществующую учетную запись", [
+            $this->safeLog("warning", "Попытка входа в несуществующую учетную запись", [
                 "login" => $login,
                 "ip" => $request->ip(),
             ]);
@@ -56,7 +56,7 @@ class LoginController extends Controller
 
         // Проверяем, активна ли учетная запись
         if (!$user->is_active) {
-            Log::warning("Попытка входа в заблокированную учетную запись", [
+            $this->safeLog("warning", "Попытка входа в заблокированную учетную запись", [
                 "login" => $request->login,
                 "ip" => $request->ip(),
                 "user_agent" => $request->userAgent(),
@@ -88,7 +88,7 @@ class LoginController extends Controller
             }
 
             // Логирование успешного входа
-            Log::info("Успешный вход пользователя", [
+            $this->safeLog("info", "Успешный вход пользователя", [
                 "user_id" => $user->id,
                 "phone" => $user->phone,
                 "ip" => $request->ip(),
@@ -98,7 +98,7 @@ class LoginController extends Controller
         }
 
         // Логирование неудачной попытки входа
-        Log::warning("Неудачная попытка входа", [
+        $this->safeLog("warning", "Неудачная попытка входа", [
             "phone" => $user->phone,
             "ip" => $request->ip(),
             "user_agent" => $request->userAgent(),
@@ -110,6 +110,27 @@ class LoginController extends Controller
                 "Неверный пароль. Пожалуйста, проверьте введенные данные и попробуйте снова.",
             ],
         ]);
+    }
+
+    /**
+     * Записать в журнал, не роняя вход при сбое записи.
+     *
+     * Обычная ошибка на входе — неверный пароль. Она обрабатывается штатно
+     * и должна возвращать понятное сообщение. Но если журнал недоступен для
+     * записи (частый случай — съехавшие права на storage/logs после ручного
+     * обновления), сам вызов Log бросает исключение уже после проверки
+     * пароля, и пользователь вместо «Неверный пароль» видит 500.
+     *
+     * Запись в журнал не должна определять исход аутентификации. Если она не
+     * удалась — пробуем сказать об этом через системный лог PHP и продолжаем.
+     */
+    private function safeLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            Log::{$level}($message, $context);
+        } catch (\Throwable $e) {
+            error_log("ICT Help: не удалось записать в журнал ({$message}): " . $e->getMessage());
+        }
     }
 
     public function logout(Request $request)
