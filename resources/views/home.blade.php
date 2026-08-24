@@ -226,12 +226,12 @@
                                             'closed' => 'Закрыта'
                                         ];
                                     @endphp
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}" title="Статус: {{ $statusLabels[$ticket->status] ?? $ticket->status }}">
+                                    <span class="inline-flex items-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}" title="Статус: {{ $statusLabels[$ticket->status] ?? $ticket->status }}">
                                         {{ $statusLabels[$ticket->status] ?? $ticket->status }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" title="Приоритет: {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}">
+                                    <span class="inline-flex items-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" title="Приоритет: {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}">
                                         {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
                                     </span>
                                 </td>
@@ -694,12 +694,12 @@
                         </div>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}" title="Статус: ${statusLabels[ticket.status] || ticket.status}">
+                        <span class="inline-flex items-center whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}" title="Статус: ${statusLabels[ticket.status] || ticket.status}">
                             ${statusLabels[ticket.status] || ticket.status}
                         </span>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}" title="Приоритет: ${priorityLabels[ticket.priority] || ticket.priority}">
+                        <span class="inline-flex items-center whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}" title="Приоритет: ${priorityLabels[ticket.priority] || ticket.priority}">
                             ${priorityLabels[ticket.priority] || ticket.priority}
                         </span>
                     </td>
@@ -794,7 +794,7 @@
             statusCell.className = 'px-4 py-3';
 
             const statusSpan = document.createElement('span');
-            statusSpan.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}`;
+            statusSpan.className = `inline-flex items-center whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium ${statusColors[ticket.status] || 'bg-slate-100 text-slate-800'}`;
             statusSpan.textContent = statusLabels[ticket.status] || ticket.status;
             statusSpan.title = `Статус: ${statusLabels[ticket.status] || ticket.status}`;
 
@@ -806,11 +806,11 @@
 
             const prioritySpan = document.createElement('span');
             if (ticket.priority === 'urgent') {
-                prioritySpan.className = 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-900';
+                prioritySpan.className = 'inline-flex items-center whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-900';
                 prioritySpan.textContent = 'Срочный';
                 prioritySpan.title = 'Приоритет: Срочный';
             } else {
-                prioritySpan.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}`;
+                prioritySpan.className = `inline-flex items-center whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium ${priorityColors[ticket.priority] || 'bg-slate-100 text-slate-800'}`;
                 prioritySpan.textContent = priorityLabels[ticket.priority] || ticket.priority;
                 prioritySpan.title = `Приоритет: ${priorityLabels[ticket.priority] || ticket.priority}`;
             }
@@ -1056,45 +1056,56 @@
                     return;
                 }
 
-                // Базовые стили
-                menu.style.position = 'absolute';
-                menu.style.zIndex = '100';
-                menu.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-                menu.style.maxHeight = '80vh';
-                menu.style.overflowY = 'auto';
-
-                const rect = toggle.getBoundingClientRect();
-
-                // Горизонтальное позиционирование
-                if (window.innerWidth - rect.right < 200) {
-                    menu.style.left = 'auto';
-                    menu.style.right = '0';
-                } else {
-                    menu.style.left = '0';
-                    menu.style.right = 'auto';
-                }
-
-                // Вертикальное: если снизу не хватает места — открываем вверх,
-                // чтобы меню не выходило за экран и не удлиняло страницу (прокрутка).
-                const menuHeight = menu.offsetHeight;
-                const spaceBelow = window.innerHeight - rect.bottom;
-                if (spaceBelow < menuHeight + 16 && rect.top > menuHeight + 16) {
-                    menu.style.top = 'auto';
-                    menu.style.bottom = 'calc(100% + 0.5rem)';
-                } else {
-                    menu.style.bottom = 'auto';
-                    menu.style.top = 'calc(100% + 0.5rem)';
-                }
-
-                // Если меню всё же вылезает за правый край
-                const menuRect = menu.getBoundingClientRect();
-                if (menuRect.right > window.innerWidth) {
-                    menu.style.right = '0';
-                    menu.style.left = 'auto';
-                }
+                positionDropdownMenu(menu, toggle);
             });
         });
     }
+
+    // Меню лежит в карточке активных заявок с overflow-x-auto: при
+    // position: absolute контейнер обрезает его, и оно выглядит съехавшим
+    // и обрубленным. Крепим меню к окну через fixed — оно не подчиняется
+    // overflow предков. Тот же подход, что и в разделе «Все заявки».
+    function positionDropdownMenu(menu, toggle) {
+        const gap = 8;
+
+        menu.style.position = 'fixed';
+        menu.style.zIndex = '1000';
+        menu.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+        menu.style.maxHeight = '80vh';
+        menu.style.overflowY = 'auto';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+
+        const rect = toggle.getBoundingClientRect();
+        const menuWidth = menu.offsetWidth || 192;
+        const menuHeight = menu.offsetHeight;
+
+        // По горизонтали прижимаем правый край меню к кнопке и следим,
+        // чтобы оно не вылезло за края окна.
+        let left = rect.right - menuWidth;
+        left = Math.max(gap, Math.min(left, window.innerWidth - menuWidth - gap));
+        menu.style.left = left + 'px';
+
+        // Если снизу не хватает места — открываем вверх.
+        const spaceBelow = window.innerHeight - rect.bottom;
+        menu.style.top = (spaceBelow < menuHeight + gap && rect.top > menuHeight + gap)
+            ? (rect.top - menuHeight - gap) + 'px'
+            : (rect.bottom + gap) + 'px';
+    }
+
+    // Меню закреплено за окном — при прокрутке или изменении размера оно бы
+    // «отклеилось» от своей кнопки, поэтому просто закрываем его.
+    function closeAllDropdownMenus() {
+        document.querySelectorAll('[data-dropdown-menu]').forEach(function(menu) {
+            menu.classList.add('hidden');
+        });
+        document.querySelectorAll('[data-dropdown-toggle]').forEach(function(toggle) {
+            toggle.classList.remove('bg-slate-100');
+        });
+    }
+
+    window.addEventListener('scroll', closeAllDropdownMenus, true);
+    window.addEventListener('resize', closeAllDropdownMenus);
 
     // Инициализируем панель техника после загрузки DOM
     document.addEventListener('DOMContentLoaded', function() {
