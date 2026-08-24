@@ -73,20 +73,19 @@ class TicketController extends Controller
             });
         }
 
-        // Фильтрация заявок в зависимости от роли пользователя
+        // Это «Мои заявки» — здесь у каждого только своё, независимо от
+        // роли. Полный список для управляющих живёт отдельно, в разделе
+        // «Все заявки» (AllTicketsController). Раньше admin и master видели
+        // тут всё подряд, и вкладка «Мои заявки» показывала чужие обращения.
         $user = Auth::user();
-        if ($user && $user->role) {
-            if (in_array($user->role->slug, ["admin", "master"])) {
-                // Администраторы и мастера видят все заявки
-            } else {
-                // Техник видит созданные им и назначенные на него заявки
-                $query->where(function ($q) use ($user) {
-                    $q->where("user_id", $user->id)->orWhere(
-                        "assigned_to_id",
-                        $user->id,
-                    );
-                });
-            }
+        if ($user) {
+            // Сотрудник видит созданные им и назначенные на него заявки.
+            $query->where(function ($q) use ($user) {
+                $q->where("user_id", $user->id)->orWhere(
+                    "assigned_to_id",
+                    $user->id,
+                );
+            });
         } else {
             // Гость видит только свои обращения — те, что помечены его
             // меткой. Без метки список пуст, чужие заявки не покажем.
