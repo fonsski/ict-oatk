@@ -242,11 +242,6 @@
     @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
 }
 
-.table tbody tr:hover {
-    @apply bg-gray-50;
-}
-
-
 .modal-overlay {
     @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
 }
