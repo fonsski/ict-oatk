@@ -42,6 +42,7 @@ class StoreCalendarTaskRequest extends FormRequest
             "due_all_day" => "boolean",
             "due_at" => "required|date",
             "priority" => ["nullable", Rule::in(array_keys(CalendarTask::PRIORITIES))],
+            "user_id" => "nullable|exists:users,id",
         ];
     }
 

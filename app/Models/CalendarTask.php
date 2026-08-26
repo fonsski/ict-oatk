@@ -28,6 +28,7 @@ class CalendarTask extends Model
         "title",
         "description",
         "user_id",
+        "created_by_user_id",
         "due_at",
         "due_all_day",
         "completed_at",
@@ -40,9 +41,24 @@ class CalendarTask extends Model
         "completed_at" => "datetime",
     ];
 
+    /**
+     * Исполнитель — кому поручена задача (историческое имя поля user_id).
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Синоним для читаемости: исполнитель задачи. */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, "user_id");
+    }
+
+    /** Автор — кто создал задачу. */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, "created_by_user_id");
     }
 
     public function isCompleted(): bool

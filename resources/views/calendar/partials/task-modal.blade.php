@@ -39,13 +39,24 @@
                     Весь день (без времени)
                 </label>
 
-                <div>
-                    <label for="tk-priority" class="form-label">Приоритет</label>
-                    <select id="tk-priority" name="priority" class="form-input">
-                        @foreach (\App\Models\CalendarTask::PRIORITIES as $value => $label)
-                            <option value="{{ $value }}" {{ old('priority', 'medium') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="tk-priority" class="form-label">Приоритет</label>
+                        <select id="tk-priority" name="priority" class="form-input">
+                            @foreach (\App\Models\CalendarTask::PRIORITIES as $value => $label)
+                                <option value="{{ $value }}" {{ old('priority', 'medium') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tk-assignee" class="form-label">Исполнитель</label>
+                        <select id="tk-assignee" name="user_id" class="form-input">
+                            <option value="">Я</option>
+                            @foreach ($staff as $person)
+                                <option value="{{ $person->id }}" {{ old('user_id') == $person->id ? 'selected' : '' }}>{{ $person->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div>

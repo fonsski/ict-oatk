@@ -29,5 +29,5 @@
 </div>
 
 @include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff, 'tickets' => $tickets])
-@include('calendar.partials.task-modal')
+@include('calendar.partials.task-modal', ['staff' => $staff])
 @endsection

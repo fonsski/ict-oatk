@@ -60,14 +60,28 @@
                     Весь день (без времени)
                 </label>
 
-                <div>
-                    <label for="priority" class="form-label">Приоритет</label>
-                    <select id="priority" name="priority" class="form-input">
-                        @foreach (\App\Models\CalendarTask::PRIORITIES as $value => $label)
-                            <option value="{{ $value }}" {{ old('priority', $task->priority) === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="priority" class="form-label">Приоритет</label>
+                        <select id="priority" name="priority" class="form-input">
+                            @foreach (\App\Models\CalendarTask::PRIORITIES as $value => $label)
+                                <option value="{{ $value }}" {{ old('priority', $task->priority) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="user_id" class="form-label">Исполнитель</label>
+                        <select id="user_id" name="user_id" class="form-input">
+                            @foreach ($staff as $person)
+                                <option value="{{ $person->id }}" {{ old('user_id', $task->user_id) == $person->id ? 'selected' : '' }}>{{ $person->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
+
+                <p class="text-xs text-slate-500">
+                    Автор: {{ $task->creator?->name ?? '—' }}
+                </p>
 
                 <div>
                     <label for="description" class="form-label">Описание</label>

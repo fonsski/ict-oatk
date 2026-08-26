@@ -20,7 +20,10 @@ class CalendarTaskController extends Controller
         $data = $request->validated();
         unset($data["due_date"]);
 
-        $data["user_id"] = Auth::id();
+        // Автор — текущий пользователь; исполнитель по умолчанию тоже он,
+        // но задачу можно поручить другому сотруднику.
+        $data["created_by_user_id"] = Auth::id();
+        $data["user_id"] = $data["user_id"] ?? Auth::id();
         $data["priority"] = $data["priority"] ?? CalendarTask::PRIORITY_MEDIUM;
 
         $task = CalendarTask::create($data);
@@ -48,7 +51,16 @@ class CalendarTaskController extends Controller
     {
         $this->authorizeOwner($task);
 
-        return view("calendar.task-edit", ["task" => $task]);
+        $task->load(["creator:id,name", "assignee:id,name"]);
+
+        return view("calendar.task-edit", [
+            "task" => $task,
+            "staff" => \App\Models\User::query()
+                ->where("is_active", true)
+                ->whereHas("role", fn ($q) => $q->whereIn("slug", ["admin", "master", "technician"]))
+                ->orderBy("name")
+                ->get(["id", "name"]),
+        ]);
     }
 
     public function update(UpdateCalendarTaskRequest $request, CalendarTask $task)
@@ -79,7 +91,8 @@ class CalendarTaskController extends Controller
 
     private function authorizeOwner(CalendarTask $task): void
     {
-        if ($task->user_id !== Auth::id()) {
+        // Доступ у исполнителя и у автора задачи.
+        if ($task->user_id !== Auth::id() && $task->created_by_user_id !== Auth::id()) {
             abort(403);
         }
     }

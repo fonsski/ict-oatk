@@ -109,6 +109,38 @@ class CalendarTaskTest extends TestCase
         $response->assertDontSee($foreign->title);
     }
 
+    public function test_creator_is_recorded_and_task_can_be_assigned_to_another(): void
+    {
+        $author = User::factory()->withRole("master")->create();
+        $assignee = User::factory()->withRole("technician")->create();
+
+        $this->actingAs($author)->post(route("calendar.tasks.store"), [
+            "title" => "Поручение технику",
+            "due_date" => "2026-08-28",
+            "due_all_day" => "1",
+            "user_id" => $assignee->id,
+        ]);
+
+        $this->assertDatabaseHas("calendar_tasks", [
+            "title" => "Поручение технику",
+            "created_by_user_id" => $author->id,
+            "user_id" => $assignee->id,
+        ]);
+    }
+
+    public function test_author_keeps_access_even_if_assigned_to_another(): void
+    {
+        $author = User::factory()->withRole("master")->create();
+        $assignee = User::factory()->withRole("technician")->create();
+        $task = CalendarTask::factory()->for($assignee)->create([
+            "created_by_user_id" => $author->id,
+        ]);
+
+        // Автор может открыть и переключить, хотя исполнитель — другой.
+        $this->actingAs($author)->get(route("calendar.tasks.edit", $task))->assertOk();
+        $this->actingAs($author)->post(route("calendar.tasks.toggle", $task))->assertRedirect();
+    }
+
     public function test_owner_can_update_a_task(): void
     {
         $user = User::factory()->withRole("technician")->create();
