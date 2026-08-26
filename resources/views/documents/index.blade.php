@@ -120,7 +120,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($documents as $document)
-                    <tr class="hover:bg-slate-50">
+                    <tr>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-medium text-slate-900">{{ $document->original_name }}</span>
