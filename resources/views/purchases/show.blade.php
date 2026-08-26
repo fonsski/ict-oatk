@@ -83,6 +83,7 @@
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Наименование</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ед. измер.</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Сумма</th>
                     </tr>
@@ -100,6 +101,7 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $item->quantity }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">{{ $item->unit ?: 'шт.' }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">{{ number_format($item->unit_price, 2, ',', ' ') }} ₽</td>
                         <td class="px-4 py-3 whitespace-nowrap font-medium">{{ number_format($item->sum, 2, ',', ' ') }} ₽</td>
                     </tr>

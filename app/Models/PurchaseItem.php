@@ -22,6 +22,7 @@ class PurchaseItem extends Model
         "equipment_category_id",
         "name",
         "quantity",
+        "unit",
         "unit_price",
         "sum",
     ];

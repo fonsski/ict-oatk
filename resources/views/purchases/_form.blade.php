@@ -10,6 +10,7 @@
         'equipment_category_id' => $i->equipment_category_id,
         'name' => $i->name,
         'quantity' => $i->quantity,
+        'unit' => $i->unit,
         'unit_price' => $i->unit_price,
     ])->values() : collect();
 @endphp
@@ -60,11 +61,20 @@
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник / категория оборудования</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Наименование</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ед. измер.</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена за ед., руб.</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Стоимость, руб.</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
                 </tr>
             </thead>
             <tbody id="items-body" class="bg-white divide-y divide-gray-200"></tbody>
+            <tfoot>
+                <tr class="bg-gray-50 font-semibold">
+                    <td class="px-3 py-2 text-right" colspan="6">Итого:</td>
+                    <td class="px-3 py-2" id="items-total">0,00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
     <p class="text-xs text-gray-500 mt-2">Позиция «Оборудование» — при проведении закупки заведёт в инвентарь указанное количество единиц (инвентарный номер проставляется позже вручную). Позиция «Расходник» — увеличит остаток выбранного расходника.</p>
@@ -99,8 +109,12 @@
             <input type="number" name="items[__INDEX__][quantity]" min="1" value="1" required class="item-quantity rounded border-gray-300 px-2 py-1.5 w-20">
         </td>
         <td class="px-3 py-2 align-top">
+            <input type="text" name="items[__INDEX__][unit]" maxlength="32" value="шт." class="item-unit rounded border-gray-300 px-2 py-1.5 w-20">
+        </td>
+        <td class="px-3 py-2 align-top">
             <input type="number" name="items[__INDEX__][unit_price]" min="0" step="0.01" value="0" required class="item-price rounded border-gray-300 px-2 py-1.5 w-28">
         </td>
+        <td class="px-3 py-2 align-top text-sm text-gray-700 item-sum whitespace-nowrap">0,00</td>
         <td class="px-3 py-2 align-top">
             <button type="button" class="remove-item-row text-red-600 hover:text-red-800 text-sm">Удалить</button>
         </td>
@@ -113,7 +127,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const tbody = document.getElementById('items-body');
     const template = document.getElementById('item-row-template');
     const addButton = document.getElementById('add-item-row');
+    const totalCell = document.getElementById('items-total');
     let index = 0;
+
+    const fmt = (n) => n.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function recalcRow(row) {
+        const qty = parseFloat(row.querySelector('.item-quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        row.querySelector('.item-sum').textContent = fmt(qty * price);
+    }
+
+    function recalcTotal() {
+        let total = 0;
+        tbody.querySelectorAll('.item-row').forEach((row) => {
+            const qty = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            total += qty * price;
+        });
+        totalCell.textContent = fmt(total);
+    }
 
     function toggleRowFields(row) {
         const type = row.querySelector('.item-type').value;
@@ -134,12 +167,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (prefill.equipment_category_id) row.querySelector('.category-select').value = prefill.equipment_category_id;
             row.querySelector('.item-name').value = prefill.name;
             row.querySelector('.item-quantity').value = prefill.quantity;
+            if (prefill.unit) row.querySelector('.item-unit').value = prefill.unit;
             row.querySelector('.item-price').value = prefill.unit_price;
         }
 
         toggleRowFields(row);
+        recalcRow(row);
+        recalcTotal();
         row.querySelector('.item-type').addEventListener('change', () => toggleRowFields(row));
-        row.querySelector('.remove-item-row').addEventListener('click', () => row.remove());
+        row.querySelector('.item-quantity').addEventListener('input', () => { recalcRow(row); recalcTotal(); });
+        row.querySelector('.item-price').addEventListener('input', () => { recalcRow(row); recalcTotal(); });
+        row.querySelector('.remove-item-row').addEventListener('click', () => { row.remove(); recalcTotal(); });
     }
 
     addButton.addEventListener('click', () => addRow(null));

@@ -217,8 +217,7 @@ class PurchaseController extends Controller
             $template->setValue("np#{$n}", $item ? (string) $n : "");
             $template->setValue("name#{$n}", $item ? $item->name : "");
             $template->setValue("qty#{$n}", $item ? (string) $item->quantity : "");
-            // Единицы измерения у позиций не хранятся — по умолчанию штуки.
-            $template->setValue("unit#{$n}", $item ? "шт." : "");
+            $template->setValue("unit#{$n}", $item ? ($item->unit ?: "шт.") : "");
             $template->setValue(
                 "price#{$n}",
                 $item ? number_format((float) $item->unit_price, 2, ",", " ") : "",
@@ -273,6 +272,7 @@ class PurchaseController extends Controller
                     : ($itemData["equipment_category_id"] ?? null),
                 "name" => $itemData["name"],
                 "quantity" => $itemData["quantity"],
+                "unit" => trim($itemData["unit"] ?? "") ?: "шт.",
                 "unit_price" => $itemData["unit_price"],
                 "sum" => $sum,
             ]);

@@ -30,6 +30,7 @@ class UpdatePurchaseRequest extends FormRequest
             "items.*.equipment_category_id" => "nullable|exists:equipment_categories,id",
             "items.*.name" => "required|string|max:255",
             "items.*.quantity" => "required|integer|min:1",
+            "items.*.unit" => "nullable|string|max:32",
             "items.*.unit_price" => "required|numeric|min:0",
         ];
     }
