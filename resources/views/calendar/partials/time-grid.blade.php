@@ -90,17 +90,20 @@
                     @foreach ($d['timed'] as $item)
                         @php
                             $occ = $item['occ'];
+                            $duration = $item['endMin'] - $item['startMin'];
                             $top = $item['startMin'] / 60 * $hourPx;
-                            $height = max(18, ($item['endMin'] - $item['startMin']) / 60 * $hourPx - 2);
+                            $height = max(18, $duration / 60 * $hourPx - 2);
                             $widthPct = 100 / $item['cols'];
                             $leftPct = $item['col'] * $widthPct;
+                            // Короткие блоки не вмещают две строки — показываем в одну.
+                            $compact = $duration <= 45;
                         @endphp
                         <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
-                           class="absolute rounded border-l-4 px-1.5 py-0.5 overflow-hidden text-xs {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }}"
+                           class="absolute rounded border-l-4 px-1.5 overflow-hidden text-[11px] leading-tight {{ $compact ? 'py-0 flex items-center gap-1' : 'py-0.5' }} {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }}"
                            style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ $leftPct }}% + 2px); width: calc({{ $widthPct }}% - 4px);"
                            title="{{ $occ->title }} ({{ $occ->startsAt->format('H:i') }}–{{ $occ->endsAt->format('H:i') }})">
-                            <span class="font-medium">{{ $occ->startsAt->format('H:i') }}</span>
-                            <span class="block truncate">{{ $occ->title }}</span>
+                            <span class="font-semibold shrink-0">{{ $occ->startsAt->format('H:i') }}</span>
+                            <span class="{{ $compact ? 'truncate' : 'block truncate' }}">{{ $occ->title }}</span>
                         </a>
                     @endforeach
                 </div>
