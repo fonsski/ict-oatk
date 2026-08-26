@@ -370,6 +370,23 @@
                                 @endif
                             </dd>
                         </div>
+
+                        @if(auth()->check() && auth()->user()->hasRole(['admin', 'master', 'technician']) && $ticket->calendarEvents->isNotEmpty())
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">События календаря</dt>
+                            <dd class="mt-1 space-y-1">
+                                @foreach($ticket->calendarEvents as $event)
+                                <a href="{{ route('calendar.show', $event) }}" class="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                                    <svg class="w-4 h-4 text-gray-400 mr-1.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path>
+                                    </svg>
+                                    <span>{{ $event->starts_at->format('d.m H:i') }} — {{ $event->title }}</span>
+                                </a>
+                                @endforeach
+                            </dd>
+                        </div>
+                        @endif
+
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Исполнитель</dt>
                             <dd class="mt-1 flex items-center">

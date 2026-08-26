@@ -55,6 +55,7 @@ class CalendarEvent extends Model
         "location",
         "room_id",
         "color",
+        "reminder_minutes",
         "status",
         "recurrence_freq",
         "recurrence_interval",
@@ -70,6 +71,15 @@ class CalendarEvent extends Model
         "recurrence_until" => "date",
         "recurrence_interval" => "integer",
         "recurrence_count" => "integer",
+        "reminder_minutes" => "integer",
+    ];
+
+    /** Варианты «за сколько напомнить». */
+    public const REMINDER_OPTIONS = [
+        10 => "За 10 минут",
+        30 => "За 30 минут",
+        60 => "За час",
+        1440 => "За день",
     ];
 
     public function organizer(): BelongsTo
@@ -114,16 +124,6 @@ class CalendarEvent extends Model
     {
         return $this->morphedByMany(
             Equipment::class,
-            "linkable",
-            "calendar_event_links",
-            "event_id",
-        )->withTimestamps();
-    }
-
-    public function documents(): MorphToMany
-    {
-        return $this->morphedByMany(
-            Document::class,
             "linkable",
             "calendar_event_links",
             "event_id",

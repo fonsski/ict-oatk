@@ -82,6 +82,21 @@ class Ticket extends Model
         return $this->belongsTo(Equipment::class);
     }
 
+    /**
+     * События календаря, привязанные к этой заявке (обратная сторона
+     * calendar_event_links).
+     */
+    public function calendarEvents(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphToMany(
+            CalendarEvent::class,
+            "linkable",
+            "calendar_event_links",
+            "linkable_id",
+            "event_id",
+        )->withTimestamps();
+    }
+
     public function reporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reporter_id');

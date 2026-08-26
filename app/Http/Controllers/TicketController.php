@@ -202,6 +202,7 @@ class TicketController extends Controller
                 'assignedTo.role:id,name,slug',
                 'room:id,number,name,type,building,floor',
                 'equipment:id,name,model,serial_number',
+                'calendarEvents:id,title,starts_at,ends_at,all_day',
                 'comments.user:id,name',
                 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
