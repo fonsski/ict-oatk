@@ -430,7 +430,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        var csrfMetaEl = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfMetaEl ? csrfMetaEl.getAttribute('content') : '';
         
         // Временно отключаем LiveUpdates для отладки
         console.log('LiveUpdates отключен для отладки');
@@ -451,64 +452,63 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Обновление заявок
-    async function refreshTickets() {
-        try {
-            if (statusIndicator) {
-                statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
-            }
+    // Живое обновление списка. Намеренно без async/await и optional chaining
+    // (?.), чтобы страница работала и в старых браузерах телевизоров — иначе
+    // синтаксическая ошибка обрушила бы весь скрипт и таблица не отрисовалась.
+    function refreshTickets() {
+        if (statusIndicator) {
+            statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+        }
 
-            const formData = new FormData(filtersForm);
-            const params = new URLSearchParams(formData);
+        // Нет fetch (совсем старый браузер) — тихо выходим, первичная таблица
+        // уже отрисована из серверных данных.
+        if (typeof fetch === 'undefined') return;
 
-            const response = await fetch(`{{ route('all-tickets.api') }}?${params}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                },
-                cache: 'no-store',
-                credentials: 'same-origin'
-            });
+        var formData = new FormData(filtersForm);
+        var params = new URLSearchParams(formData);
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
+        fetch('{{ route('all-tickets.api') }}?' + params, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            cache: 'no-store',
+            credentials: 'same-origin'
+        })
+        .then(function (response) {
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
-                    console.warn('Ошибка аутентификации, перенаправляем на логин');
                     window.location.href = '/login';
-                    return;
+                    return null;
                 }
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('HTTP error! status: ' + response.status);
             }
-
-            const data = await response.json();
-
+            return response.json();
+        })
+        .then(function (data) {
+            if (!data) return;
             updateStats(data.stats);
             updateTicketsTable(data.tickets);
-
-            if (lastUpdated) lastUpdated.textContent = `Обновлено: ${data.last_updated}`;
+            if (lastUpdated) lastUpdated.textContent = 'Обновлено: ' + data.last_updated;
             if (statusIndicator) statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
-
-        } catch (error) {
+        })
+        .catch(function (error) {
             console.error('Ошибка при обновлении заявок:', error);
             if (statusIndicator) {
                 statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
-                // Возвращаем зеленый цвет через 30 секунд
-                setTimeout(() => {
-                    if (statusIndicator) {
-                        statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
-                    }
+                setTimeout(function () {
+                    if (statusIndicator) statusIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
                 }, 30000);
             }
             if (lastUpdated) lastUpdated.textContent = 'Ошибка обновления';
-
-            // Обработка ошибок аутентификации
-            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
-                console.warn('Ошибка аутентификации, перенаправляем на логин');
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 1000);
+            if (error && error.message && (error.message.indexOf('401') !== -1 || error.message.indexOf('403') !== -1 || error.message.indexOf('Unauthorized') !== -1)) {
+                setTimeout(function () { window.location.href = '/login'; }, 1000);
             }
-        }
+        });
     }
 
     // Обновление статистики
