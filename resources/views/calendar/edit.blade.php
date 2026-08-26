@@ -93,11 +93,15 @@
                 </label>
 
                 <div>
-                    <label for="ticket_id" class="form-label">Связать с заявкой</label>
+                    <div class="flex items-center justify-between">
+                        <label for="ticket_id" class="form-label">Связать с заявкой</label>
+                        <span id="ticket-room" class="text-xs text-slate-500"></span>
+                    </div>
                     <select id="ticket_id" name="ticket_id" class="form-input">
                         <option value="">— нет —</option>
                         @foreach ($tickets as $ticket)
-                            <option value="{{ $ticket->id }}" {{ old('ticket_id', $selectedTicketId) == $ticket->id ? 'selected' : '' }}>
+                            <option value="{{ $ticket->id }}" data-room-id="{{ $ticket->room_id }}" data-room="{{ $ticket->room?->number }}"
+                                    {{ old('ticket_id', $selectedTicketId) == $ticket->id ? 'selected' : '' }}>
                                 #{{ $ticket->id }} — {{ \Illuminate\Support\Str::limit($ticket->title, 50) }}
                             </option>
                         @endforeach
@@ -145,8 +149,12 @@
     </div>
 </div>
 
+@include('calendar.partials.room-ticket-link-script')
+
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', () => linkRoomTicket('room_id', 'ticket_id', 'ticket-room'));
+
     function toggleAllDayEdit(isAllDay) {
         document.getElementById('edit-datetime-fields').classList.toggle('hidden', isAllDay);
         document.getElementById('edit-date-fields').classList.toggle('hidden', !isAllDay);

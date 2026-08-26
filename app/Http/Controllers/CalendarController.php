@@ -42,9 +42,10 @@ class CalendarController extends Controller
                     $w->where("user_id", $user->id)->orWhere("assigned_to_id", $user->id);
                 }),
             )
+            ->with("room:id,number")
             ->latest()
             ->limit(50)
-            ->get(["id", "title", "status"]);
+            ->get(["id", "title", "status", "room_id"]);
     }
 
     /**

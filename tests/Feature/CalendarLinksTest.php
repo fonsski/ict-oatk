@@ -209,6 +209,22 @@ class CalendarLinksTest extends TestCase
         $this->assertTrue($event->tickets->contains($b));
     }
 
+    public function test_edit_form_exposes_ticket_room_for_the_picker(): void
+    {
+        $master = $this->master();
+        $room = $this->room();
+        $ticket = $this->ticket();
+        $ticket->update(["room_id" => $room->id]);
+        $event = CalendarEvent::factory()->create(["organizer_id" => $master->id]);
+
+        $this->actingAs($master)
+            ->get(route("calendar.edit", $event))
+            ->assertOk()
+            // Опция заявки несёт свой кабинет — по нему JS приоритизирует список.
+            ->assertSee('data-room-id="' . $room->id . '"', false)
+            ->assertSee('data-room="' . $room->number . '"', false);
+    }
+
     public function test_show_page_lists_linked_ticket(): void
     {
         $master = $this->master();

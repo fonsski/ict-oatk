@@ -83,11 +83,15 @@
                 </label>
 
                 <div>
-                    <label for="ev-ticket" class="form-label">Связать с заявкой</label>
+                    <div class="flex items-center justify-between">
+                        <label for="ev-ticket" class="form-label">Связать с заявкой</label>
+                        <span id="ev-ticket-room" class="text-xs text-slate-500"></span>
+                    </div>
                     <select id="ev-ticket" name="ticket_id" class="form-input">
                         <option value="">— нет —</option>
                         @foreach ($tickets as $ticket)
-                            <option value="{{ $ticket->id }}" {{ old('ticket_id') == $ticket->id ? 'selected' : '' }}>
+                            <option value="{{ $ticket->id }}" data-room-id="{{ $ticket->room_id }}" data-room="{{ $ticket->room?->number }}"
+                                    {{ old('ticket_id') == $ticket->id ? 'selected' : '' }}>
                                 #{{ $ticket->id }} — {{ \Illuminate\Support\Str::limit($ticket->title, 50) }}
                             </option>
                         @endforeach
@@ -141,8 +145,12 @@
     </div>
 </div>
 
+@include('calendar.partials.room-ticket-link-script')
+
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', () => linkRoomTicket('ev-room', 'ev-ticket', 'ev-ticket-room'));
+
     function openEventModal(dateStr) {
         const modal = document.getElementById('event-modal');
         const startsAt = document.getElementById('ev-starts-at');
