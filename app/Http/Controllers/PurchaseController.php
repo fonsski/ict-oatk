@@ -6,11 +6,14 @@ use App\Http\Requests\PostPurchaseRequest;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Consumable;
+use App\Models\Document;
 use App\Models\EquipmentCategory;
 use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PhpOffice\PhpWord\TemplateProcessor;
 
 class PurchaseController extends Controller
@@ -242,6 +245,39 @@ class PurchaseController extends Controller
             "Заявка ТМЦ " .
             ($purchase->number ?: $purchase->id) .
             ".docx";
+
+        // Сохраняем заявку в «Документы» — приватно, чтобы её видел
+        // составивший закупку и управляющие роли. Прежнюю версию заменяем.
+        $previous = $purchase
+            ->documents()
+            ->where("original_name", $fileName)
+            ->get();
+        foreach ($previous as $doc) {
+            Storage::disk("local")->delete($doc->path);
+            $doc->delete();
+        }
+
+        $storedPath = "documents/purchase/{$purchase->id}/" .
+            Str::random(20) .
+            ".docx";
+        Storage::disk("local")->put(
+            $storedPath,
+            file_get_contents($tmpFile),
+        );
+
+        $purchase->documents()->create([
+            "type" => Document::TYPE_OTHER,
+            "path" => $storedPath,
+            "original_name" => $fileName,
+            "mime_type" =>
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "size" => filesize($tmpFile),
+            "description" => "Заявка на приобретение ТМЦ по закупке " .
+                ($purchase->number ?: $purchase->id),
+            "is_private" => true,
+            "uploaded_by_user_id" =>
+                $purchase->created_by_user_id ?? Auth::id(),
+        ]);
 
         return response()
             ->download($tmpFile, $fileName)
