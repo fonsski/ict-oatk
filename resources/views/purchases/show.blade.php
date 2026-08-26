@@ -42,6 +42,7 @@
                     <button type="submit" class="btn-danger">Удалить</button>
                 </form>
             @endif
+            <a href="{{ route('purchases.request-document', $purchase) }}" class="btn-secondary">Заявка ТМЦ (.docx)</a>
         </div>
         @endif
     </div>

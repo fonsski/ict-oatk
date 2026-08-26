@@ -438,6 +438,11 @@ Route::middleware("auth")->group(function () {
         // Маршруты для закупок
         Route::resource("/purchases", PurchaseController::class);
 
+        Route::get("/purchases/{purchase}/request-document", [
+            PurchaseController::class,
+            "requestDocument",
+        ])->name("purchases.request-document");
+
         Route::get("/purchases/{purchase}/post", [
             PurchaseController::class,
             "postForm",

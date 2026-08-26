@@ -11,6 +11,7 @@ use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class PurchaseController extends Controller
 {
@@ -192,6 +193,60 @@ class PurchaseController extends Controller
         return redirect()
             ->route("purchases.show", $purchase)
             ->with("success", "Закупка проведена: инвентарь и остатки обновлены");
+    }
+
+    /**
+     * Сформировать заявку на приобретение ТМЦ (.docx) по шаблону колледжа.
+     */
+    public function requestDocument(Purchase $purchase)
+    {
+        $this->authorizeManage();
+
+        $purchase->load("items", "createdBy");
+
+        $template = new TemplateProcessor(
+            resource_path("templates/purchase_request.docx"),
+        );
+
+        $items = $purchase->items;
+        $rows = max($items->count(), 1);
+        $template->cloneRow("np", $rows);
+
+        for ($n = 1; $n <= $rows; $n++) {
+            $item = $items[$n - 1] ?? null;
+            $template->setValue("np#{$n}", $item ? (string) $n : "");
+            $template->setValue("name#{$n}", $item ? $item->name : "");
+            $template->setValue("qty#{$n}", $item ? (string) $item->quantity : "");
+            // Единицы измерения у позиций не хранятся — по умолчанию штуки.
+            $template->setValue("unit#{$n}", $item ? "шт." : "");
+            $template->setValue(
+                "price#{$n}",
+                $item ? number_format((float) $item->unit_price, 2, ",", " ") : "",
+            );
+            $template->setValue(
+                "sum#{$n}",
+                $item ? number_format((float) $item->sum, 2, ",", " ") : "",
+            );
+        }
+
+        $template->setValue(
+            "total",
+            number_format((float) $purchase->total_sum, 2, ",", " "),
+        );
+        $template->setValue("author", $purchase->createdBy->name ?? "");
+        $template->setValue("purpose", $purchase->comment ?? "");
+
+        $tmpFile = tempnam(sys_get_temp_dir(), "purchase_request_");
+        $template->saveAs($tmpFile);
+
+        $fileName =
+            "Заявка ТМЦ " .
+            ($purchase->number ?: $purchase->id) .
+            ".docx";
+
+        return response()
+            ->download($tmpFile, $fileName)
+            ->deleteFileAfterSend(true);
     }
 
     private function authorizeManage(): void
