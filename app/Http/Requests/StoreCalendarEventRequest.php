@@ -43,6 +43,8 @@ class StoreCalendarEventRequest extends FormRequest
             "location" => "nullable|string|max:255",
             "room_id" => "nullable|exists:rooms,id",
             "color" => ["nullable", Rule::in(CalendarEvent::COLORS)],
+            "participant_ids" => "nullable|array",
+            "participant_ids.*" => "integer|exists:users,id",
         ];
     }
 

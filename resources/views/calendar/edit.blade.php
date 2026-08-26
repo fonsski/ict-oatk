@@ -96,6 +96,8 @@
                     </div>
                 </div>
 
+                @include('calendar.partials.participant-picker', ['staff' => $staff, 'selected' => old('participant_ids', $selectedParticipantIds)])
+
                 <div>
                     <label for="description" class="form-label">Описание</label>
                     <textarea id="description" name="description" rows="2" class="form-input">{{ old('description', $event->description) }}</textarea>

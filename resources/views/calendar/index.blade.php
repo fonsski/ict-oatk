@@ -95,5 +95,5 @@
     </div>
 </div>
 
-@include('calendar.partials.event-modal', ['rooms' => $rooms])
+@include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff])
 @endsection

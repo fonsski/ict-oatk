@@ -8,6 +8,7 @@
         return $dt->day . ' ' . $ruMonths[$dt->month] . ' ' . $dt->year;
     };
     $canManage = auth()->user()->hasRole(['admin', 'master']) || $event->organizer_id === auth()->id();
+    $myParticipation = $event->participants->firstWhere('user_id', auth()->id());
 @endphp
 
 @section('content')
@@ -86,6 +87,29 @@
                     </div>
                 @endif
             </dl>
+
+            @if ($myParticipation)
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    <p class="text-sm text-slate-500 mb-2">
+                        Вас пригласили на это событие.
+                        @if ($myParticipation->response !== 'pending')
+                            Ваш ответ: <span class="font-medium text-slate-700">{{ $myParticipation->response_label }}</span>.
+                        @endif
+                    </p>
+                    <form method="POST" action="{{ route('calendar.respond', $event) }}" class="flex flex-wrap items-center gap-2">
+                        @csrf
+                        @foreach (['accepted' => 'Приду', 'maybe' => 'Возможно', 'declined' => 'Не приду'] as $value => $label)
+                            <button type="submit" name="response" value="{{ $value }}"
+                                    class="py-1.5 px-4 text-sm rounded-md border transition
+                                        {{ $myParticipation->response === $value
+                                            ? 'bg-blue-600 border-blue-600 text-white'
+                                            : 'border-slate-300 text-slate-700 hover:bg-slate-50' }}">
+                                {{ $label }}
+                            </button>
+                        @endforeach
+                    </form>
+                </div>
+            @endif
 
             @if ($canManage)
                 <div class="mt-6 flex items-center gap-3 pt-4 border-t border-slate-100">

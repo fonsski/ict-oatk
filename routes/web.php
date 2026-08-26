@@ -230,6 +230,7 @@ Route::middleware("auth")->group(function () {
         Route::get("/calendar/events/{event}", [CalendarController::class, "show"])->name("calendar.show");
         Route::get("/calendar/events/{event}/edit", [CalendarController::class, "edit"])->name("calendar.edit");
         Route::put("/calendar/events/{event}", [CalendarController::class, "update"])->name("calendar.update");
+        Route::post("/calendar/events/{event}/respond", [CalendarController::class, "respond"])->name("calendar.respond");
         Route::delete("/calendar/events/{event}", [CalendarController::class, "destroy"])->name("calendar.destroy");
     });
 

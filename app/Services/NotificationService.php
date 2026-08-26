@@ -282,6 +282,78 @@ class NotificationService
     }
 
     /**
+     * Пригласить сотрудника на событие календаря.
+     */
+    public function notifyEventInvitation(\App\Models\CalendarEvent $event, User $participant)
+    {
+        try {
+            $this->createNotification([
+                "user_id" => $participant->id,
+                "type" => "calendar_invitation",
+                "title" => "Приглашение на событие",
+                "message" => "Вас пригласили: {$event->title}",
+                "icon" => "calendar",
+                "color" => $event->color ?: "blue",
+                "data" => [
+                    "event_id" => $event->id,
+                    "starts_at" => $event->starts_at?->toDateTimeString(),
+                ],
+                "url" => route("calendar.show", $event, false),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Не удалось отправить приглашение на событие #{$event->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Сообщить организатору, что участник ответил на приглашение.
+     */
+    public function notifyEventResponse(\App\Models\CalendarEvent $event, User $participant, string $responseLabel)
+    {
+        if (!$event->organizer_id || $event->organizer_id === $participant->id) {
+            return;
+        }
+
+        try {
+            $this->createNotification([
+                "user_id" => $event->organizer_id,
+                "type" => "calendar_response",
+                "title" => "Ответ на приглашение",
+                "message" => "{$participant->name}: {$responseLabel} — {$event->title}",
+                "icon" => "calendar",
+                "data" => [
+                    "event_id" => $event->id,
+                    "participant_id" => $participant->id,
+                ],
+                "url" => route("calendar.show", $event, false),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Не удалось уведомить организатора события #{$event->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Сообщить участнику об изменении или отмене события.
+     */
+    public function notifyEventChanged(\App\Models\CalendarEvent $event, User $participant, string $what)
+    {
+        try {
+            $this->createNotification([
+                "user_id" => $participant->id,
+                "type" => "calendar_changed",
+                "title" => $what === "cancelled" ? "Событие отменено" : "Событие изменено",
+                "message" => $event->title,
+                "icon" => "calendar",
+                "color" => $what === "cancelled" ? "red" : ($event->color ?: "blue"),
+                "data" => ["event_id" => $event->id],
+                "url" => route("calendar.show", $event, false),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Не удалось уведомить об изменении события #{$event->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Получить уведомления для пользователя
      */
     public function getUserNotifications(
