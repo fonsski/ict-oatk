@@ -80,7 +80,9 @@
 
             {{-- Колонки дней --}}
             @foreach ($days as $d)
-                <div class="flex-1 relative border-l border-slate-100">
+                <div class="flex-1 relative border-l border-slate-100"
+                     data-time-col data-date="{{ $d['date']->toDateString() }}"
+                     ondragover="gridDragOver(event)" ondrop="gridDrop(event)">
                     {{-- Часовые линии --}}
                     @for ($h = 0; $h < 24; $h++)
                         <div class="absolute left-0 right-0 border-t border-slate-100" style="top: {{ $h * $hourPx }}px;"></div>
@@ -99,7 +101,8 @@
                             $compact = $duration <= 45;
                         @endphp
                         <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
-                           class="absolute rounded border-l-4 px-1.5 overflow-hidden text-[11px] leading-tight {{ $compact ? 'py-0 flex items-center gap-1' : 'py-0.5' }} {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }}"
+                           @unless ($occ->event->isRecurring()) draggable="true" ondragstart="gridDragStart(event, {{ $occ->event->id }})" ondragend="gridDragEnd(event)" @endunless
+                           class="absolute rounded border-l-4 px-1.5 overflow-hidden text-[11px] leading-tight {{ $compact ? 'py-0 flex items-center gap-1' : 'py-0.5' }} {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }} {{ $occ->event->isRecurring() ? '' : 'cursor-grab active:cursor-grabbing' }}"
                            style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ $leftPct }}% + 2px); width: calc({{ $widthPct }}% - 4px);"
                            title="{{ $occ->title }} ({{ $occ->startsAt->format('H:i') }}–{{ $occ->endsAt->format('H:i') }})">
                             <span class="font-semibold shrink-0">{{ $occ->startsAt->format('H:i') }}</span>
@@ -114,10 +117,78 @@
 
 @push('scripts')
 <script>
+    const GRID_HOUR_PX = {{ $hourPx }};
+
     // Прокручиваем сетку к рабочему утру, чтобы не начинать с полуночи.
     document.addEventListener('DOMContentLoaded', () => {
         const scroll = document.getElementById('time-grid-scroll');
-        if (scroll) scroll.scrollTop = 7 * {{ $hourPx }};
+        if (scroll) scroll.scrollTop = 7 * GRID_HOUR_PX;
     });
+
+    // Перетаскивание событий по времени в неделе/дне. Повторяющиеся не таскаем.
+    let gridDraggedEventId = null;
+    let gridGrabOffsetY = 0; // где внутри блока «схватили», чтобы не прыгало
+
+    function gridDragStart(e, eventId) {
+        gridDraggedEventId = eventId;
+        const rect = e.currentTarget.getBoundingClientRect();
+        gridGrabOffsetY = e.clientY - rect.top;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(eventId));
+        e.currentTarget.addEventListener('click', gridPreventClick, true);
+    }
+
+    function gridPreventClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.removeEventListener('click', gridPreventClick, true);
+    }
+
+    function gridDragEnd() {
+        gridDraggedEventId = null;
+    }
+
+    function gridDragOver(e) {
+        if (gridDraggedEventId === null) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    async function gridDrop(e) {
+        e.preventDefault();
+        const col = e.currentTarget;
+        const eventId = gridDraggedEventId;
+        if (!eventId) return;
+
+        const rect = col.getBoundingClientRect();
+        // Начало блока — под курсором с учётом места захвата.
+        let y = e.clientY - rect.top - gridGrabOffsetY;
+        let minutes = Math.round((y / GRID_HOUR_PX) * 60 / 15) * 15; // шаг 15 минут
+        minutes = Math.max(0, Math.min(minutes, 24 * 60 - 15));
+
+        const hh = String(Math.floor(minutes / 60)).padStart(2, '0');
+        const mm = String(minutes % 60).padStart(2, '0');
+        const startsAt = `${col.dataset.date} ${hh}:${mm}`;
+
+        try {
+            const res = await fetch(`/calendar/events/${eventId}/move`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ starts_at: startsAt }),
+            });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.message || 'Не удалось перенести событие.');
+            }
+        } catch (err) {
+            alert('Не удалось перенести событие.');
+        }
+    }
 </script>
 @endpush

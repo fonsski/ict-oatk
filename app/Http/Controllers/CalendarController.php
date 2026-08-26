@@ -477,7 +477,12 @@ class CalendarController extends Controller
     {
         $this->authorizeManage($event);
 
-        $validated = $request->validate(["date" => "required|date"]);
+        // date — перенос на другой день (месяц), время сохраняется.
+        // starts_at — точный момент (неделя/день), время задаёт перетаскивание.
+        $validated = $request->validate([
+            "date" => "required_without:starts_at|date",
+            "starts_at" => "required_without:date|date",
+        ]);
 
         // Перетаскивание серии неоднозначно (сдвинуть все даты?), поэтому
         // повторяющиеся события переносим только через форму правки.
@@ -487,12 +492,16 @@ class CalendarController extends Controller
             ], 422);
         }
 
-        $target = CarbonImmutable::parse($validated["date"]);
         $start = CarbonImmutable::parse($event->starts_at);
         $end = CarbonImmutable::parse($event->ends_at);
         $durationSeconds = $start->diffInSeconds($end);
 
-        $newStart = $target->setTime((int) $start->format("H"), (int) $start->format("i"));
+        if (!empty($validated["starts_at"])) {
+            $newStart = CarbonImmutable::parse($validated["starts_at"]);
+        } else {
+            $target = CarbonImmutable::parse($validated["date"]);
+            $newStart = $target->setTime((int) $start->format("H"), (int) $start->format("i"));
+        }
 
         $event->update([
             "starts_at" => $newStart,

@@ -40,6 +40,24 @@ class CalendarMoveTest extends TestCase
         $this->assertSame("2026-08-29 15:30", $event->ends_at->format("Y-m-d H:i"));
     }
 
+    public function test_moving_to_a_precise_time_sets_start_and_keeps_duration(): void
+    {
+        $master = User::factory()->withRole("master")->create();
+        $event = CalendarEvent::factory()->create([
+            "organizer_id" => $master->id,
+            "starts_at" => "2026-08-26 10:00",
+            "ends_at" => "2026-08-26 11:30", // 1.5 часа
+        ]);
+
+        $this->actingAs($master)
+            ->postJson(route("calendar.move", $event), ["starts_at" => "2026-08-27 14:15"])
+            ->assertOk();
+
+        $event->refresh();
+        $this->assertSame("2026-08-27 14:15", $event->starts_at->format("Y-m-d H:i"));
+        $this->assertSame("2026-08-27 15:45", $event->ends_at->format("Y-m-d H:i"));
+    }
+
     public function test_recurring_event_cannot_be_dragged(): void
     {
         $master = User::factory()->withRole("master")->create();
