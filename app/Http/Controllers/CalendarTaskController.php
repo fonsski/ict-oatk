@@ -91,7 +91,10 @@ class CalendarTaskController extends Controller
 
     private function authorizeOwner(CalendarTask $task): void
     {
-        // Доступ у исполнителя и у автора задачи.
+        // Доступ у исполнителя, автора и управляющих.
+        if (Auth::user()->hasRole(["admin", "master"])) {
+            return;
+        }
         if ($task->user_id !== Auth::id() && $task->created_by_user_id !== Auth::id()) {
             abort(403);
         }

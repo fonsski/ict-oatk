@@ -66,6 +66,25 @@ class CalendarTask extends Model
         return $this->completed_at !== null;
     }
 
+    /**
+     * Задачи, видимые пользователю: управляющие видят все, остальные — где
+     * они исполнитель или автор (переданная другому задача остаётся у автора).
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (!$user) {
+            return $query->whereRaw("1 = 0");
+        }
+
+        if ($user->hasRole(["admin", "master"])) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($user) {
+            $q->where("user_id", $user->id)->orWhere("created_by_user_id", $user->id);
+        });
+    }
+
     public function scopeCompleted(Builder $query): Builder
     {
         return $query->whereNotNull("completed_at");

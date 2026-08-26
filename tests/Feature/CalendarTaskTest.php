@@ -109,6 +109,52 @@ class CalendarTaskTest extends TestCase
         $response->assertDontSee($foreign->title);
     }
 
+    public function test_author_still_sees_a_task_handed_to_another(): void
+    {
+        $author = User::factory()->withRole("technician")->create();
+        $assignee = User::factory()->withRole("technician")->create();
+        $task = CalendarTask::factory()->for($assignee)->create([
+            "title" => "Переданная задача",
+            "created_by_user_id" => $author->id,
+            "due_at" => "2026-08-15 00:00",
+        ]);
+
+        // Автор видит её в календаре, хотя исполнитель — другой.
+        $this->actingAs($author)
+            ->get(route("calendar.index", ["month" => "2026-08"]))
+            ->assertSee("Переданная задача");
+    }
+
+    public function test_manager_sees_everyones_tasks(): void
+    {
+        $master = User::factory()->withRole("master")->create();
+        $someone = User::factory()->withRole("technician")->create();
+        CalendarTask::factory()->for($someone)->create([
+            "title" => "Чужая задача техника",
+            "created_by_user_id" => $someone->id,
+            "due_at" => "2026-08-15 00:00",
+        ]);
+
+        $this->actingAs($master)
+            ->get(route("calendar.index", ["month" => "2026-08"]))
+            ->assertSee("Чужая задача техника");
+    }
+
+    public function test_technician_does_not_see_unrelated_tasks(): void
+    {
+        $viewer = User::factory()->withRole("technician")->create();
+        $other = User::factory()->withRole("technician")->create();
+        CalendarTask::factory()->for($other)->create([
+            "title" => "Совсем чужая",
+            "created_by_user_id" => $other->id,
+            "due_at" => "2026-08-15 00:00",
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route("calendar.index", ["month" => "2026-08"]))
+            ->assertDontSee("Совсем чужая");
+    }
+
     public function test_creator_is_recorded_and_task_can_be_assigned_to_another(): void
     {
         $author = User::factory()->withRole("master")->create();

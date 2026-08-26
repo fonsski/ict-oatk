@@ -96,11 +96,12 @@ class CalendarController extends Controller
             ->expand($events, $gridStart, $gridEnd)
             ->groupBy(fn ($o) => $o->startsAt->toDateString());
 
-        // Личные задачи текущего пользователя с датой в пределах сетки.
+        // Задачи, видимые пользователю: свои и — для управляющих — все.
         $tasks = CalendarTask::query()
-            ->where("user_id", Auth::id())
+            ->visibleTo(Auth::user())
             ->whereNotNull("due_at")
             ->whereBetween("due_at", [$gridStart, $gridEnd])
+            ->with("assignee:id,name")
             ->orderBy("due_at")
             ->get()
             ->groupBy(fn ($t) => CarbonImmutable::parse($t->due_at)->toDateString());
@@ -187,9 +188,10 @@ class CalendarController extends Controller
             ->groupBy(fn ($o) => $o->startsAt->toDateString());
 
         $tasks = CalendarTask::query()
-            ->where("user_id", Auth::id())
+            ->visibleTo(Auth::user())
             ->whereNotNull("due_at")
             ->whereBetween("due_at", [$start, $end])
+            ->with("assignee:id,name")
             ->orderBy("due_at")
             ->get()
             ->groupBy(fn ($t) => CarbonImmutable::parse($t->due_at)->toDateString());

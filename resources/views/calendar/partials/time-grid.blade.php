@@ -58,7 +58,7 @@
                             </form>
                             <a href="{{ route('calendar.tasks.edit', $task) }}"
                                class="truncate text-xs {{ $task->isCompleted() ? 'line-through text-slate-400' : 'text-slate-700 hover:text-blue-600' }}"
-                               title="{{ $task->title }}">{{ $task->title }}</a>
+                               title="{{ $task->title }}@if($task->user_id !== auth()->id()) · {{ $task->assignee?->name }}@endif">{{ $task->title }}@if($task->user_id !== auth()->id())<span class="text-slate-400"> · {{ \Illuminate\Support\Str::limit($task->assignee?->name, 12) }}</span>@endif</a>
                         </div>
                     @endforeach
                 </div>
