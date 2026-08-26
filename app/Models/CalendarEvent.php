@@ -101,6 +101,28 @@ class CalendarEvent extends Model
         return $this->recurrence_freq !== null;
     }
 
+    /**
+     * События, видимые пользователю: управляющие видят все, остальные —
+     * где они организатор или приглашённый участник.
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (!$user) {
+            return $query->whereRaw("1 = 0");
+        }
+
+        if ($user->hasRole(["admin", "master"])) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($user) {
+            $q->where("organizer_id", $user->id)->orWhereHas(
+                "participants",
+                fn (Builder $p) => $p->where("user_id", $user->id),
+            );
+        });
+    }
+
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;

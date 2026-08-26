@@ -17,6 +17,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\KnowledgeCategoryController;
 use App\Http\Controllers\NetworkTopologyController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HomepageFAQController;
 use App\Http\Controllers\HomeController;
@@ -217,6 +218,19 @@ Route::middleware("auth")->group(function () {
             \App\Http\Controllers\Api\UserController::class,
             "technicians",
         ])->name("api.users.technicians");
+    });
+
+    // Календарь доступен всему персоналу: события, встречи, задачи.
+    Route::middleware([
+        "auth",
+        \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
+    ])->group(function () {
+        Route::get("/calendar", [CalendarController::class, "index"])->name("calendar.index");
+        Route::post("/calendar/events", [CalendarController::class, "store"])->name("calendar.events.store");
+        Route::get("/calendar/events/{event}", [CalendarController::class, "show"])->name("calendar.show");
+        Route::get("/calendar/events/{event}/edit", [CalendarController::class, "edit"])->name("calendar.edit");
+        Route::put("/calendar/events/{event}", [CalendarController::class, "update"])->name("calendar.update");
+        Route::delete("/calendar/events/{event}", [CalendarController::class, "destroy"])->name("calendar.destroy");
     });
 
     // Ресурс equipment полностью доступен только для ролей admin, master и technician

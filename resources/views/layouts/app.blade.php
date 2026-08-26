@@ -54,6 +54,10 @@
 
                         @if (auth()->check() &&
                                 auth()->user()->hasRole(['admin', 'master', 'technician']))
+                            <a href="{{ route('calendar.index') }}"
+                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('calendar.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                                Календарь
+                            </a>
                             <a href="{{ route('knowledge.index') }}"
                                 class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                                 База знаний
@@ -267,6 +271,11 @@
 
                     @if (auth()->check() &&
                             auth()->user()->hasRole(['admin', 'master', 'technician']))
+                        <!-- Календарь -->
+                        <a href="{{ route('calendar.index') }}"
+                            class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('calendar.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
+                            Календарь
+                        </a>
                         <!-- База знаний -->
                         <a href="{{ route('knowledge.index') }}"
                             class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
