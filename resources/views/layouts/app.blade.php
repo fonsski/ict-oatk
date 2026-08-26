@@ -15,20 +15,21 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Лого -->
-                <a href="{{ route('home') }}" class="flex items-center space-x-2">
+                <a href="{{ route('home') }}" class="flex items-center space-x-2 shrink-0">
                     <div
-                        class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        class="w-8 h-8 shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                             stroke-linejoin="round">
                             <path d="M11.42 15.17 17.25 21a2.652 2.652 0 0 0 3.75-3.75l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437"></path>
                         </svg>
                     </div>
-                    <span class="text-xl font-bold text-gray-900">ICT Help</span>
+                    <span class="text-xl font-bold text-gray-900 whitespace-nowrap">ICT Help</span>
                 </a>
 
-                <!-- Навигация -->
-                <nav class="hidden md:flex items-center space-x-6" role="navigation" aria-label="Основная навигация">
+                <!-- Навигация. whitespace-nowrap наследуется всеми пунктами,
+                     чтобы «Подать заявку» не разрывалось на две строки. -->
+                <nav class="hidden xl:flex items-center space-x-1 whitespace-nowrap" role="navigation" aria-label="Основная навигация">
                     @auth
                         <a href="{{ route('home') }}"
                             class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
@@ -170,8 +171,8 @@
                             <button type="button" id="user-menu-button"
                                 class="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 aria-expanded="false" aria-haspopup="true" aria-label="Меню пользователя">
-                                <span>{{ auth()->user()->name }}</span>
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                <span class="max-w-[160px] truncate whitespace-nowrap">{{ auth()->user()->name }}</span>
+                                <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="6,9 12,15 18,9"></polyline>
                                 </svg>
@@ -227,7 +228,7 @@
                 </nav>
 
                 <!-- Кнопка мобильного меню -->
-                <div class="md:hidden">
+                <div class="xl:hidden">
                     <button type="button" id="mobile-menu-button" class="text-gray-500 hover:text-gray-600 p-2">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -239,7 +240,7 @@
         </div>
 
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200 mobile-menu"
+        <div id="mobile-menu" class="hidden xl:hidden bg-white border-t border-gray-200 mobile-menu"
             role="navigation" aria-label="Мобильная навигация">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 @auth
