@@ -110,6 +110,30 @@ class User extends Authenticatable
     }
 
     /**
+     * События календаря, где пользователь — организатор.
+     */
+    public function organizedEvents()
+    {
+        return $this->hasMany(CalendarEvent::class, "organizer_id");
+    }
+
+    /**
+     * Участие пользователя в чужих событиях (приглашения).
+     */
+    public function eventParticipations()
+    {
+        return $this->hasMany(CalendarEventParticipant::class);
+    }
+
+    /**
+     * Личные задачи пользователя в календаре.
+     */
+    public function calendarTasks()
+    {
+        return $this->hasMany(CalendarTask::class);
+    }
+
+    /**
      * Проверка, имеет ли пользователь определенную роль
      */
     public function hasRole($role)
