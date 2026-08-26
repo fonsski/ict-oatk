@@ -76,7 +76,8 @@
                             @foreach ($cell['occurrences']->take(3) as $occ)
                                 <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
                                    @unless ($occ->event->isRecurring()) draggable="true" ondragstart="calDragStart(event, {{ $occ->event->id }})" ondragend="calDragEnd(event)" @endunless
-                                   class="block truncate rounded px-1.5 py-0.5 text-xs font-medium transition {{ $palette[$occ->color()] ?? $palette['blue'] }} {{ $occ->event->isRecurring() ? '' : 'cursor-grab active:cursor-grabbing' }}"
+                                   @if ($occ->event->declinedByViewer()) data-event-declined @endif
+                                   class="block truncate rounded px-1.5 py-0.5 text-xs font-medium transition {{ $palette[$occ->color()] ?? $palette['blue'] }} {{ $occ->event->isRecurring() ? '' : 'cursor-grab active:cursor-grabbing' }} {{ $occ->event->declinedByViewer() ? 'line-through opacity-60' : '' }}"
                                    title="{{ $occ->title }}">
                                     @unless ($occ->isAllDay())
                                         <span class="tabular-nums opacity-70">{{ $occ->startsAt->format('H:i') }}</span>

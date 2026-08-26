@@ -88,7 +88,14 @@ class CalendarController extends Controller
         $events = CalendarEvent::query()
             ->where("status", CalendarEvent::STATUS_CONFIRMED)
             ->overlapping($gridStart, $gridEnd)
-            ->with(["organizer:id,name", "room:id,number,name", "exceptions"])
+            ->with([
+                "organizer:id,name",
+                "room:id,number,name",
+                "exceptions",
+                // Только запись участия текущего пользователя — по ней видно,
+                // отклонил ли он событие.
+                "participants" => fn ($q) => $q->where("user_id", Auth::id()),
+            ])
             ->visibleTo(Auth::user())
             ->get();
 
@@ -179,7 +186,14 @@ class CalendarController extends Controller
         $events = CalendarEvent::query()
             ->where("status", CalendarEvent::STATUS_CONFIRMED)
             ->overlapping($start, $end)
-            ->with(["organizer:id,name", "room:id,number,name", "exceptions"])
+            ->with([
+                "organizer:id,name",
+                "room:id,number,name",
+                "exceptions",
+                // Только запись участия текущего пользователя — по ней видно,
+                // отклонил ли он событие.
+                "participants" => fn ($q) => $q->where("user_id", Auth::id()),
+            ])
             ->visibleTo(Auth::user())
             ->get();
 

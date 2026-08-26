@@ -137,6 +137,18 @@ class CalendarEvent extends Model
     }
 
     /**
+     * Отклонил ли текущий пользователь приглашение. Опирается на заранее
+     * загруженную (ограниченную им же) связь participants.
+     */
+    public function declinedByViewer(): bool
+    {
+        return $this->relationLoaded("participants")
+            && $this->participants->contains(
+                fn ($p) => $p->response === CalendarEventParticipant::RESPONSE_DECLINED,
+            );
+    }
+
+    /**
      * Человекочитаемое правило повтора, например «Каждую неделю: Пн, Ср, до 01.10.2026».
      */
     public function recurrenceSummary(): ?string

@@ -43,7 +43,8 @@
                 <div class="flex-1 border-l border-slate-100 p-1 space-y-0.5 min-h-[2rem]">
                     @foreach ($d['allDay'] as $occ)
                         <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
-                           class="block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }}"
+                           @if ($occ->event->declinedByViewer()) data-event-declined @endif
+                           class="block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }} {{ $occ->event->declinedByViewer() ? 'line-through opacity-60' : '' }}"
                            title="{{ $occ->title }}">{{ $occ->title }}</a>
                     @endforeach
                     @foreach ($d['tasks'] as $task)
@@ -102,7 +103,8 @@
                         @endphp
                         <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
                            @unless ($occ->event->isRecurring()) draggable="true" ondragstart="gridDragStart(event, {{ $occ->event->id }})" ondragend="gridDragEnd(event)" @endunless
-                           class="absolute rounded border-l-4 px-1.5 overflow-hidden text-[11px] leading-tight {{ $compact ? 'py-0 flex items-center gap-1' : 'py-0.5' }} {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }} {{ $occ->event->isRecurring() ? '' : 'cursor-grab active:cursor-grabbing' }}"
+                           @if ($occ->event->declinedByViewer()) data-event-declined @endif
+                           class="absolute rounded border-l-4 px-1.5 overflow-hidden text-[11px] leading-tight {{ $compact ? 'py-0 flex items-center gap-1' : 'py-0.5' }} {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }} {{ $occ->event->isRecurring() ? '' : 'cursor-grab active:cursor-grabbing' }} {{ $occ->event->declinedByViewer() ? 'line-through opacity-60' : '' }}"
                            style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ $leftPct }}% + 2px); width: calc({{ $widthPct }}% - 4px);"
                            title="{{ $occ->title }} ({{ $occ->startsAt->format('H:i') }}–{{ $occ->endsAt->format('H:i') }})">
                             <span class="font-semibold shrink-0">{{ $occ->startsAt->format('H:i') }}</span>

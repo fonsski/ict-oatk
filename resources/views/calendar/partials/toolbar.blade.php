@@ -47,6 +47,10 @@
                         <input type="checkbox" id="pref-show-completed" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                         Показывать выполненные задачи
                     </label>
+                    <label class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="pref-show-declined" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        Показывать отклонённые мероприятия
+                    </label>
                 </div>
             </div>
         </div>
@@ -76,8 +80,9 @@
 </div>
 
 <style>
-    /* Скрытие выполненных задач по настройке отображения. */
+    /* Скрытие по настройкам отображения. */
     html.hide-completed-tasks [data-task-done] { display: none; }
+    html.hide-declined-events [data-event-declined] { display: none; }
 </style>
 
 @push('scripts')
@@ -93,22 +98,25 @@
         if (!e.target.closest('#cal-settings-menu')) closeCalSettings();
     });
 
-    // Настройка «показывать выполненные задачи» — в localStorage, применяется
-    // мгновенно ко всем видам без перезагрузки.
-    const CAL_HIDE_DONE = 'cal_hide_completed_tasks';
-    function applyCompletedPref() {
-        const hide = localStorage.getItem(CAL_HIDE_DONE) === '1';
-        document.documentElement.classList.toggle('hide-completed-tasks', hide);
-        const box = document.getElementById('pref-show-completed');
-        if (box) box.checked = !hide;
+    // Настройки отображения — в localStorage, применяются мгновенно ко всем
+    // видам без перезагрузки.
+    function bindDisplayPref(storageKey, htmlClass, boxId) {
+        const apply = () => {
+            const hide = localStorage.getItem(storageKey) === '1';
+            document.documentElement.classList.toggle(htmlClass, hide);
+            const box = document.getElementById(boxId);
+            if (box) box.checked = !hide;
+        };
+        apply();
+        const box = document.getElementById(boxId);
+        if (box) box.addEventListener('change', () => {
+            localStorage.setItem(storageKey, box.checked ? '0' : '1');
+            apply();
+        });
     }
     document.addEventListener('DOMContentLoaded', () => {
-        applyCompletedPref();
-        const box = document.getElementById('pref-show-completed');
-        if (box) box.addEventListener('change', () => {
-            localStorage.setItem(CAL_HIDE_DONE, box.checked ? '0' : '1');
-            applyCompletedPref();
-        });
+        bindDisplayPref('cal_hide_completed_tasks', 'hide-completed-tasks', 'pref-show-completed');
+        bindDisplayPref('cal_hide_declined_events', 'hide-declined-events', 'pref-show-declined');
     });
 </script>
 @endpush

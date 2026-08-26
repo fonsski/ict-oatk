@@ -79,6 +79,35 @@ class CalendarViewsTest extends TestCase
         $response->assertSee("Вс");
     }
 
+    public function test_declined_event_is_marked_for_the_viewer(): void
+    {
+        $organizer = User::factory()->withRole("master")->create();
+        $viewer = User::factory()->withRole("technician")->create();
+        $event = \App\Models\CalendarEvent::factory()->create([
+            "organizer_id" => $organizer->id,
+            "title" => "Отклонённая встреча",
+            "starts_at" => "2026-08-19 10:00",
+            "ends_at" => "2026-08-19 11:00",
+        ]);
+        \App\Models\CalendarEventParticipant::create([
+            "event_id" => $event->id,
+            "user_id" => $viewer->id,
+            "response" => "declined",
+        ]);
+
+        // Участник видит событие приглушённым/зачёркнутым (стиль отклонённого).
+        $this->actingAs($viewer)
+            ->get(route("calendar.index", ["month" => "2026-08"]))
+            ->assertOk()
+            ->assertSee("line-through opacity-60", false);
+
+        // Организатор — не отклонял, для него метки нет.
+        $this->actingAs($organizer)
+            ->get(route("calendar.index", ["month" => "2026-08"]))
+            ->assertOk()
+            ->assertDontSee("line-through opacity-60", false);
+    }
+
     public function test_week_view_switch_links_are_present(): void
     {
         $user = User::factory()->withRole("technician")->create();
