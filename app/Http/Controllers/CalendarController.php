@@ -302,13 +302,47 @@ class CalendarController extends Controller
             ->with("success", "Событие создано");
     }
 
-    public function show(CalendarEvent $event)
+    public function show(Request $request, CalendarEvent $event)
     {
         $this->authorizeView($event);
 
         $event->load(["organizer:id,name", "room:id,number,name", "participants.user:id,name"]);
 
-        return view("calendar.show", ["event" => $event]);
+        // Если пришли с конкретного экземпляра серии — знаем его дату и
+        // можем предложить отменить только её.
+        $occurrenceDate = null;
+        if ($event->isRecurring() && $request->query("date")) {
+            try {
+                $occurrenceDate = CarbonImmutable::parse($request->query("date"));
+            } catch (\Throwable) {
+                // Кривая дата — покажем событие как серию целиком.
+            }
+        }
+
+        return view("calendar.show", [
+            "event" => $event,
+            "occurrenceDate" => $occurrenceDate,
+        ]);
+    }
+
+    /**
+     * Отменить один экземпляр повторяющегося события, не трогая серию.
+     */
+    public function cancelOccurrence(Request $request, CalendarEvent $event)
+    {
+        $this->authorizeManage($event);
+
+        $validated = $request->validate(["date" => "required|date"]);
+        $date = CarbonImmutable::parse($validated["date"])->toDateString();
+
+        $event->exceptions()->updateOrCreate(
+            ["occurrence_date" => $date],
+            ["is_cancelled" => true],
+        );
+
+        return redirect()
+            ->route("calendar.index", ["month" => CarbonImmutable::parse($date)->format("Y-m")])
+            ->with("success", "Эта дата события отменена");
     }
 
     public function edit(CalendarEvent $event)

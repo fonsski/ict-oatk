@@ -48,6 +48,18 @@
                     </dd>
                 </div>
 
+                @if ($event->isRecurring())
+                    <div class="flex gap-3">
+                        <dt class="w-32 shrink-0 text-slate-500">Повторение</dt>
+                        <dd class="text-slate-900">
+                            {{ $event->recurrenceSummary() }}
+                            @if ($occurrenceDate)
+                                <span class="block text-xs text-slate-500 mt-0.5">Открыта дата: {{ $occurrenceDate->format('d.m.Y') }}</span>
+                            @endif
+                        </dd>
+                    </div>
+                @endif
+
                 @if ($event->room || $event->location)
                     <div class="flex gap-3">
                         <dt class="w-32 shrink-0 text-slate-500">Место</dt>
@@ -112,13 +124,28 @@
             @endif
 
             @if ($canManage)
-                <div class="mt-6 flex items-center gap-3 pt-4 border-t border-slate-100">
+                <div class="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
                     <a href="{{ route('calendar.edit', $event) }}" class="btn-outline py-1.5 px-4 text-sm">Редактировать</a>
+
+                    @if ($event->isRecurring() && $occurrenceDate)
+                        {{-- Отменить только эту дату серии --}}
+                        <form method="POST" action="{{ route('calendar.cancel-occurrence', $event) }}"
+                              onsubmit="return confirm('Отменить событие только {{ $occurrenceDate->format('d.m.Y') }}?')">
+                            @csrf
+                            <input type="hidden" name="date" value="{{ $occurrenceDate->toDateString() }}">
+                            <button type="submit" class="py-1.5 px-4 text-sm text-amber-700 hover:text-amber-800 hover:bg-amber-50 rounded-md">
+                                Отменить {{ $occurrenceDate->format('d.m') }}
+                            </button>
+                        </form>
+                    @endif
+
                     <form method="POST" action="{{ route('calendar.destroy', $event) }}"
-                          onsubmit="return confirm('Удалить это событие?')">
+                          onsubmit="return confirm('{{ $event->isRecurring() ? 'Удалить всю серию повторов?' : 'Удалить это событие?' }}')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="py-1.5 px-4 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md">Удалить</button>
+                        <button type="submit" class="py-1.5 px-4 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md">
+                            {{ $event->isRecurring() ? 'Удалить всю серию' : 'Удалить' }}
+                        </button>
                     </form>
                 </div>
             @endif

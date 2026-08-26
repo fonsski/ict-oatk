@@ -42,7 +42,7 @@
             @foreach ($days as $d)
                 <div class="flex-1 border-l border-slate-100 p-1 space-y-0.5 min-h-[2rem]">
                     @foreach ($d['allDay'] as $occ)
-                        <a href="{{ route('calendar.show', $occ->event) }}"
+                        <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
                            class="block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }}"
                            title="{{ $occ->title }}">{{ $occ->title }}</a>
                     @endforeach
@@ -95,7 +95,7 @@
                             $widthPct = 100 / $item['cols'];
                             $leftPct = $item['col'] * $widthPct;
                         @endphp
-                        <a href="{{ route('calendar.show', $occ->event) }}"
+                        <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
                            class="absolute rounded border-l-4 px-1.5 py-0.5 overflow-hidden text-xs {{ ($blockPalette[$occ->color()] ?? $blockPalette['blue']) }}"
                            style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ $leftPct }}% + 2px); width: calc({{ $widthPct }}% - 4px);"
                            title="{{ $occ->title }} ({{ $occ->startsAt->format('H:i') }}–{{ $occ->endsAt->format('H:i') }})">

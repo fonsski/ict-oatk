@@ -30,6 +30,57 @@ class StoreCalendarEventRequest extends FormRequest
                 ]);
             }
         }
+
+        $this->normalizeRecurrence();
+    }
+
+    /**
+     * Приводит поля повтора к тому виду, в котором их ждёт модель.
+     *
+     * Форма присылает дни недели массивом и режим окончания отдельным
+     * переключателем; здесь дни склеиваются в строку «MO,WE», а «до даты»
+     * и «N раз» очищают друг друга. Без частоты весь блок обнуляется.
+     */
+    private function normalizeRecurrence(): void
+    {
+        $freq = $this->input("recurrence_freq");
+
+        if (!$freq) {
+            $this->merge([
+                "recurrence_freq" => null,
+                "recurrence_interval" => 1,
+                "recurrence_byday" => null,
+                "recurrence_until" => null,
+                "recurrence_count" => null,
+            ]);
+            return;
+        }
+
+        // Дни недели важны только для еженедельного повтора.
+        $byday = null;
+        if ($freq === CalendarEvent::FREQ_WEEKLY) {
+            $days = (array) $this->input("recurrence_byday", []);
+            $valid = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+            $byday = collect($days)
+                ->map(fn ($d) => strtoupper((string) $d))
+                ->filter(fn ($d) => in_array($d, $valid, true))
+                ->unique()
+                ->implode(",");
+            $byday = $byday !== "" ? $byday : null;
+        }
+
+        // Режим окончания: never | until | count.
+        $mode = $this->input("recurrence_end_mode", "never");
+        $until = $mode === "until" ? $this->input("recurrence_until") : null;
+        $count = $mode === "count" ? $this->input("recurrence_count") : null;
+
+        $this->merge([
+            "recurrence_freq" => $freq,
+            "recurrence_interval" => 1,
+            "recurrence_byday" => $byday,
+            "recurrence_until" => $until,
+            "recurrence_count" => $count,
+        ]);
     }
 
     public function rules(): array
@@ -45,6 +96,10 @@ class StoreCalendarEventRequest extends FormRequest
             "color" => ["nullable", Rule::in(CalendarEvent::COLORS)],
             "participant_ids" => "nullable|array",
             "participant_ids.*" => "integer|exists:users,id",
+            "recurrence_freq" => ["nullable", Rule::in(array_keys(CalendarEvent::FREQUENCIES))],
+            "recurrence_byday" => "nullable|string|max:20",
+            "recurrence_until" => "nullable|date|after_or_equal:starts_at",
+            "recurrence_count" => "nullable|integer|min:1|max:365",
         ];
     }
 

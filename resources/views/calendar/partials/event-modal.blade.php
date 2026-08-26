@@ -91,6 +91,8 @@
                     </div>
                 </div>
 
+                @include('calendar.partials.recurrence-fields', ['event' => null])
+
                 @include('calendar.partials.participant-picker', ['staff' => $staff, 'selected' => old('participant_ids', [])])
 
                 <div>

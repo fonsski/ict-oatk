@@ -102,6 +102,37 @@ class CalendarEvent extends Model
     }
 
     /**
+     * Человекочитаемое правило повтора, например «Каждую неделю: Пн, Ср, до 01.10.2026».
+     */
+    public function recurrenceSummary(): ?string
+    {
+        if (!$this->isRecurring()) {
+            return null;
+        }
+
+        $summary = self::FREQUENCIES[$this->recurrence_freq] ?? $this->recurrence_freq;
+
+        if ($this->recurrence_freq === self::FREQ_WEEKLY && $this->recurrence_byday) {
+            $names = [
+                "MO" => "Пн", "TU" => "Вт", "WE" => "Ср", "TH" => "Чт",
+                "FR" => "Пт", "SA" => "Сб", "SU" => "Вс",
+            ];
+            $days = collect(explode(",", $this->recurrence_byday))
+                ->map(fn ($d) => $names[$d] ?? $d)
+                ->implode(", ");
+            $summary .= ": " . $days;
+        }
+
+        if ($this->recurrence_until) {
+            $summary .= ", до " . $this->recurrence_until->format("d.m.Y");
+        } elseif ($this->recurrence_count) {
+            $summary .= ", " . $this->recurrence_count . " раз";
+        }
+
+        return $summary;
+    }
+
+    /**
      * События, видимые пользователю: управляющие видят все, остальные —
      * где они организатор или приглашённый участник.
      */

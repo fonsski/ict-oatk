@@ -65,7 +65,7 @@
 
                         <div class="flex flex-col gap-0.5">
                             @foreach ($cell['occurrences']->take(3) as $occ)
-                                <a href="{{ route('calendar.show', $occ->event) }}"
+                                <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
                                    class="block truncate rounded px-1.5 py-0.5 text-xs font-medium transition {{ $palette[$occ->color()] ?? $palette['blue'] }}"
                                    title="{{ $occ->title }}">
                                     @unless ($occ->isAllDay())
