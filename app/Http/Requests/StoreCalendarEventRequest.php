@@ -100,6 +100,11 @@ class StoreCalendarEventRequest extends FormRequest
             "recurrence_byday" => "nullable|string|max:20",
             "recurrence_until" => "nullable|date|after_or_equal:starts_at",
             "recurrence_count" => "nullable|integer|min:1|max:365",
+            // Связи с сущностями системы и «бронировать несмотря на занятость».
+            "ticket_id" => "nullable|exists:tickets,id",
+            "equipment_ids" => "nullable|array",
+            "equipment_ids.*" => "integer|exists:equipment,id",
+            "ignore_room_conflict" => "boolean",
         ];
     }
 

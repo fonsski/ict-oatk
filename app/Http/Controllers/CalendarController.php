@@ -8,9 +8,11 @@ use App\Models\CalendarEvent;
 use App\Models\CalendarEventParticipant;
 use App\Models\CalendarTask;
 use App\Models\Room;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Support\Calendar\OccurrenceExpander;
+use App\Support\Calendar\RoomAvailability;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +23,28 @@ class CalendarController extends Controller
     public function __construct(
         private OccurrenceExpander $expander,
         private NotificationService $notifications,
+        private RoomAvailability $roomAvailability,
     ) {
+    }
+
+    /**
+     * Заявки для привязки к событию. Управляющие видят все, техник — свои
+     * и назначенные на него.
+     */
+    private function ticketsForPicker(): \Illuminate\Support\Collection
+    {
+        $user = Auth::user();
+
+        return Ticket::query()
+            ->when(
+                !$user->hasRole(["admin", "master"]),
+                fn ($q) => $q->where(function ($w) use ($user) {
+                    $w->where("user_id", $user->id)->orWhere("assigned_to_id", $user->id);
+                }),
+            )
+            ->latest()
+            ->limit(50)
+            ->get(["id", "title", "status"]);
     }
 
     /**
@@ -91,6 +114,7 @@ class CalendarController extends Controller
             "today" => CarbonImmutable::today(),
             "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
             "staff" => $this->staffForPicker(),
+            "tickets" => $this->ticketsForPicker(),
         ]);
     }
 
@@ -113,6 +137,7 @@ class CalendarController extends Controller
                 "todayDate" => CarbonImmutable::today()->toDateString(),
                 "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
                 "staff" => $this->staffForPicker(),
+                "tickets" => $this->ticketsForPicker(),
             ],
         ));
     }
@@ -136,6 +161,7 @@ class CalendarController extends Controller
                 "todayDate" => CarbonImmutable::today()->toDateString(),
                 "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
                 "staff" => $this->staffForPicker(),
+                "tickets" => $this->ticketsForPicker(),
             ],
         ));
     }
@@ -281,15 +307,25 @@ class CalendarController extends Controller
     {
         $data = $request->validated();
         $participantIds = $data["participant_ids"] ?? [];
-        unset($data["participant_ids"]);
+        $ticketId = $data["ticket_id"] ?? null;
+        $equipmentIds = $data["equipment_ids"] ?? [];
+        $ignoreConflict = (bool) ($data["ignore_room_conflict"] ?? false);
+        unset($data["participant_ids"], $data["ticket_id"], $data["equipment_ids"], $data["ignore_room_conflict"]);
+
+        // Кабинет физически один — предупреждаем о накладке, если не просят
+        // бронировать несмотря на занятость.
+        if ($conflict = $this->roomConflictError($data, null, $ignoreConflict)) {
+            return $conflict;
+        }
 
         $data["organizer_id"] = Auth::id();
         $data["color"] = $data["color"] ?? "blue";
         $data["status"] = CalendarEvent::STATUS_CONFIRMED;
 
-        [$event, $invitedIds] = DB::transaction(function () use ($data, $participantIds) {
+        [$event, $invitedIds] = DB::transaction(function () use ($data, $participantIds, $ticketId, $equipmentIds) {
             $event = CalendarEvent::create($data);
             $invited = $this->syncParticipants($event, $participantIds);
+            $this->syncLinks($event, $ticketId, $equipmentIds);
             return [$event, $invited];
         });
 
@@ -306,7 +342,13 @@ class CalendarController extends Controller
     {
         $this->authorizeView($event);
 
-        $event->load(["organizer:id,name", "room:id,number,name", "participants.user:id,name"]);
+        $event->load([
+            "organizer:id,name",
+            "room:id,number,name",
+            "participants.user:id,name",
+            "tickets:id,title,status",
+            "equipment:id,name,inventory_number",
+        ]);
 
         // Если пришли с конкретного экземпляра серии — знаем его дату и
         // можем предложить отменить только её.
@@ -353,7 +395,9 @@ class CalendarController extends Controller
             "event" => $event,
             "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
             "staff" => $this->staffForPicker(),
+            "tickets" => $this->ticketsForPicker(),
             "selectedParticipantIds" => $event->participants()->pluck("user_id")->all(),
+            "selectedTicketId" => $event->tickets()->value("tickets.id"),
         ]);
     }
 
@@ -363,14 +407,23 @@ class CalendarController extends Controller
 
         $data = $request->validated();
         $participantIds = $data["participant_ids"] ?? [];
-        unset($data["participant_ids"]);
+        $ticketId = $data["ticket_id"] ?? null;
+        $equipmentIds = $data["equipment_ids"] ?? [];
+        $ignoreConflict = (bool) ($data["ignore_room_conflict"] ?? false);
+        unset($data["participant_ids"], $data["ticket_id"], $data["equipment_ids"], $data["ignore_room_conflict"]);
+
+        // При правке из проверки исключаем само событие.
+        if ($conflict = $this->roomConflictError($data, $event->id, $ignoreConflict)) {
+            return $conflict;
+        }
 
         // Меняются ли время/место — от этого зависит, беспокоить ли участников.
         $wasStart = $event->starts_at;
         $wasEnd = $event->ends_at;
 
-        $invitedIds = DB::transaction(function () use ($event, $data, $participantIds) {
+        $invitedIds = DB::transaction(function () use ($event, $data, $participantIds, $ticketId, $equipmentIds) {
             $event->update($data);
+            $this->syncLinks($event, $ticketId, $equipmentIds);
             return $this->syncParticipants($event, $participantIds);
         });
 
@@ -480,6 +533,47 @@ class CalendarController extends Controller
         }
 
         return $toAdd->all();
+    }
+
+    /**
+     * Если кабинет занят и бронировать «несмотря на» не просили — возвращает
+     * готовый redirect с ошибкой; иначе null.
+     */
+    private function roomConflictError(array $data, ?int $exceptId, bool $ignore)
+    {
+        if (empty($data["room_id"]) || $ignore) {
+            return null;
+        }
+
+        $conflicts = $this->roomAvailability->conflicts(
+            (int) $data["room_id"],
+            CarbonImmutable::parse($data["starts_at"]),
+            CarbonImmutable::parse($data["ends_at"]),
+            $exceptId,
+        );
+
+        if ($conflicts->isEmpty()) {
+            return null;
+        }
+
+        return back()
+            ->withInput()
+            ->withErrors([
+                "room_id" =>
+                    "Кабинет занят: " . $this->roomAvailability->describe($conflicts) .
+                    ". Отметьте «бронировать несмотря на занятость», если это допустимо.",
+            ]);
+    }
+
+    /**
+     * Приводит связи события к переданным заявке и оборудованию.
+     *
+     * @param  array<int>  $equipmentIds
+     */
+    private function syncLinks(CalendarEvent $event, ?int $ticketId, array $equipmentIds): void
+    {
+        $event->tickets()->sync($ticketId ? [$ticketId] : []);
+        $event->equipment()->sync($equipmentIds);
     }
 
     /**

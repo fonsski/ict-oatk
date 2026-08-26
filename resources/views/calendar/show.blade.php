@@ -92,6 +92,28 @@
                     </div>
                 @endif
 
+                @if ($event->tickets->isNotEmpty() || $event->equipment->isNotEmpty())
+                    <div class="flex gap-3">
+                        <dt class="w-32 shrink-0 text-slate-500">Связи</dt>
+                        <dd class="text-slate-900 space-y-1">
+                            @foreach ($event->tickets as $ticket)
+                                <div>
+                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-blue-600 hover:underline">
+                                        Заявка #{{ $ticket->id }} — {{ \Illuminate\Support\Str::limit($ticket->title, 40) }}
+                                    </a>
+                                </div>
+                            @endforeach
+                            @foreach ($event->equipment as $item)
+                                <div>
+                                    <a href="{{ route('equipment.show', $item) }}" class="text-blue-600 hover:underline">
+                                        {{ $item->name }}@if ($item->inventory_number) <span class="text-slate-500">({{ $item->inventory_number }})</span>@endif
+                                    </a>
+                                </div>
+                            @endforeach
+                        </dd>
+                    </div>
+                @endif
+
                 @if ($event->description)
                     <div class="flex gap-3">
                         <dt class="w-32 shrink-0 text-slate-500">Описание</dt>

@@ -83,6 +83,27 @@
                     </div>
                 </div>
 
+                @error('room_id')
+                    <div class="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">{{ $message }}</div>
+                @enderror
+                <label class="flex items-center gap-2 text-sm text-slate-600">
+                    <input type="checkbox" name="ignore_room_conflict" value="1" {{ old('ignore_room_conflict') ? 'checked' : '' }}
+                           class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    Бронировать, даже если кабинет занят
+                </label>
+
+                <div>
+                    <label for="ticket_id" class="form-label">Связать с заявкой</label>
+                    <select id="ticket_id" name="ticket_id" class="form-input">
+                        <option value="">— нет —</option>
+                        @foreach ($tickets as $ticket)
+                            <option value="{{ $ticket->id }}" {{ old('ticket_id', $selectedTicketId) == $ticket->id ? 'selected' : '' }}>
+                                #{{ $ticket->id }} — {{ \Illuminate\Support\Str::limit($ticket->title, 50) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div>
                     <label class="form-label">Цвет метки</label>
                     <div class="flex items-center gap-2 mt-1">

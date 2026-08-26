@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * Событие календаря — встреча, мероприятие, бронь кабинета.
@@ -94,6 +95,39 @@ class CalendarEvent extends Model
     public function exceptions(): HasMany
     {
         return $this->hasMany(CalendarEventException::class, "event_id");
+    }
+
+    /**
+     * Связанные с событием сущности системы через calendar_event_links.
+     */
+    public function tickets(): MorphToMany
+    {
+        return $this->morphedByMany(
+            Ticket::class,
+            "linkable",
+            "calendar_event_links",
+            "event_id",
+        )->withTimestamps();
+    }
+
+    public function equipment(): MorphToMany
+    {
+        return $this->morphedByMany(
+            Equipment::class,
+            "linkable",
+            "calendar_event_links",
+            "event_id",
+        )->withTimestamps();
+    }
+
+    public function documents(): MorphToMany
+    {
+        return $this->morphedByMany(
+            Document::class,
+            "linkable",
+            "calendar_event_links",
+            "event_id",
+        )->withTimestamps();
     }
 
     public function isRecurring(): bool

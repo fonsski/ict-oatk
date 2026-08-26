@@ -32,6 +32,6 @@
     @include('calendar.partials.time-grid')
 </div>
 
-@include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff])
+@include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff, 'tickets' => $tickets])
 @include('calendar.partials.task-modal')
 @endsection
