@@ -35,11 +35,13 @@ class Document extends Model
         "mime_type",
         "size",
         "description",
+        "is_private",
         "uploaded_by_user_id",
     ];
 
     protected $casts = [
         "size" => "integer",
+        "is_private" => "boolean",
     ];
 
     public function documentable(): MorphTo

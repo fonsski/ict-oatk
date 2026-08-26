@@ -171,6 +171,8 @@
                     </form>
                 </div>
             @endif
+
+            @include('calendar.partials.documents', ['subject' => $event, 'type' => 'event'])
         </div>
     </div>
 </div>

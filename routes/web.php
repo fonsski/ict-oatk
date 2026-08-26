@@ -19,6 +19,7 @@ use App\Http\Controllers\KnowledgeCategoryController;
 use App\Http\Controllers\NetworkTopologyController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarTaskController;
+use App\Http\Controllers\CalendarDocumentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HomepageFAQController;
 use App\Http\Controllers\HomeController;
@@ -242,6 +243,15 @@ Route::middleware("auth")->group(function () {
         Route::get("/calendar/tasks/{task}/edit", [CalendarTaskController::class, "edit"])->name("calendar.tasks.edit");
         Route::put("/calendar/tasks/{task}", [CalendarTaskController::class, "update"])->name("calendar.tasks.update");
         Route::delete("/calendar/tasks/{task}", [CalendarTaskController::class, "destroy"])->name("calendar.tasks.destroy");
+
+        // Документы к событиям и задачам ({type} = event | task).
+        Route::post("/calendar/{type}/{id}/documents", [CalendarDocumentController::class, "store"])
+            ->whereIn("type", ["event", "task"])
+            ->name("calendar.documents.store");
+        Route::get("/calendar/documents/{document}/download", [CalendarDocumentController::class, "download"])
+            ->name("calendar.documents.download");
+        Route::delete("/calendar/documents/{document}", [CalendarDocumentController::class, "destroy"])
+            ->name("calendar.documents.destroy");
     });
 
     // Ресурс equipment полностью доступен только для ролей admin, master и technician

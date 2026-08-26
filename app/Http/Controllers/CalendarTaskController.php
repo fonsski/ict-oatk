@@ -51,7 +51,7 @@ class CalendarTaskController extends Controller
     {
         $this->authorizeOwner($task);
 
-        $task->load(["creator:id,name", "assignee:id,name"]);
+        $task->load(["creator:id,name", "assignee:id,name", "documents.uploadedBy:id,name"]);
 
         return view("calendar.task-edit", [
             "task" => $task,

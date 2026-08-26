@@ -93,6 +93,8 @@
                 </div>
             </form>
 
+            @include('calendar.partials.documents', ['subject' => $task, 'type' => 'task'])
+
             <form method="POST" action="{{ route('calendar.tasks.destroy', $task) }}"
                   onsubmit="return confirm('Удалить задачу?')" class="mt-4 pt-4 border-t border-slate-100">
                 @csrf

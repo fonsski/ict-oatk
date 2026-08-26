@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  */
 class CalendarEvent extends Model
 {
-    use HasFactory;
+    use HasDocuments, HasFactory;
 
     public const STATUS_CONFIRMED = "confirmed";
     public const STATUS_CANCELLED = "cancelled";

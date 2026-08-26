@@ -351,6 +351,7 @@ class CalendarController extends Controller
             "participants.user:id,name",
             "tickets:id,title,status",
             "equipment:id,name,inventory_number",
+            "documents.uploadedBy:id,name",
         ]);
 
         // Если пришли с конкретного экземпляра серии — знаем его дату и
