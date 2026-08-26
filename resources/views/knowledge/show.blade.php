@@ -191,9 +191,7 @@
                         @foreach(explode(',', $article->tags) as $tag)
                         @php $tag = trim($tag); @endphp
                         @if(!empty($tag))
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 text-wrap">
-                            #{{ $tag }}
-                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">#{{ $tag }}</span>
                         @endif
                         @endforeach
                     </div>
@@ -207,6 +205,7 @@
                         <span class="ml-4">Обновлено: {{ $article->updated_at->format('d.m.Y H:i') }}</span>
                         @endif
                     </div>
+                </div>
             </div>
         </article>
 
