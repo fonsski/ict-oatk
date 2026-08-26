@@ -38,11 +38,23 @@ class CalendarController extends Controller
     }
 
     /**
-     * Вид «Месяц»: сетка недель с экземплярами событий по дням.
+     * Календарь. Вид выбирается параметром view: month | week | day.
      */
     public function index(Request $request)
     {
-        $month = $this->resolveMonth($request->query("month"));
+        return match ($request->query("view")) {
+            "week" => $this->weekView($request),
+            "day" => $this->dayView($request),
+            default => $this->monthView($request),
+        };
+    }
+
+    /**
+     * Вид «Месяц»: сетка недель с экземплярами событий по дням.
+     */
+    private function monthView(Request $request)
+    {
+        $month = $this->resolveMonth($request->query("month") ?? $request->query("date"));
 
         // Сетка месяца выходит за его края: показываем «хвосты» соседних
         // месяцев, чтобы недели были полными (как в Google Calendar).
@@ -80,6 +92,189 @@ class CalendarController extends Controller
             "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
             "staff" => $this->staffForPicker(),
         ]);
+    }
+
+    /**
+     * Вид «Неделя»: 7 дней с часовой сеткой.
+     */
+    private function weekView(Request $request)
+    {
+        $anchor = $this->resolveDate($request->query("date"));
+        $start = $anchor->startOfWeek(CarbonImmutable::MONDAY);
+        $end = $anchor->endOfWeek(CarbonImmutable::SUNDAY);
+
+        return view("calendar.week", array_merge(
+            $this->timeGridData($start, $end),
+            [
+                "rangeStart" => $start,
+                "rangeEnd" => $end,
+                "prevDate" => $anchor->subWeek()->toDateString(),
+                "nextDate" => $anchor->addWeek()->toDateString(),
+                "todayDate" => CarbonImmutable::today()->toDateString(),
+                "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
+                "staff" => $this->staffForPicker(),
+            ],
+        ));
+    }
+
+    /**
+     * Вид «День»: один день с часовой сеткой.
+     */
+    private function dayView(Request $request)
+    {
+        $day = $this->resolveDate($request->query("date"));
+        $start = $day->startOfDay();
+        $end = $day->endOfDay();
+
+        return view("calendar.day", array_merge(
+            $this->timeGridData($start, $end),
+            [
+                "rangeStart" => $start,
+                "rangeEnd" => $end,
+                "prevDate" => $day->subDay()->toDateString(),
+                "nextDate" => $day->addDay()->toDateString(),
+                "todayDate" => CarbonImmutable::today()->toDateString(),
+                "rooms" => Room::orderBy("number")->get(["id", "number", "name"]),
+                "staff" => $this->staffForPicker(),
+            ],
+        ));
+    }
+
+    /**
+     * Данные для видов с часовой сеткой (неделя и день).
+     *
+     * По каждому дню отрезка: события с временем — с раскладкой пересечений,
+     * события «весь день» и задачи — отдельными строками сверху.
+     */
+    private function timeGridData(CarbonImmutable $start, CarbonImmutable $end): array
+    {
+        $events = CalendarEvent::query()
+            ->where("status", CalendarEvent::STATUS_CONFIRMED)
+            ->overlapping($start, $end)
+            ->with(["organizer:id,name", "room:id,number,name", "exceptions"])
+            ->visibleTo(Auth::user())
+            ->get();
+
+        $occurrences = $this->expander
+            ->expand($events, $start, $end)
+            ->groupBy(fn ($o) => $o->startsAt->toDateString());
+
+        $tasks = CalendarTask::query()
+            ->where("user_id", Auth::id())
+            ->whereNotNull("due_at")
+            ->whereBetween("due_at", [$start, $end])
+            ->orderBy("due_at")
+            ->get()
+            ->groupBy(fn ($t) => CarbonImmutable::parse($t->due_at)->toDateString());
+
+        $days = [];
+        $day = $start->startOfDay();
+        $lastDay = $end->startOfDay();
+
+        while ($day->lte($lastDay)) {
+            $key = $day->toDateString();
+            $dayOccurrences = $occurrences->get($key, collect());
+
+            $days[] = [
+                "date" => $day,
+                "allDay" => $dayOccurrences->filter(fn ($o) => $o->isAllDay())->values(),
+                "timed" => $this->layoutTimed(
+                    $dayOccurrences->reject(fn ($o) => $o->isAllDay())->values(),
+                ),
+                "tasks" => $tasks->get($key, collect()),
+            ];
+
+            $day = $day->addDay();
+        }
+
+        return ["days" => $days];
+    }
+
+    /**
+     * Раскладка событий с временем внутри дня: пересекающиеся ставятся в
+     * соседние колонки, чтобы не наезжать друг на друга (как в Google).
+     *
+     * @return array<int, array{occ: \App\Support\Calendar\EventOccurrence, startMin: int, endMin: int, col: int, cols: int}>
+     */
+    private function layoutTimed(\Illuminate\Support\Collection $occurrences): array
+    {
+        $items = $occurrences
+            ->map(function ($occ) {
+                $startMin = (int) $occ->startsAt->format("H") * 60 + (int) $occ->startsAt->format("i");
+                // Окончание может уходить в следующий день — прижимаем к концу суток.
+                $endMin = $occ->endsAt->toDateString() === $occ->startsAt->toDateString()
+                    ? (int) $occ->endsAt->format("H") * 60 + (int) $occ->endsAt->format("i")
+                    : 24 * 60;
+                // Минимальная высота, чтобы совсем короткие были кликабельны.
+                $endMin = max($endMin, $startMin + 20);
+
+                return ["occ" => $occ, "startMin" => $startMin, "endMin" => $endMin, "col" => 0, "cols" => 1];
+            })
+            ->sortBy("startMin")
+            ->values()
+            ->all();
+
+        // Жадная раскладка по кластерам пересечения.
+        $cluster = [];
+        $clusterEnd = -1;
+
+        $flush = function (array &$cluster): void {
+            $columns = []; // время окончания последнего события в каждой колонке
+            foreach ($cluster as &$item) {
+                $placed = false;
+                foreach ($columns as $ci => $colEnd) {
+                    if ($item["startMin"] >= $colEnd) {
+                        $item["col"] = $ci;
+                        $columns[$ci] = $item["endMin"];
+                        $placed = true;
+                        break;
+                    }
+                }
+                if (!$placed) {
+                    $item["col"] = count($columns);
+                    $columns[] = $item["endMin"];
+                }
+            }
+            unset($item);
+
+            $total = max(1, count($columns));
+            foreach ($cluster as &$item) {
+                $item["cols"] = $total;
+            }
+            unset($item);
+        };
+
+        $result = [];
+        foreach ($items as $item) {
+            if (!empty($cluster) && $item["startMin"] >= $clusterEnd) {
+                $flush($cluster);
+                $result = array_merge($result, $cluster);
+                $cluster = [];
+                $clusterEnd = -1;
+            }
+
+            $cluster[] = $item;
+            $clusterEnd = max($clusterEnd, $item["endMin"]);
+        }
+        if (!empty($cluster)) {
+            $flush($cluster);
+            $result = array_merge($result, $cluster);
+        }
+
+        return $result;
+    }
+
+    private function resolveDate(?string $value): CarbonImmutable
+    {
+        if ($value) {
+            try {
+                return CarbonImmutable::parse($value);
+            } catch (\Throwable) {
+                // Кривой параметр — показываем сегодня.
+            }
+        }
+
+        return CarbonImmutable::today();
     }
 
     public function store(StoreCalendarEventRequest $request)

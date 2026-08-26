@@ -17,37 +17,21 @@
 @endphp
 
 @section('content')
+@php
+    $anchor = ($today->year === $month->year && $today->month === $month->month)
+        ? $today->toDateString()
+        : $month->toDateString();
+@endphp
 <div class="container-width section-padding">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div class="flex items-center gap-3">
-            <h1 class="text-3xl font-bold text-slate-900">
-                {{ $ruMonths[$month->month] }} {{ $month->year }}
-            </h1>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <a href="{{ route('calendar.index', ['month' => $prevMonth]) }}"
-               class="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100" title="Предыдущий месяц" aria-label="Предыдущий месяц">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            </a>
-            <a href="{{ route('calendar.index') }}" class="btn-outline py-1.5 px-4 text-sm">Сегодня</a>
-            <a href="{{ route('calendar.index', ['month' => $nextMonth]) }}"
-               class="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100" title="Следующий месяц" aria-label="Следующий месяц">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </a>
-            <div class="relative ml-2" id="create-menu">
-                <button type="button" onclick="toggleCreateMenu()" class="btn-primary py-1.5 px-4 text-sm flex items-center gap-1">
-                    Создать
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div id="create-menu-items" class="hidden absolute right-0 mt-1 w-44 bg-white rounded-md shadow-lg border border-slate-200 z-30 py-1">
-                    <button type="button" onclick="closeCreateMenu(); openEventModal()" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Событие</button>
-                    <button type="button" onclick="closeCreateMenu(); openTaskModal()" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Задачу</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('calendar.partials.toolbar', [
+        'viewMode' => 'month',
+        'title' => $ruMonths[$month->month] . ' ' . $month->year,
+        'navPrev' => route('calendar.index', ['month' => $prevMonth]),
+        'navNext' => route('calendar.index', ['month' => $nextMonth]),
+        'navToday' => route('calendar.index'),
+        'anchor' => $anchor,
+        'anchorMonth' => $month->format('Y-m'),
+    ])
 
     @if (session('success'))
         <div class="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
@@ -127,14 +111,4 @@
 
 @include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff])
 @include('calendar.partials.task-modal')
-
-@push('scripts')
-<script>
-    function toggleCreateMenu() { document.getElementById('create-menu-items').classList.toggle('hidden'); }
-    function closeCreateMenu() { document.getElementById('create-menu-items').classList.add('hidden'); }
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('#create-menu')) closeCreateMenu();
-    });
-</script>
-@endpush
 @endsection
