@@ -56,7 +56,18 @@ class Document extends Model
 
     public function getTypeNameAttribute(): string
     {
-        return self::TYPES[$this->type] ?? self::TYPES[self::TYPE_OTHER];
+        return DocumentType::where("slug", $this->type)->value("name")
+            ?? (self::TYPES[$this->type] ?? self::TYPES[self::TYPE_OTHER]);
+    }
+
+    /**
+     * Доступные типы (slug => name) из справочника, с откатом на константы.
+     */
+    public static function typeOptions(): array
+    {
+        $options = DocumentType::options();
+
+        return $options ?: self::TYPES;
     }
 
     public function getHumanSizeAttribute(): string

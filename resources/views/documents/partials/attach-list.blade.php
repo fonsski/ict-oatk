@@ -44,7 +44,7 @@
         <div>
             <label class="block text-xs text-gray-500 mb-1">Тип документа</label>
             <select name="type" class="rounded border-gray-300 px-2 py-1.5 text-sm">
-                @foreach(\App\Models\Document::TYPES as $value => $label)
+                @foreach(\App\Models\Document::typeOptions() as $value => $label)
                 <option value="{{ $value }}">{{ $label }}</option>
                 @endforeach
             </select>

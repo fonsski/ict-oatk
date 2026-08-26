@@ -84,7 +84,7 @@ class DocumentController extends Controller
                 "max:" . Document::MAX_SIZE_KB,
                 "mimes:" . Document::ALLOWED_MIMES,
             ],
-            "type" => "nullable|in:" . implode(",", array_keys(Document::TYPES)),
+            "type" => "nullable|in:" . implode(",", array_keys(Document::typeOptions())),
             "description" => "nullable|string|max:255",
             "is_private" => "boolean",
         ]);
@@ -188,7 +188,7 @@ class DocumentController extends Controller
                 "max:" . Document::MAX_SIZE_KB,
                 "mimes:" . Document::ALLOWED_MIMES,
             ],
-            "type" => "nullable|in:" . implode(",", array_keys(Document::TYPES)),
+            "type" => "nullable|in:" . implode(",", array_keys(Document::typeOptions())),
             "description" => "nullable|string|max:255",
         ]);
 

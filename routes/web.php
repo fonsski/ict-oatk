@@ -8,6 +8,7 @@ use App\Http\Controllers\OperatingSystemController;
 use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\ConsumableWriteOffController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\WriteOffController;
 use App\Http\Controllers\TicketController;
@@ -342,6 +343,24 @@ Route::middleware("auth")->group(function () {
             DocumentController::class,
             "index",
         ])->name("documents.index");
+
+        // Управление типами документов.
+        Route::get("/document-types", [
+            DocumentTypeController::class,
+            "index",
+        ])->name("document-types.index");
+        Route::post("/document-types", [
+            DocumentTypeController::class,
+            "store",
+        ])->name("document-types.store");
+        Route::put("/document-types/{documentType}", [
+            DocumentTypeController::class,
+            "update",
+        ])->name("document-types.update");
+        Route::delete("/document-types/{documentType}", [
+            DocumentTypeController::class,
+            "destroy",
+        ])->name("document-types.destroy");
 
         // Загрузка общего документа в библиотеку (без привязки к сущности).
         Route::post("/documents", [

@@ -3,23 +3,23 @@
 @section('title', $document->original_name . ' - Просмотр - ICT Help')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-5xl mx-auto px-6 py-8">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div class="min-w-0">
-            <a href="{{ route('documents.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← Все документы</a>
-            <h1 class="text-2xl font-bold text-gray-900 mt-1 break-words">{{ $document->original_name }}</h1>
-            <p class="text-sm text-gray-500 mt-1">
+            <a href="{{ route('documents.index') }}" class="text-sm text-slate-500 hover:text-slate-700">← Все документы</a>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1 break-words">{{ $document->original_name }}</h1>
+            <p class="text-sm text-slate-500 mt-1">
                 {{ $document->type_name }} · {{ $document->human_size }}
                 @if($document->is_private)
                     · <span class="text-amber-700">Приватный</span>
                 @endif
             </p>
         </div>
-        <a href="{{ route('documents.download', $document) }}" class="btn-primary whitespace-nowrap self-start">Скачать</a>
+        <a href="{{ route('documents.download', $document) }}" class="inline-flex items-center px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap self-start">Скачать</a>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
         @switch($document->preview_kind)
             @case('pdf')
                 <iframe src="{{ route('documents.raw', $document) }}" class="w-full" style="height: 80vh;" title="{{ $document->original_name }}"></iframe>
