@@ -132,7 +132,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-slate-200">
                     @foreach(\App\Models\User::with(['role', 'tickets'])->orderBy('last_login_at', 'desc')->take(10)->get() as $user)
-                        <tr class="hover:bg-slate-50">
+                        <tr>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="ml-3">

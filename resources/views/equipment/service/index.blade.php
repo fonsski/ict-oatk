@@ -114,7 +114,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-slate-200">
                         @foreach($serviceHistory as $record)
-                            <tr class="hover:bg-slate-50">
+                            <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-slate-900">{{ $record->service_date->format('d.m.Y') }}</div>
                                     <div class="text-sm text-slate-500">{{ $record->service_date->format('H:i') }}</div>

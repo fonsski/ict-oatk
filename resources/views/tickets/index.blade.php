@@ -102,7 +102,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         @foreach($tickets as $ticket)
-                            <tr class="hover:bg-slate-50 transition-colors duration-200">
+                            <tr>
                                 <td class="px-4 py-4">
                                     <div class="min-w-0">
                                         <a href="{{ route('tickets.show', $ticket) }}"

@@ -144,7 +144,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         @foreach($users as $user)
-                            <tr class="hover:bg-slate-50 transition-colors duration-200">
+                            <tr>
                                 <td class="px-6 py-4">
                                     <input type="checkbox"
                                            name="user_ids[]"

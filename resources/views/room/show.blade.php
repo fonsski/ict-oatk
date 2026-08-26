@@ -231,7 +231,7 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
                             @foreach($room->equipment as $equipment)
-                                <tr class="hover:bg-slate-50">
+                                <tr>
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-medium text-slate-900">{{ $equipment->name }}</div>
                                         @if($equipment->model)

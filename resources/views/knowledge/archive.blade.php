@@ -34,7 +34,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($articles as $article)
-                    <tr class="hover:bg-gray-50">
+                    <tr>
                         <td class="px-6 py-4">
                             <a href="{{ route('knowledge.show', $article) }}" class="text-sm font-medium text-gray-900 hover:text-blue-600">
                                 {{ $article->title }}

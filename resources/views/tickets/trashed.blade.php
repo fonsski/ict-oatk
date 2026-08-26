@@ -60,7 +60,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($tickets as $ticket)
-                    <tr class="hover:bg-slate-50">
+                    <tr>
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium text-slate-900">{{ $ticket->title }}</div>
                             <div class="text-sm text-slate-500">#{{ $ticket->id }} · {{ format_ticket_category($ticket->category) }}</div>

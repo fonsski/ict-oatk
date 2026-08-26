@@ -181,7 +181,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-slate-200">
                         @foreach($rooms as $room)
-                            <tr class="hover:bg-slate-50">
+                            <tr>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <div class="flex items-center">

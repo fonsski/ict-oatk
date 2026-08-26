@@ -110,7 +110,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($categories as $category)
-                        <tr class="hover:bg-gray-50">
+                        <tr>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"

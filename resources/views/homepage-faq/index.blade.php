@@ -64,7 +64,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-slate-200">
                         @foreach($faqs as $faq)
-                            <tr class="hover:bg-slate-50">
+                            <tr>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <div class="text-sm font-medium text-slate-900 mb-1">
