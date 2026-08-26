@@ -205,7 +205,7 @@
                     <tbody class="divide-y divide-slate-200" id="tech-tickets-tbody">
                         @if(isset($tickets) && $tickets->count() > 0)
                             @foreach($tickets->take(10) as $ticket)
-                            <tr class="hover:bg-slate-50 transition-colors duration-200">
+                            <tr>
                                 <td class="px-4 py-3">
                                     <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block" title="{{ $ticket->title }}">
                                         <span class="line-clamp-1">{{ Str::limit($ticket->title, 50) }}</span>
@@ -685,7 +685,7 @@
             }
 
             return `
-                <tr class="hover:bg-slate-50 transition-colors duration-200" data-ticket-id="${ticket.id}">
+                <tr data-ticket-id="${ticket.id}">
                     <td class="px-4 py-3">
                         <div>
                             <a href="${ticket.url || '#'}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block" title="${ticket.title || ''}">
@@ -767,7 +767,6 @@
 
             // Создаем элемент строки
             const row = document.createElement('tr');
-            row.className = 'hover:bg-slate-50 transition-colors duration-200';
             row.setAttribute('data-ticket-id', ticket.id);
 
             // Ячейка с названием заявки

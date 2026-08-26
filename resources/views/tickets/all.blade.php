@@ -193,11 +193,7 @@
                 position: relative;
             }
             #tickets-container tr {
-                transition: all 0.2s ease;
                 border-bottom: 1px solid #f1f5f9;
-            }
-            #tickets-container tr:hover {
-                background-color: #f8fafc;
             }
             #tickets-container tbody tr:last-child {
                 border-bottom: none;
@@ -609,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const safeDescription = ticket.description ? ticket.description.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
 
         return `
-            <tr class="hover:bg-slate-50 transition-all duration-300" data-ticket-id="${ticket.id}">
+            <tr data-ticket-id="${ticket.id}">
                 <td class="px-4 py-3">
                     <div>
                         <a href="${ticketUrl}"
