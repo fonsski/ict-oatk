@@ -519,6 +519,20 @@ Route::middleware("auth")->group(function () {
         "auth",
         \App\Http\Middleware\CheckRole::class . ":admin,master",
     ])->group(function () {
+        // Специфичные маршруты регистрируем ДО resource, иначе GET /room/{room}
+        // перехватывает /room/statistics, /room/export и /room/get-rooms.
+        Route::get("/room/export", [RoomController::class, "export"])->name(
+            "room.export",
+        );
+        Route::get("/room/statistics", [
+            RoomController::class,
+            "statistics",
+        ])->name("room.statistics");
+        Route::get("/room/get-rooms", [
+            RoomController::class,
+            "getRooms",
+        ])->name("room.get-rooms");
+
         Route::resource("/room", RoomController::class);
 
         // Дополнительные действия для кабинетов
@@ -534,17 +548,6 @@ Route::middleware("auth")->group(function () {
             RoomController::class,
             "bulkAction",
         ])->name("room.bulk-action");
-        Route::get("/room/export", [RoomController::class, "export"])->name(
-            "room.export",
-        );
-        Route::get("/room/statistics", [
-            RoomController::class,
-            "statistics",
-        ])->name("room.statistics");
-        Route::get("/room/get-rooms", [
-            RoomController::class,
-            "getRooms",
-        ])->name("room.get-rooms");
     });
 
     // Маршруты для администраторов, мастеров и техников
