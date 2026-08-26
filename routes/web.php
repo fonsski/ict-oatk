@@ -232,6 +232,7 @@ Route::middleware("auth")->group(function () {
         Route::get("/calendar/events/{event}/edit", [CalendarController::class, "edit"])->name("calendar.edit");
         Route::put("/calendar/events/{event}", [CalendarController::class, "update"])->name("calendar.update");
         Route::post("/calendar/events/{event}/respond", [CalendarController::class, "respond"])->name("calendar.respond");
+        Route::post("/calendar/events/{event}/move", [CalendarController::class, "move"])->name("calendar.move");
         Route::post("/calendar/events/{event}/cancel-occurrence", [CalendarController::class, "cancelOccurrence"])->name("calendar.cancel-occurrence");
         Route::delete("/calendar/events/{event}", [CalendarController::class, "destroy"])->name("calendar.destroy");
 

@@ -57,6 +57,8 @@
                         $isWeekend = $date->dayOfWeekIso >= 6;
                     @endphp
                     <div onclick="if (!event.target.closest('a,button,form')) openEventModal('{{ $date->toDateString() }}')"
+                         data-day-cell data-date="{{ $date->toDateString() }}"
+                         ondragover="calDragOver(event)" ondragleave="calDragLeave(event)" ondrop="calDrop(event)"
                          class="min-h-[116px] border-b border-r border-slate-100 p-1.5 flex flex-col gap-1 cursor-pointer transition
                                 {{ !$cell['inMonth'] ? 'bg-slate-50/50' : ($isToday ? 'bg-blue-50/50' : ($isWeekend ? 'bg-slate-50/40' : 'bg-white')) }}
                                 hover:bg-slate-50">
@@ -73,7 +75,8 @@
                         <div class="flex flex-col gap-0.5">
                             @foreach ($cell['occurrences']->take(3) as $occ)
                                 <a href="{{ route('calendar.show', $occ->event->isRecurring() ? ['event' => $occ->event, 'date' => $occ->occurrenceDate()] : ['event' => $occ->event]) }}"
-                                   class="block truncate rounded px-1.5 py-0.5 text-xs font-medium transition {{ $palette[$occ->color()] ?? $palette['blue'] }}"
+                                   @unless ($occ->event->isRecurring()) draggable="true" ondragstart="calDragStart(event, {{ $occ->event->id }})" ondragend="calDragEnd(event)" @endunless
+                                   class="block truncate rounded px-1.5 py-0.5 text-xs font-medium transition {{ $palette[$occ->color()] ?? $palette['blue'] }} {{ $occ->event->isRecurring() ? '' : 'cursor-grab active:cursor-grabbing' }}"
                                    title="{{ $occ->title }}">
                                     @unless ($occ->isAllDay())
                                         <span class="tabular-nums opacity-70">{{ $occ->startsAt->format('H:i') }}</span>
@@ -118,4 +121,71 @@
 
 @include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff, 'tickets' => $tickets])
 @include('calendar.partials.task-modal', ['staff' => $staff])
+
+@push('scripts')
+<script>
+    // Перетаскивание событий между днями месяца. Повторяющиеся не таскаем —
+    // у них draggable не выставлен.
+    let calDraggedEventId = null;
+
+    function calDragStart(e, eventId) {
+        calDraggedEventId = eventId;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(eventId));
+        // Не даём клику-переходу по ссылке сработать после перетаскивания.
+        e.target.addEventListener('click', preventOnceAfterDrag, true);
+    }
+
+    function preventOnceAfterDrag(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.removeEventListener('click', preventOnceAfterDrag, true);
+    }
+
+    function calDragEnd(e) {
+        calDraggedEventId = null;
+        document.querySelectorAll('[data-day-cell]').forEach((c) => c.classList.remove('ring-2', 'ring-blue-400', 'ring-inset'));
+    }
+
+    function calDragOver(e) {
+        if (calDraggedEventId === null) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('ring-2', 'ring-blue-400', 'ring-inset');
+    }
+
+    function calDragLeave(e) {
+        e.currentTarget.classList.remove('ring-2', 'ring-blue-400', 'ring-inset');
+    }
+
+    async function calDrop(e) {
+        e.preventDefault();
+        const cell = e.currentTarget;
+        cell.classList.remove('ring-2', 'ring-blue-400', 'ring-inset');
+        const eventId = calDraggedEventId;
+        const date = cell.dataset.date;
+        if (!eventId || !date) return;
+
+        try {
+            const res = await fetch(`/calendar/events/${eventId}/move`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ date }),
+            });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.message || 'Не удалось перенести событие.');
+            }
+        } catch (err) {
+            alert('Не удалось перенести событие.');
+        }
+    }
+</script>
+@endpush
 @endsection

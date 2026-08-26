@@ -468,6 +468,39 @@ class CalendarController extends Controller
     }
 
     /**
+     * Перенос события на другой день (перетаскивание в виде «Месяц»).
+     * Время суток и длительность сохраняются.
+     */
+    public function move(Request $request, CalendarEvent $event)
+    {
+        $this->authorizeManage($event);
+
+        $validated = $request->validate(["date" => "required|date"]);
+
+        // Перетаскивание серии неоднозначно (сдвинуть все даты?), поэтому
+        // повторяющиеся события переносим только через форму правки.
+        if ($event->isRecurring()) {
+            return response()->json([
+                "message" => "Повторяющееся событие переносится через редактирование.",
+            ], 422);
+        }
+
+        $target = CarbonImmutable::parse($validated["date"]);
+        $start = CarbonImmutable::parse($event->starts_at);
+        $end = CarbonImmutable::parse($event->ends_at);
+        $durationSeconds = $start->diffInSeconds($end);
+
+        $newStart = $target->setTime((int) $start->format("H"), (int) $start->format("i"));
+
+        $event->update([
+            "starts_at" => $newStart,
+            "ends_at" => $newStart->addSeconds($durationSeconds),
+        ]);
+
+        return response()->json(["ok" => true]);
+    }
+
+    /**
      * Ответ участника на приглашение (RSVP).
      */
     public function respond(Request $request, CalendarEvent $event)
