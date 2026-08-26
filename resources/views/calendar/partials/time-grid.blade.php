@@ -47,7 +47,7 @@
                            title="{{ $occ->title }}">{{ $occ->title }}</a>
                     @endforeach
                     @foreach ($d['tasks'] as $task)
-                        <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1" @if($task->isCompleted()) data-task-done @endif>
                             <form method="POST" action="{{ route('calendar.tasks.toggle', $task) }}" class="shrink-0">
                                 @csrf
                                 <button type="submit" class="w-4 h-4 flex items-center justify-center rounded-full border transition

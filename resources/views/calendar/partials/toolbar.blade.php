@@ -27,6 +27,30 @@
             @endforeach
         </div>
 
+        {{-- Переключатель Календарь / Задачи и настройки отображения --}}
+        <div class="inline-flex items-center gap-1">
+            <a href="{{ route('calendar.index') }}" title="Календарь"
+               class="p-2 rounded-md {{ ($viewMode ?? '') === 'tasks' ? 'text-slate-500 hover:bg-slate-100' : 'bg-blue-50 text-blue-600' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </a>
+            <a href="{{ route('calendar.tasks.index') }}" title="Задачи"
+               class="p-2 rounded-md {{ ($viewMode ?? '') === 'tasks' ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-100' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            </a>
+
+            <div class="relative" id="cal-settings-menu">
+                <button type="button" onclick="toggleCalSettings()" class="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100" title="Настройки отображения" aria-label="Настройки">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </button>
+                <div id="cal-settings-items" class="hidden absolute right-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-slate-200 z-30 py-2">
+                    <label class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="pref-show-completed" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        Показывать выполненные задачи
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="flex items-center gap-1">
             <a href="{{ $navPrev }}" class="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100" aria-label="Назад">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -51,10 +75,40 @@
     </div>
 </div>
 
+<style>
+    /* Скрытие выполненных задач по настройке отображения. */
+    html.hide-completed-tasks [data-task-done] { display: none; }
+</style>
+
 @push('scripts')
 <script>
     function toggleCreateMenu() { document.getElementById('create-menu-items').classList.toggle('hidden'); }
     function closeCreateMenu() { const m = document.getElementById('create-menu-items'); if (m) m.classList.add('hidden'); }
-    document.addEventListener('click', (e) => { if (!e.target.closest('#create-menu')) closeCreateMenu(); });
+
+    function toggleCalSettings() { document.getElementById('cal-settings-items').classList.toggle('hidden'); }
+    function closeCalSettings() { const m = document.getElementById('cal-settings-items'); if (m) m.classList.add('hidden'); }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#create-menu')) closeCreateMenu();
+        if (!e.target.closest('#cal-settings-menu')) closeCalSettings();
+    });
+
+    // Настройка «показывать выполненные задачи» — в localStorage, применяется
+    // мгновенно ко всем видам без перезагрузки.
+    const CAL_HIDE_DONE = 'cal_hide_completed_tasks';
+    function applyCompletedPref() {
+        const hide = localStorage.getItem(CAL_HIDE_DONE) === '1';
+        document.documentElement.classList.toggle('hide-completed-tasks', hide);
+        const box = document.getElementById('pref-show-completed');
+        if (box) box.checked = !hide;
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        applyCompletedPref();
+        const box = document.getElementById('pref-show-completed');
+        if (box) box.addEventListener('change', () => {
+            localStorage.setItem(CAL_HIDE_DONE, box.checked ? '0' : '1');
+            applyCompletedPref();
+        });
+    });
 </script>
 @endpush

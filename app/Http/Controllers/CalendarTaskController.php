@@ -15,6 +15,33 @@ use Illuminate\Support\Facades\Auth;
  */
 class CalendarTaskController extends Controller
 {
+    /**
+     * Отдельная страница со списком задач — активные и, свёрнуто, выполненные.
+     */
+    public function index()
+    {
+        $tasks = CalendarTask::query()
+            ->visibleTo(Auth::user())
+            ->with(["assignee:id,name", "creator:id,name"])
+            ->get();
+
+        // Активные — по сроку (без срока в конец); выполненные — свежие сверху.
+        $pending = $tasks
+            ->whereNull("completed_at")
+            ->sortBy(fn ($t) => $t->due_at?->timestamp ?? PHP_INT_MAX)
+            ->values();
+
+        $completed = $tasks
+            ->whereNotNull("completed_at")
+            ->sortByDesc("completed_at")
+            ->values();
+
+        return view("calendar.tasks-index", [
+            "pending" => $pending,
+            "completed" => $completed,
+        ]);
+    }
+
     public function store(StoreCalendarTaskRequest $request)
     {
         $data = $request->validated();

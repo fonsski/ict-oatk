@@ -91,7 +91,7 @@
 
                             {{-- Задачи дня: кружок-переключатель + название --}}
                             @foreach ($cell['tasks']->take(3) as $task)
-                                <div class="flex items-center gap-1 group">
+                                <div class="flex items-center gap-1 group" @if($task->isCompleted()) data-task-done @endif>
                                     <form method="POST" action="{{ route('calendar.tasks.toggle', $task) }}" class="shrink-0">
                                         @csrf
                                         <button type="submit" class="w-4 h-4 flex items-center justify-center rounded-full border transition

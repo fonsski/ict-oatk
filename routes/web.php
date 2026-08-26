@@ -238,6 +238,7 @@ Route::middleware("auth")->group(function () {
         Route::delete("/calendar/events/{event}", [CalendarController::class, "destroy"])->name("calendar.destroy");
 
         // Личные задачи в календаре.
+        Route::get("/calendar/tasks", [CalendarTaskController::class, "index"])->name("calendar.tasks.index");
         Route::post("/calendar/tasks", [CalendarTaskController::class, "store"])->name("calendar.tasks.store");
         Route::post("/calendar/tasks/{task}/toggle", [CalendarTaskController::class, "toggle"])->name("calendar.tasks.toggle");
         Route::get("/calendar/tasks/{task}/edit", [CalendarTaskController::class, "edit"])->name("calendar.tasks.edit");
