@@ -675,7 +675,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                     </svg>
                                 </button>
-                                <div class="actions-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden" data-ticket-id="${ticket.id}">
+                                <div class="actions-menu absolute right-0 mt-2 w-56 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden" data-ticket-id="${ticket.id}">
                                     <div class="py-1">
                                         <a href="${ticketUrl}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
                                         ${ticket.status !== 'in_progress' && ticket.status !== 'closed' && !ticket.assigned_to_name ? `<button type="button" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition single-action" data-action="change-status" data-id="${ticket.id}" data-status="in_progress">Взять в работу</button>` : ''}
@@ -1346,6 +1346,10 @@ if (action === 'change-status' && status) {
         menu.style.zIndex = '1000';
         menu.style.maxHeight = '80vh';
         menu.style.overflowY = 'auto';
+        // Без этого браузер при overflow-y:auto включает и overflow-x:auto, и
+        // длинный пункт («Переназначить исполнителя») получает горизонтальную
+        // полосу прокрутки, которая мигает при наведении.
+        menu.style.overflowX = 'hidden';
         menu.style.right = 'auto';
         menu.style.bottom = 'auto';
 
