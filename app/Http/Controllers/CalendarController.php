@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCalendarEventRequest;
 use App\Http\Requests\UpdateCalendarEventRequest;
 use App\Models\CalendarEvent;
 use App\Models\CalendarEventParticipant;
+use App\Models\CalendarTask;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -59,7 +60,16 @@ class CalendarController extends Controller
             ->expand($events, $gridStart, $gridEnd)
             ->groupBy(fn ($o) => $o->startsAt->toDateString());
 
-        $weeks = $this->buildWeeks($gridStart, $gridEnd, $month, $occurrences);
+        // Личные задачи текущего пользователя с датой в пределах сетки.
+        $tasks = CalendarTask::query()
+            ->where("user_id", Auth::id())
+            ->whereNotNull("due_at")
+            ->whereBetween("due_at", [$gridStart, $gridEnd])
+            ->orderBy("due_at")
+            ->get()
+            ->groupBy(fn ($t) => CarbonImmutable::parse($t->due_at)->toDateString());
+
+        $weeks = $this->buildWeeks($gridStart, $gridEnd, $month, $occurrences, $tasks);
 
         return view("calendar.index", [
             "month" => $month,
@@ -276,7 +286,7 @@ class CalendarController extends Controller
      *
      * @return array<int, array<int, array>>
      */
-    private function buildWeeks(CarbonImmutable $gridStart, CarbonImmutable $gridEnd, CarbonImmutable $month, $occurrences): array
+    private function buildWeeks(CarbonImmutable $gridStart, CarbonImmutable $gridEnd, CarbonImmutable $month, $occurrences, $tasks): array
     {
         $weeks = [];
         $week = [];
@@ -287,6 +297,7 @@ class CalendarController extends Controller
                 "date" => $day,
                 "inMonth" => $day->month === $month->month,
                 "occurrences" => $occurrences->get($day->toDateString(), collect()),
+                "tasks" => $tasks->get($day->toDateString(), collect()),
             ];
 
             if (count($week) === 7) {

@@ -18,6 +18,7 @@ use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\KnowledgeCategoryController;
 use App\Http\Controllers\NetworkTopologyController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarTaskController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HomepageFAQController;
 use App\Http\Controllers\HomeController;
@@ -232,6 +233,13 @@ Route::middleware("auth")->group(function () {
         Route::put("/calendar/events/{event}", [CalendarController::class, "update"])->name("calendar.update");
         Route::post("/calendar/events/{event}/respond", [CalendarController::class, "respond"])->name("calendar.respond");
         Route::delete("/calendar/events/{event}", [CalendarController::class, "destroy"])->name("calendar.destroy");
+
+        // Личные задачи в календаре.
+        Route::post("/calendar/tasks", [CalendarTaskController::class, "store"])->name("calendar.tasks.store");
+        Route::post("/calendar/tasks/{task}/toggle", [CalendarTaskController::class, "toggle"])->name("calendar.tasks.toggle");
+        Route::get("/calendar/tasks/{task}/edit", [CalendarTaskController::class, "edit"])->name("calendar.tasks.edit");
+        Route::put("/calendar/tasks/{task}", [CalendarTaskController::class, "update"])->name("calendar.tasks.update");
+        Route::delete("/calendar/tasks/{task}", [CalendarTaskController::class, "destroy"])->name("calendar.tasks.destroy");
     });
 
     // Ресурс equipment полностью доступен только для ролей admin, master и technician

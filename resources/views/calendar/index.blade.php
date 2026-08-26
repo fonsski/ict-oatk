@@ -36,9 +36,16 @@
                class="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100" title="Следующий месяц" aria-label="Следующий месяц">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
-            <button type="button" onclick="openEventModal()" class="btn-primary py-1.5 px-4 text-sm ml-2">
-                Создать
-            </button>
+            <div class="relative ml-2" id="create-menu">
+                <button type="button" onclick="toggleCreateMenu()" class="btn-primary py-1.5 px-4 text-sm flex items-center gap-1">
+                    Создать
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="create-menu-items" class="hidden absolute right-0 mt-1 w-44 bg-white rounded-md shadow-lg border border-slate-200 z-30 py-1">
+                    <button type="button" onclick="closeCreateMenu(); openEventModal()" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Событие</button>
+                    <button type="button" onclick="closeCreateMenu(); openTaskModal()" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Задачу</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -87,6 +94,29 @@
                             @if ($cell['occurrences']->count() > 3)
                                 <span class="px-1.5 text-xs text-slate-500">Ещё {{ $cell['occurrences']->count() - 3 }}</span>
                             @endif
+
+                            {{-- Задачи дня: кружок-переключатель + название --}}
+                            @foreach ($cell['tasks']->take(3) as $task)
+                                <div class="flex items-center gap-1 group">
+                                    <form method="POST" action="{{ route('calendar.tasks.toggle', $task) }}" class="shrink-0">
+                                        @csrf
+                                        <button type="submit" class="w-4 h-4 flex items-center justify-center rounded-full border transition
+                                                {{ $task->isCompleted() ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-400 text-transparent hover:border-blue-500' }}"
+                                                title="{{ $task->isCompleted() ? 'Снять отметку' : 'Отметить выполненной' }}">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        </button>
+                                    </form>
+                                    <a href="{{ route('calendar.tasks.edit', $task) }}"
+                                       class="block truncate text-xs {{ $task->isCompleted() ? 'line-through text-slate-400' : 'text-slate-700 hover:text-blue-600' }}"
+                                       title="{{ $task->title }}">
+                                        {{ $task->title }}
+                                    </a>
+                                </div>
+                            @endforeach
+
+                            @if ($cell['tasks']->count() > 3)
+                                <span class="px-1.5 text-xs text-slate-500">Ещё {{ $cell['tasks']->count() - 3 }} задач</span>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -96,4 +126,15 @@
 </div>
 
 @include('calendar.partials.event-modal', ['rooms' => $rooms, 'staff' => $staff])
+@include('calendar.partials.task-modal')
+
+@push('scripts')
+<script>
+    function toggleCreateMenu() { document.getElementById('create-menu-items').classList.toggle('hidden'); }
+    function closeCreateMenu() { document.getElementById('create-menu-items').classList.add('hidden'); }
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#create-menu')) closeCreateMenu();
+    });
+</script>
+@endpush
 @endsection

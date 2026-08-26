@@ -153,8 +153,9 @@
         if (e.key === 'Escape') closeEventModal();
     });
 
-    // Если сервер вернул ошибки валидации — снова показываем модалку.
-    @if ($errors->any())
+    // Если сервер вернул ошибки валидации события — снова показываем модалку.
+    // Задача шлёт due_date; по его наличию отличаем, чью форму открывать.
+    @if ($errors->any() && !old('due_date'))
         document.addEventListener('DOMContentLoaded', () => document.getElementById('event-modal').classList.remove('hidden'));
     @endif
 </script>
