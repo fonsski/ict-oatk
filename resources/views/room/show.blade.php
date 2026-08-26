@@ -233,7 +233,10 @@
                             @foreach($room->equipment as $equipment)
                                 <tr>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">{{ $equipment->name }}</div>
+                                        <a href="{{ route('equipment.show', $equipment) }}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                            {{ $equipment->name ?? 'Без названия' }}
+                                        </a>
+                                        <div class="text-xs text-slate-500 mt-0.5">Инв. № {{ $equipment->inventory_number }}</div>
                                         @if($equipment->model)
                                             <div class="text-sm text-slate-500">{{ $equipment->model }}</div>
                                         @endif
