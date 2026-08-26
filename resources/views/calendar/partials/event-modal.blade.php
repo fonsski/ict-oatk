@@ -112,6 +112,17 @@
                     </div>
                 </div>
 
+                <div>
+                    <label for="ev-reminder" class="form-label">Напоминание</label>
+                    <select id="ev-reminder" name="reminder_minutes" class="form-input">
+                        <option value="">Без напоминания</option>
+                        @foreach (\App\Models\CalendarEvent::REMINDER_OPTIONS as $min => $label)
+                            <option value="{{ $min }}" {{ old('reminder_minutes') == $min ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500">Придёт уведомление организатору и участникам.</p>
+                </div>
+
                 @include('calendar.partials.recurrence-fields', ['event' => null])
 
                 @include('calendar.partials.participant-picker', ['staff' => $staff, 'selected' => old('participant_ids', [])])

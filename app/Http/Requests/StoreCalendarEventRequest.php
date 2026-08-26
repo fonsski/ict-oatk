@@ -94,6 +94,7 @@ class StoreCalendarEventRequest extends FormRequest
             "location" => "nullable|string|max:255",
             "room_id" => "nullable|exists:rooms,id",
             "color" => ["nullable", Rule::in(CalendarEvent::COLORS)],
+            "reminder_minutes" => ["nullable", Rule::in(array_keys(CalendarEvent::REMINDER_OPTIONS))],
             "participant_ids" => "nullable|array",
             "participant_ids.*" => "integer|exists:users,id",
             "recurrence_freq" => ["nullable", Rule::in(array_keys(CalendarEvent::FREQUENCIES))],

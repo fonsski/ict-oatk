@@ -354,6 +354,30 @@ class NotificationService
     }
 
     /**
+     * Напоминание о скором начале события.
+     */
+    public function notifyEventReminder(\App\Models\CalendarEvent $event, User $user, \Carbon\CarbonInterface $startsAt)
+    {
+        try {
+            $this->createNotification([
+                "user_id" => $user->id,
+                "type" => "calendar_reminder",
+                "title" => "Скоро событие",
+                "message" => $event->title . " — в " . $startsAt->format("H:i"),
+                "icon" => "calendar",
+                "color" => $event->color ?: "blue",
+                "data" => [
+                    "event_id" => $event->id,
+                    "starts_at" => $startsAt->toDateTimeString(),
+                ],
+                "url" => route("calendar.show", $event, false),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Не удалось отправить напоминание о событии #{$event->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Получить уведомления для пользователя
      */
     public function getUserNotifications(
