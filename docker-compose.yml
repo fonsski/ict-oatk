@@ -47,6 +47,27 @@ services:
                 max-size: "10m"
                 max-file: "3"
 
+    queue:
+        image: "sail-8.4/app"
+        restart: unless-stopped
+        environment:
+            WWWUSER: "${WWWUSER}"
+            LARAVEL_SAIL: 1
+            CONTAINER_ROLE: "queue"
+        volumes:
+            - ".:/var/www/html"
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
+            - mysql
+        command: php artisan queue:work --tries=1 --timeout=90
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "3"
+
     mysql:
         image: "mysql/mysql-server:8.0"
         ports:
