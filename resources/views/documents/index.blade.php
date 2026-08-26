@@ -14,6 +14,56 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        <ul class="list-disc list-inside text-sm">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    <details class="bg-white shadow-md rounded-lg mb-6" {{ $errors->any() ? 'open' : '' }}>
+        <summary class="cursor-pointer px-4 py-3 font-medium text-gray-800 select-none">＋ Загрузить документ</summary>
+        <form action="{{ route('documents.store-general') }}" method="POST" enctype="multipart/form-data" class="p-4 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
+            @csrf
+            <div class="md:col-span-2">
+                <label class="block text-xs text-gray-500 mb-1">Файл <span class="text-red-500">*</span></label>
+                <input type="file" name="file" required class="block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2" />
+                <p class="text-xs text-gray-400 mt-1">До {{ \App\Models\Document::MAX_SIZE_KB / 1024 }} МБ. Форматы: {{ \App\Models\Document::ALLOWED_MIMES }}.</p>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Тип</label>
+                <select name="type" class="w-full rounded border-gray-300 px-3 py-2">
+                    @foreach(\App\Models\Document::TYPES as $value => $label)
+                    <option value="{{ $value }}" {{ old('type', \App\Models\Document::TYPE_OTHER) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Описание</label>
+                <input type="text" name="description" value="{{ old('description') }}" maxlength="255" class="w-full rounded border-gray-300 px-3 py-2" />
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs text-gray-500 mb-2">Доступ</label>
+                <div class="flex items-center gap-6">
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                        <input type="radio" name="is_private" value="0" {{ old('is_private', '0') === '1' ? '' : 'checked' }}>
+                        Общий <span class="text-xs text-gray-400">— виден всем сотрудникам</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                        <input type="radio" name="is_private" value="1" {{ old('is_private') === '1' ? 'checked' : '' }}>
+                        Приватный <span class="text-xs text-gray-400">— только вам и управляющим</span>
+                    </label>
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Загрузить</button>
+            </div>
+        </form>
+    </details>
+
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <div class="p-4 border-b">
             <form method="GET" class="flex flex-wrap gap-3 items-end">
@@ -59,7 +109,14 @@
                     @forelse($documents as $document)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $document->original_name }}</div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium text-gray-900">{{ $document->original_name }}</span>
+                                @if($document->is_private)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Приватный</span>
+                                @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Общий</span>
+                                @endif
+                            </div>
                             <div class="text-xs text-gray-400">{{ $document->human_size }}</div>
                             @if($document->description)
                             <div class="text-xs text-gray-500">{{ $document->description }}</div>
@@ -76,6 +133,9 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $document->uploadedBy->name ?? '—' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $document->created_at->format('d.m.Y H:i') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($document->is_previewable)
+                            <a href="{{ route('documents.preview', $document) }}" class="text-blue-600 hover:text-blue-800 mr-3">Просмотр</a>
+                            @endif
                             <a href="{{ route('documents.download', $document) }}" class="text-blue-600 hover:text-blue-800">Скачать</a>
                             @if(auth()->user()->hasRole(['admin', 'master']))
                             <form action="{{ route('documents.destroy', $document) }}" method="POST" class="inline"

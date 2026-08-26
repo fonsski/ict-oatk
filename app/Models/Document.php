@@ -77,10 +77,65 @@ class Document extends Model
     }
 
     /**
+     * Расширение файла в нижнем регистре (по оригинальному имени).
+     */
+    public function getExtensionAttribute(): string
+    {
+        return strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Тип встроенного просмотра: pdf | image | markdown | text | office | none.
+     * Office пока не рендерится в системе — только скачивание.
+     */
+    public function getPreviewKindAttribute(): string
+    {
+        return match ($this->extension) {
+            "pdf" => "pdf",
+            "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg" => "image",
+            "md", "markdown" => "markdown",
+            "txt", "csv", "log" => "text",
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx" => "office",
+            default => "none",
+        };
+    }
+
+    /**
+     * Можно ли показать документ прямо в системе.
+     */
+    public function getIsPreviewableAttribute(): bool
+    {
+        return in_array($this->preview_kind, ["pdf", "image", "markdown", "text"], true);
+    }
+
+    /**
+     * Видимые пользователю документы: общие — всем, приватные — только автору
+     * и управляющим ролям (admin/master).
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if ($user && $user->hasRole(["admin", "master"])) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where("is_private", false);
+            if ($user) {
+                $q->orWhere("uploaded_by_user_id", $user->id);
+            }
+        });
+    }
+
+    /**
      * Человекочитаемое название сущности, к которой привязан документ.
      */
     public function getSubjectLabelAttribute(): string
     {
+        // Общий документ библиотеки — без привязки к сущности.
+        if (is_null($this->documentable_type)) {
+            return "Общий документ";
+        }
+
         if (!$this->documentable) {
             return class_basename($this->documentable_type ?? "") . " (удалено)";
         }

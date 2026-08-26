@@ -343,6 +343,22 @@ Route::middleware("auth")->group(function () {
             "index",
         ])->name("documents.index");
 
+        // Загрузка общего документа в библиотеку (без привязки к сущности).
+        Route::post("/documents", [
+            DocumentController::class,
+            "storeGeneral",
+        ])->name("documents.store-general");
+
+        Route::get("/documents/{document}/preview", [
+            DocumentController::class,
+            "preview",
+        ])->name("documents.preview");
+
+        Route::get("/documents/{document}/raw", [
+            DocumentController::class,
+            "raw",
+        ])->name("documents.raw");
+
         Route::post("/documents/{type}/{id}", [
             DocumentController::class,
             "store",
