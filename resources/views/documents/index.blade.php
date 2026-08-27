@@ -101,7 +101,7 @@
                     <label class="block text-xs text-slate-500 mb-1">По дату</label>
                     <input type="date" name="date_to" value="{{ request('date_to') }}" class="rounded-lg border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                 </div>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors">Применить</button>
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">Применить</button>
                 <a href="{{ route('documents.index') }}" class="text-sm text-slate-500 hover:text-slate-700 underline">Сбросить</a>
             </form>
         </div>

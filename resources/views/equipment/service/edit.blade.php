@@ -155,7 +155,7 @@
                             @endif
                         </span>
                         <span class="flex items-center text-sm text-red-600 ml-3 flex-shrink-0">
-                            <input type="checkbox" name="remove_attachments[]" value="{{ $index }}" class="mr-1 rounded border-slate-300 text-red-600 focus:ring-red-500">
+                            <input type="checkbox" name="remove_attachments[]" value="{{ $index }}" class="mr-1 rounded-lg border-slate-300 text-red-600 focus:ring-red-500">
                             Удалить
                         </span>
                     </label>

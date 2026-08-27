@@ -4,11 +4,11 @@
     категории. Ожидает: $operatingSystems, $selected (id или null).
 --}}
 <div class="mb-4 hidden" id="operating-system-field">
-    <label for="operating_system_id" class="block text-gray-700 text-sm font-bold mb-2">
+    <label for="operating_system_id" class="block text-slate-700 text-sm font-bold mb-2">
         Операционная система
     </label>
     <select name="operating_system_id" id="operating_system_id"
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('operating_system_id') border-red-500 @enderror">
+            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('operating_system_id') border-red-500 @enderror">
         <option value="">Не указана</option>
         @foreach($operatingSystems->groupBy('family') as $family => $group)
             @if($family)
@@ -28,7 +28,7 @@
             @endif
         @endforeach
     </select>
-    <p class="text-sm text-gray-500 mt-1">
+    <p class="text-sm text-slate-500 mt-1">
         Список настраивается в разделе
         <a href="{{ route('operating-systems.index') }}" class="text-blue-600 hover:text-blue-800">«Операционные системы»</a>
     </p>

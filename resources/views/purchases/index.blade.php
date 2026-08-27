@@ -52,7 +52,7 @@
                     <label class="block text-xs text-slate-500 mb-1">Сумма до</label>
                     <input type="number" step="0.01" name="sum_to" value="{{ request('sum_to') }}" class="rounded-lg border-slate-300 px-3 py-2 w-28" />
                 </div>
-                <button type="submit" class="bg-slate-800 text-white px-3 py-2 rounded">Применить</button>
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">Применить</button>
                 <a href="{{ route('purchases.index') }}" class="text-sm text-slate-500 underline">Сбросить</a>
             </form>
         </div>

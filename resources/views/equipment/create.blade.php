@@ -3,13 +3,13 @@
 @section('title', 'Добавить оборудование')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-6 py-8">
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">Добавить оборудование</h1>
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <h1 class="text-2xl font-bold text-slate-900 mb-6">Добавить оборудование</h1>
 
             @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
                     <ul>
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -22,11 +22,11 @@
                 @csrf
 
                 <div class="mb-4">
-                    <label for="inventory_number" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="inventory_number" class="block text-slate-700 text-sm font-bold mb-2">
                         Инвентарный номер *
                     </label>
                     <input type="text" name="inventory_number" id="inventory_number"
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('inventory_number') border-red-500 @enderror"
+                           class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('inventory_number') border-red-500 @enderror"
                            value="{{ old('inventory_number') }}" 
                            required 
                            minlength="1" 
@@ -59,11 +59,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="accounting_number" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="accounting_number" class="block text-slate-700 text-sm font-bold mb-2">
                         Учётный номер
                     </label>
                     <input type="text" name="accounting_number" id="accounting_number"
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('accounting_number') border-red-500 @enderror"
+                           class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('accounting_number') border-red-500 @enderror"
                            value="{{ old('accounting_number') }}" 
                            minlength="3" 
                            maxlength="20"
@@ -101,11 +101,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="category_id" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="category_id" class="block text-slate-700 text-sm font-bold mb-2">
                         Категория
                     </label>
                     <select name="category_id" id="category_id"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Выберите категорию</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}"
@@ -123,11 +123,11 @@
                 ])
 
                 <div class="mb-4">
-                    <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="name" class="block text-slate-700 text-sm font-bold mb-2">
                         Название
                     </label>
                     <input type="text" name="name" id="name"
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('name') border-red-500 @enderror"
+                           class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                            value="{{ old('name') }}" 
                            minlength="2" 
                            maxlength="255"
@@ -142,11 +142,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="status_id" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="status_id" class="block text-slate-700 text-sm font-bold mb-2">
                         Статус *
                     </label>
                     <select name="status_id" id="status_id"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('status_id') border-red-500 @enderror"
+                            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status_id') border-red-500 @enderror"
                             required>
                         <option value="">Выберите статус</option>
                         @foreach($statuses as $status)
@@ -163,11 +163,11 @@
                 <!-- Поле location_id было удалено, так как оно не используется в системе -->
 
                 <div class="mb-4">
-                    <label for="room_id" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="room_id" class="block text-slate-700 text-sm font-bold mb-2">
                         Текущий кабинет
                     </label>
                     <select name="room_id" id="room_id"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('room_id') border-red-500 @enderror">
+                            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_id') border-red-500 @enderror">
                         <option value="">Выберите кабинет</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}">
@@ -181,11 +181,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="initial_room_id" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="initial_room_id" class="block text-slate-700 text-sm font-bold mb-2">
                         Начальный кабинет
                     </label>
                     <select name="initial_room_id" id="initial_room_id"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('initial_room_id') border-red-500 @enderror">
+                            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('initial_room_id') border-red-500 @enderror">
                         <option value="">Такой же как текущий</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('initial_room_id') == $room->id ? 'selected' : '' }}">
@@ -196,11 +196,11 @@
                     @error('initial_room_id')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
-                    <p class="text-sm text-gray-500 mt-1">Если не указан, будет использован текущий кабинет</p>
+                    <p class="text-sm text-slate-500 mt-1">Если не указан, будет использован текущий кабинет</p>
                 </div>
 
                 <div class="mb-4">
-                    <label for="has_warranty" class="flex items-center text-gray-700 text-sm font-bold mb-2">
+                    <label for="has_warranty" class="flex items-center text-slate-700 text-sm font-bold mb-2">
                         <input type="checkbox" name="has_warranty" id="has_warranty" value="1"
                                class="mr-2" {{ old('has_warranty') ? 'checked' : '' }}
                                onchange="toggleWarrantyDateField()">
@@ -209,11 +209,11 @@
                 </div>
 
                 <div id="warranty_date_container" class="mb-4 {{ old('has_warranty') ? '' : 'hidden' }}">
-                    <label for="warranty_end_date" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="warranty_end_date" class="block text-slate-700 text-sm font-bold mb-2">
                         Дата окончания гарантии *
                     </label>
                     <input type="date" name="warranty_end_date" id="warranty_end_date"
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('warranty_end_date') border-red-500 @enderror"
+                           class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('warranty_end_date') border-red-500 @enderror"
                            value="{{ old('warranty_end_date') }}" {{ old('has_warranty') ? 'required' : '' }}>
                     @error('warranty_end_date')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -221,11 +221,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="service_comment" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="service_comment" class="block text-slate-700 text-sm font-bold mb-2">
                         Комментарий о проведённом обслуживании
                     </label>
                     <textarea name="service_comment" id="service_comment" rows="3"
-                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('service_comment') border-red-500 @enderror"
+                              class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('service_comment') border-red-500 @enderror"
                               minlength="5" maxlength="500">{{ old('service_comment') }}</textarea>
                     @error('service_comment')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -233,11 +233,11 @@
                 </div>
 
                 <div class="mb-6">
-                    <label for="known_issues" class="block text-gray-700 text-sm font-bold mb-2">
+                    <label for="known_issues" class="block text-slate-700 text-sm font-bold mb-2">
                         Известные проблемы
                     </label>
                     <textarea name="known_issues" id="known_issues" rows="3"
-                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('known_issues') border-red-500 @enderror"
+                              class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('known_issues') border-red-500 @enderror"
                               minlength="5" maxlength="500">{{ old('known_issues') }}</textarea>
                     @error('known_issues')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -246,11 +246,11 @@
 
                 <div class="flex items-center justify-between">
                     <button type="submit"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            class="btn-primary">
                         Сохранить
                     </button>
                     <a href="{{ route('equipment.index') }}"
-                       class="text-gray-600 hover:text-gray-800 font-medium">
+                       class="text-slate-600 hover:text-slate-800 font-medium">
                         Отмена
                     </a>
                 </div>

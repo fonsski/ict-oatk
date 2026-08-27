@@ -3,23 +3,23 @@
 @section('title', 'История перемещений оборудования')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-6 py-8">
     <div class="max-w-4xl mx-auto">
         <!-- Заголовок и навигация -->
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">История перемещений оборудования</h1>
-                <p class="text-sm text-gray-600">Инвентарный номер: {{ $equipment->inventory_number }} @if($equipment->name) — {{ $equipment->name }}@endif</p>
+                <h1 class="text-2xl font-bold text-slate-900">История перемещений оборудования</h1>
+                <p class="text-sm text-slate-600">Инвентарный номер: {{ $equipment->inventory_number }} @if($equipment->name) — {{ $equipment->name }}@endif</p>
             </div>
             <div class="flex space-x-3">
-                <a href="{{ route('equipment.move.form', $equipment) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Переместить</a>
-                <a href="{{ route('equipment.show', $equipment) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded">Назад к оборудованию</a>
+                <a href="{{ route('equipment.move.form', $equipment) }}" class="bg-blue-600 hover:bg-blue-600 text-white px-4 py-2 rounded">Переместить</a>
+                <a href="{{ route('equipment.show', $equipment) }}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded">Назад к оборудованию</a>
             </div>
         </div>
 
         <!-- Информация о текущем кабинете -->
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Текущее расположение</h2>
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-slate-900 mb-4">Текущее расположение</h2>
             <div class="flex items-center">
                 <div class="bg-blue-100 text-blue-800 p-3 rounded-full mr-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -28,11 +28,11 @@
                 </div>
                 <div>
                     @if($equipment->room)
-                        <p class="font-medium text-gray-900">{{ $equipment->room->display_label }}</p>
-                        <p class="text-sm text-gray-600">{{ $equipment->room->full_address }}</p>
+                        <p class="font-medium text-slate-900">{{ $equipment->room->display_label }}</p>
+                        <p class="text-sm text-slate-600">{{ $equipment->room->full_address }}</p>
                     @else
-                        <p class="font-medium text-gray-900">Не указан</p>
-                        <p class="text-sm text-gray-600">Оборудование не привязано к кабинету</p>
+                        <p class="font-medium text-slate-900">Не указан</p>
+                        <p class="text-sm text-slate-600">Оборудование не привязано к кабинету</p>
                     @endif
                 </div>
             </div>
@@ -40,8 +40,8 @@
 
         <!-- Начальное расположение -->
         @if($equipment->initial_room_id)
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Начальное расположение</h2>
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-slate-900 mb-4">Начальное расположение</h2>
             <div class="flex items-center">
                 <div class="bg-green-100 text-green-800 p-3 rounded-full mr-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,11 +50,11 @@
                 </div>
                 <div>
                     @if($equipment->initialRoom)
-                        <p class="font-medium text-gray-900">{{ $equipment->initialRoom->display_label }}</p>
-                        <p class="text-sm text-gray-600">{{ $equipment->initialRoom->full_address }}</p>
+                        <p class="font-medium text-slate-900">{{ $equipment->initialRoom->display_label }}</p>
+                        <p class="text-sm text-slate-600">{{ $equipment->initialRoom->full_address }}</p>
                     @else
-                        <p class="font-medium text-gray-900">Начальный кабинет удален</p>
-                        <p class="text-sm text-gray-600">Информация о начальном кабинете недоступна</p>
+                        <p class="font-medium text-slate-900">Начальный кабинет удален</p>
+                        <p class="text-sm text-slate-600">Информация о начальном кабинете недоступна</p>
                     @endif
                 </div>
             </div>
@@ -62,13 +62,13 @@
         @endif
 
         <!-- История перемещений -->
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">История перемещений</h2>
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900">История перемещений</h2>
             </div>
 
             @if($history->count() > 0)
-                <div class="divide-y divide-gray-200">
+                <div class="divide-y divide-slate-200">
                     @foreach($history as $record)
                         <div class="px-6 py-4">
                             <div class="flex items-start">
@@ -101,30 +101,30 @@
                                 </div>
                                 <div class="ml-3 flex-1">
                                     <div class="flex items-center justify-between">
-                                        <p class="text-sm font-medium text-gray-900">{{ $record->move_type_text }}</p>
-                                        <p class="text-sm text-gray-500">{{ $record->move_date->format('d.m.Y H:i') }}</p>
+                                        <p class="text-sm font-medium text-slate-900">{{ $record->move_type_text }}</p>
+                                        <p class="text-sm text-slate-500">{{ $record->move_date->format('d.m.Y H:i') }}</p>
                                     </div>
                                     <div class="mt-1">
                                         @if($record->from_room_id)
-                                            <div class="text-sm text-gray-600">
+                                            <div class="text-sm text-slate-600">
                                                 <span class="font-medium">Откуда:</span>
                                                 {{ $record->fromRoom ? $record->fromRoom->display_label : 'Кабинет удален' }}
                                             </div>
                                         @endif
                                         @if($record->to_room_id)
-                                            <div class="text-sm text-gray-600">
+                                            <div class="text-sm text-slate-600">
                                                 <span class="font-medium">Куда:</span>
                                                 {{ $record->toRoom ? $record->toRoom->display_label : 'Кабинет удален' }}
                                             </div>
                                         @endif
                                     </div>
                                     @if($record->comment)
-                                        <div class="mt-1 text-sm text-gray-600">
+                                        <div class="mt-1 text-sm text-slate-600">
                                             <span class="font-medium">Комментарий:</span> {{ $record->comment }}
                                         </div>
                                     @endif
                                     @if($record->moved_by_user_id)
-                                        <div class="mt-1 text-xs text-gray-500">
+                                        <div class="mt-1 text-xs text-slate-500">
                                             Выполнил: {{ $record->movedByUser ? $record->movedByUser->name : 'Пользователь удален' }}
                                         </div>
                                     @endif
@@ -134,8 +134,8 @@
                     @endforeach
                 </div>
             @else
-                <div class="px-6 py-8 text-center text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="px-6 py-8 text-center text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     <p>История перемещений пуста</p>

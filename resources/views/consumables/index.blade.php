@@ -31,7 +31,7 @@
                     <input type="checkbox" name="low_stock" value="1" {{ request('low_stock') ? 'checked' : '' }} class="rounded-lg border-slate-300">
                     Только с остатком ниже минимального
                 </label>
-                <button type="submit" class="bg-slate-800 text-white px-3 py-2 rounded">Применить</button>
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">Применить</button>
                 <a href="{{ route('consumables.index') }}" class="text-sm text-slate-500 underline">Сбросить</a>
             </form>
         </div>

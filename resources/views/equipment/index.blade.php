@@ -3,9 +3,9 @@
 @section('title', 'Оборудование - ICT Help')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-6 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Оборудование</h1>
+        <h1 class="text-3xl font-bold text-slate-900">Оборудование</h1>
 
         <div class="flex gap-2">
             @if(auth()->user()->hasRole(['admin', 'master']))
@@ -18,12 +18,12 @@
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative mb-4">
         {{ session('success') }}
     </div>
     @endif
     @if ($errors->any())
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
         <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
     @endif
@@ -40,11 +40,11 @@
     </div>
     @endif
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-4 border-b">
             <form method="GET" id="filters-form" class="flex flex-wrap gap-3 items-center">
                 <div>
-                    <select name="search_by" class="rounded border-gray-300 px-3 py-2">
+                    <select name="search_by" class="rounded-lg border-slate-300 px-3 py-2">
                         <option value="inventory_number" {{ request('search_by') == 'inventory_number' ? 'selected' : '' }}>Инв. номер</option>
                         <option value="name" {{ request('search_by') == 'name' ? 'selected' : '' }}>Название</option>
                         <!-- Опция поиска по локации удалена -->
@@ -52,10 +52,10 @@
                     </select>
                 </div>
                 <div>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Поиск" class="rounded border-gray-300 px-3 py-2" />
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Поиск" class="rounded-lg border-slate-300 px-3 py-2" />
                 </div>
                 <div>
-                    <select name="status_id" class="rounded border-gray-300 px-3 py-2">
+                    <select name="status_id" class="rounded-lg border-slate-300 px-3 py-2">
                         <option value="">Все статусы</option>
                         @foreach($statuses as $s)
                         <option value="{{ $s->id }}" {{ request('status_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
@@ -63,7 +63,7 @@
                     </select>
                 </div>
                 <div>
-                    <select name="category_id" class="rounded border-gray-300 px-3 py-2">
+                    <select name="category_id" class="rounded-lg border-slate-300 px-3 py-2">
                         <option value="">Все категории</option>
                         @foreach($categories as $c)
                         <option value="{{ $c->id }}" {{ request('category_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
@@ -71,7 +71,7 @@
                     </select>
                 </div>
                 <div>
-                    <select name="operating_system_id" class="rounded border-gray-300 px-3 py-2">
+                    <select name="operating_system_id" class="rounded-lg border-slate-300 px-3 py-2">
                         <option value="">Все ОС</option>
                         <option value="none" {{ request('operating_system_id') === 'none' ? 'selected' : '' }}>ОС не указана</option>
                         @foreach($operatingSystems->groupBy('family') as $family => $group)
@@ -90,7 +90,7 @@
                     </select>
                 </div>
                 <div>
-                    <select name="room_id" class="rounded border-gray-300 px-3 py-2">
+                    <select name="room_id" class="rounded-lg border-slate-300 px-3 py-2">
                         <option value="">Все кабинеты</option>
                         <option value="none" {{ request('room_id') === 'none' ? 'selected' : '' }}>Кабинет не указан</option>
                         @foreach($rooms as $room)
@@ -99,7 +99,7 @@
                     </select>
                 </div>
                 <div>
-                    <select name="warranty" class="rounded border-gray-300 px-3 py-2">
+                    <select name="warranty" class="rounded-lg border-slate-300 px-3 py-2">
                         <option value="">Все гарантии</option>
                         <option value="active" {{ request('warranty') == 'active' ? 'selected' : '' }}>Действующие</option>
                         <option value="expired" {{ request('warranty') == 'expired' ? 'selected' : '' }}>Истекшие</option>
@@ -107,18 +107,18 @@
                     </select>
                 </div>
                 <div class="flex items-center gap-2">
-                    <label for="sort" class="text-sm text-gray-600 whitespace-nowrap">Сортировка:</label>
-                    <select name="sort" id="sort" class="rounded border-gray-300 px-3 py-2">
+                    <label for="sort" class="text-sm text-slate-600 whitespace-nowrap">Сортировка:</label>
+                    <select name="sort" id="sort" class="rounded-lg border-slate-300 px-3 py-2">
                         @foreach(\App\Http\Controllers\EquipmentController::SORTS as $value => $label)
                         <option value="{{ $value }}" {{ request('sort', 'latest') === $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <button type="submit" class="bg-gray-800 text-white px-3 py-2 rounded">Применить</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">Применить</button>
                 </div>
                 <div>
-                    <a href="{{ route('equipment.index') }}" class="text-sm text-gray-500 underline">Сбросить</a>
+                    <a href="{{ route('equipment.index') }}" class="text-sm text-slate-500 underline">Сбросить</a>
                 </div>
             </form>
         </div>

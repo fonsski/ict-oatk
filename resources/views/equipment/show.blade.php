@@ -83,7 +83,7 @@
                             @csrf
                             @method('PUT')
                             <select name="operating_system_id"
-                                    class="rounded border-gray-300 py-1.5 text-sm max-w-xs"
+                                    class="rounded-lg border-slate-300 py-1.5 text-sm max-w-xs"
                                     onchange="this.form.querySelector('button').classList.remove('hidden')">
                                 <option value="">Не указана</option>
                                 @foreach($operatingSystems->groupBy('family') as $family => $group)
@@ -196,19 +196,19 @@
         <h2 class="text-lg font-semibold text-slate-900 mb-4">Выданные расходники</h2>
 
         @if($equipment->consumableMovements->isEmpty())
-        <p class="text-sm text-gray-500">В это оборудование расходники не выдавались</p>
+        <p class="text-sm text-slate-500">В это оборудование расходники не выдавались</p>
         @else
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Основание</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Расходник</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кол-во</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Дата</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Основание</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($equipment->consumableMovements as $movement)
                     <tr>
                         <td class="px-4 py-3 whitespace-nowrap text-sm">
@@ -217,7 +217,7 @@
                                 {{ $movement->consumable->name }}
                             </a>
                             @else
-                            <span class="text-gray-500">Расходник удалён</span>
+                            <span class="text-slate-500">Расходник удалён</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $movement->quantity }} {{ $movement->consumable->unit ?? '' }}</td>
@@ -225,7 +225,7 @@
                         <td class="px-4 py-3 text-sm">
                             {{ $movement->reason ?: '—' }}
                             @if($movement->consumableWriteOff)
-                            <div class="text-xs text-gray-400">
+                            <div class="text-xs text-slate-400">
                                 Акт:
                                 <a href="{{ route('consumable-write-offs.show', $movement->consumableWriteOff) }}" class="text-blue-600 hover:text-blue-800">
                                     {{ $movement->consumableWriteOff->number }}
@@ -244,12 +244,12 @@
     <!-- Связанные статьи базы знаний -->
     <div class="card p-6 mb-8">
         <h2 class="text-lg font-semibold text-slate-900 mb-4">Связанные статьи</h2>
-        <p class="text-sm text-gray-500 mb-4">Инструкции и регламенты по этому оборудованию.</p>
+        <p class="text-sm text-slate-500 mb-4">Инструкции и регламенты по этому оборудованию.</p>
 
         @if($equipment->knowledgeArticles->isEmpty())
-        <p class="text-sm text-gray-500 mb-4">Статьи пока не привязаны</p>
+        <p class="text-sm text-slate-500 mb-4">Статьи пока не привязаны</p>
         @else
-        <ul class="divide-y divide-gray-200 mb-4">
+        <ul class="divide-y divide-slate-200 mb-4">
             @foreach($equipment->knowledgeArticles as $article)
             <li class="flex items-center justify-between py-3">
                 <div class="min-w-0">
@@ -257,7 +257,7 @@
                         {{ $article->title }}
                     </a>
                     @if($article->category)
-                    <div class="text-xs text-gray-400">{{ $article->category->name }}</div>
+                    <div class="text-xs text-slate-400">{{ $article->category->name }}</div>
                     @endif
                 </div>
                 @if(auth()->user()->canManageEquipment())
@@ -277,11 +277,11 @@
         <form action="{{ route('equipment.knowledge.store', $equipment) }}" method="POST" class="flex flex-wrap items-end gap-3">
             @csrf
             <div class="relative">
-                <label class="block text-xs text-gray-500 mb-1">Найти статью</label>
+                <label class="block text-xs text-slate-500 mb-1">Найти статью</label>
                 <input type="text" id="article-picker-input" autocomplete="off" placeholder="Начните вводить название..."
-                       class="rounded border-gray-300 px-3 py-2 w-80">
+                       class="rounded-lg border-slate-300 px-3 py-2 w-80">
                 <input type="hidden" name="knowledge_base_id" id="article-picker-id" required>
-                <div id="article-picker-results" class="hidden absolute z-20 mt-1 w-80 bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto"></div>
+                <div id="article-picker-results" class="hidden absolute z-20 mt-1 w-80 bg-white border border-slate-200 rounded-md shadow-lg max-h-56 overflow-y-auto"></div>
             </div>
             <button type="submit" class="btn-primary">Привязать</button>
         </form>
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 data.data.forEach(function (article) {
                     const button = document.createElement('button');
                     button.type = 'button';
-                    button.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-100';
+                    button.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-slate-100';
                     button.textContent = article.title;
                     button.addEventListener('click', function () {
                         input.value = article.title;
