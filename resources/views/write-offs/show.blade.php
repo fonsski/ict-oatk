@@ -15,10 +15,10 @@
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
     @endif
     @if ($errors->any())
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
         <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
     @endif
@@ -84,16 +84,16 @@
     <div class="card p-6 mb-8">
         <h2 class="text-lg font-semibold text-slate-900 mb-4">Позиции акта ({{ $writeOff->items->count() }})</h2>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Инв. номер</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Название</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кабинет</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Инв. номер</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Название</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кабинет</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Статус</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($writeOff->items as $item)
                     <tr>
                         <td class="px-4 py-3 whitespace-nowrap">
@@ -102,7 +102,7 @@
                                 {{ $item->equipment->inventory_number }}
                             </a>
                             @else
-                            <span class="text-gray-500">Оборудование удалено</span>
+                            <span class="text-slate-500">Оборудование удалено</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">{{ $item->equipment->name ?? '—' }}</td>

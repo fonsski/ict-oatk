@@ -3,14 +3,14 @@
 @section('title', 'Списание расходников - ICT Help')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-6 py-8">
     <div class="max-w-4xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Списание расходников</h1>
-            <p class="text-sm text-gray-600 mb-6">В одном списании можно указать несколько позиций — по каждой своё количество.</p>
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <h1 class="text-2xl font-bold text-slate-900 mb-2">Списание расходников</h1>
+            <p class="text-sm text-slate-600 mb-6">В одном списании можно указать несколько позиций — по каждой своё количество.</p>
 
             @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
                     <ul>
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -24,55 +24,55 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                        <label for="written_off_at" class="block text-gray-700 text-sm font-bold mb-2">Дата списания *</label>
+                        <label for="written_off_at" class="block text-slate-700 text-sm font-bold mb-2">Дата списания *</label>
                         <input type="date" name="written_off_at" id="written_off_at" required
                                max="{{ now()->format('Y-m-d') }}"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('written_off_at') border-red-500 @enderror"
+                               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('written_off_at') border-red-500 @enderror"
                                value="{{ old('written_off_at', now()->format('Y-m-d')) }}">
                         @error('written_off_at')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label for="reason" class="block text-gray-700 text-sm font-bold mb-2">Причина</label>
+                        <label for="reason" class="block text-slate-700 text-sm font-bold mb-2">Причина</label>
                         <input type="text" name="reason" id="reason" maxlength="255"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                value="{{ old('reason') }}" placeholder="Например: израсходовано при обслуживании">
                         @error('reason')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <label for="comment" class="block text-gray-700 text-sm font-bold mb-2">Комментарий</label>
+                    <label for="comment" class="block text-slate-700 text-sm font-bold mb-2">Комментарий</label>
                     <textarea name="comment" id="comment" rows="2" maxlength="1000"
-                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">{{ old('comment') }}</textarea>
+                              class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('comment') }}</textarea>
                 </div>
 
                 <div class="mb-6">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-gray-700 text-sm font-bold">Позиции списания *</label>
+                        <label class="block text-slate-700 text-sm font-bold">Позиции списания *</label>
                         <button type="button" id="add-item-row" class="btn-secondary text-sm py-1.5">+ Добавить позицию</button>
                     </div>
                     @error('items')<p class="text-red-500 text-xs mb-2">{{ $message }}</p>@enderror
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                            <thead class="bg-slate-50">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Остаток</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во к списанию</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Расходник</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Остаток</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кол-во к списанию</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase"></th>
                                 </tr>
                             </thead>
-                            <tbody id="items-body" class="bg-white divide-y divide-gray-200"></tbody>
+                            <tbody id="items-body" class="bg-white divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <button type="submit" class="btn-primary">
                         Провести списание
                     </button>
-                    <a href="{{ route('consumable-write-offs.index') }}" class="text-gray-600 hover:text-gray-800 font-medium">Отмена</a>
+                    <a href="{{ route('consumable-write-offs.index') }}" class="text-slate-600 hover:text-slate-800 font-medium">Отмена</a>
                 </div>
             </form>
         </div>
@@ -82,7 +82,7 @@
 <template id="item-row-template">
     <tr class="item-row">
         <td class="px-3 py-2">
-            <select name="items[__INDEX__][consumable_id]" required class="consumable-select rounded border-gray-300 px-2 py-1.5 w-full">
+            <select name="items[__INDEX__][consumable_id]" required class="consumable-select rounded-lg border-slate-300 px-2 py-1.5 w-full">
                 <option value="">— выберите расходник —</option>
                 @foreach($consumables as $consumable)
                 <option value="{{ $consumable->id }}" data-stock="{{ $consumable->quantity }}" data-unit="{{ $consumable->unit }}">
@@ -91,9 +91,9 @@
                 @endforeach
             </select>
         </td>
-        <td class="px-3 py-2 whitespace-nowrap stock-cell text-gray-500">—</td>
+        <td class="px-3 py-2 whitespace-nowrap stock-cell text-slate-500">—</td>
         <td class="px-3 py-2">
-            <input type="number" name="items[__INDEX__][quantity]" min="1" value="1" required class="item-quantity rounded border-gray-300 px-2 py-1.5 w-28">
+            <input type="number" name="items[__INDEX__][quantity]" min="1" value="1" required class="item-quantity rounded-lg border-slate-300 px-2 py-1.5 w-28">
         </td>
         <td class="px-3 py-2">
             <button type="button" class="remove-item-row text-red-600 hover:text-red-800">Удалить</button>

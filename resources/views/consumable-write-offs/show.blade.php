@@ -15,7 +15,7 @@
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
     @endif
 
     <h1 class="text-3xl font-bold text-slate-900 mb-8">Списание {{ $writeOff->number }}</h1>
@@ -50,26 +50,26 @@
     <div class="card p-6 mb-8">
         <h2 class="text-lg font-semibold text-slate-900 mb-4">Позиции</h2>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Списано</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Текущий остаток</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Расходник</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Списано</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Текущий остаток</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($writeOff->items as $item)
                     <tr>
                         <td class="px-4 py-3 whitespace-nowrap">
                             @if($item->consumable)
                             <a href="{{ route('consumables.show', $item->consumable) }}" class="text-blue-600 hover:text-blue-800">{{ $item->consumable->name }}</a>
                             @else
-                            <span class="text-gray-500">Расходник удалён</span>
+                            <span class="text-slate-500">Расходник удалён</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $item->quantity }} {{ $item->consumable->unit ?? '' }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ $item->consumable->quantity ?? '—' }} {{ $item->consumable->unit ?? '' }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-slate-600">{{ $item->consumable->quantity ?? '—' }} {{ $item->consumable->unit ?? '' }}</td>
                     </tr>
                     @endforeach
                 </tbody>
