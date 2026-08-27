@@ -15,10 +15,10 @@
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
     @endif
     @if ($errors->any())
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
         <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
     @endif
@@ -27,7 +27,7 @@
         <div>
             <h1 class="text-3xl font-bold text-slate-900 mb-2">Закупка {{ $purchase->number }}</h1>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                {{ $purchase->status === 'posted' ? 'bg-green-100 text-green-800' : ($purchase->status === 'cancelled' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800') }}">
+                {{ $purchase->status === 'posted' ? 'bg-green-100 text-green-800' : ($purchase->status === 'cancelled' ? 'bg-slate-100 text-slate-800' : 'bg-yellow-100 text-yellow-800') }}">
                 {{ $purchase->status_name }}
             </span>
         </div>
@@ -77,27 +77,27 @@
     <div class="card p-6 mb-8">
         <h2 class="text-lg font-semibold text-slate-900 mb-4">Позиции</h2>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Наименование</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ед. измер.</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Сумма</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Тип</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Наименование</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кол-во</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Ед. измер.</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Цена</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Сумма</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($purchase->items as $item)
                     <tr>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $item->type_name }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             {{ $item->name }}
                             @if($item->consumable)
-                                <div class="text-xs text-gray-400">Расходник: <a href="{{ route('consumables.show', $item->consumable) }}" class="text-blue-600 hover:text-blue-800">{{ $item->consumable->name }}</a></div>
+                                <div class="text-xs text-slate-400">Расходник: <a href="{{ route('consumables.show', $item->consumable) }}" class="text-blue-600 hover:text-blue-800">{{ $item->consumable->name }}</a></div>
                             @elseif($item->equipmentCategory)
-                                <div class="text-xs text-gray-400">Категория: {{ $item->equipmentCategory->name }}</div>
+                                <div class="text-xs text-slate-400">Категория: {{ $item->equipmentCategory->name }}</div>
                             @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $item->quantity }}</td>

@@ -15,10 +15,10 @@
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative mb-4">{{ session('success') }}</div>
     @endif
     @if ($errors->any())
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
         <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
     @endif
@@ -92,21 +92,21 @@
             <div class="relative">
                 <label class="block text-sm font-medium text-slate-700 mb-1">Оборудование (инв. номер / название)</label>
                 <input type="text" id="equipment-picker-input" autocomplete="off" placeholder="Начните вводить инв. номер..."
-                       class="rounded border-gray-300 px-3 py-2 w-72">
+                       class="rounded-lg border-slate-300 px-3 py-2 w-72">
                 <input type="hidden" name="equipment_id" id="equipment-picker-id" required>
-                <div id="equipment-picker-results" class="hidden absolute z-20 mt-1 w-72 bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto"></div>
+                <div id="equipment-picker-results" class="hidden absolute z-20 mt-1 w-72 bg-white border border-slate-200 rounded-md shadow-lg max-h-56 overflow-y-auto"></div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Количество (в наличии: {{ $consumable->quantity }})</label>
-                <input type="number" name="quantity" min="1" max="{{ $consumable->quantity }}" value="1" required class="rounded border-gray-300 px-3 py-2 w-32">
+                <input type="number" name="quantity" min="1" max="{{ $consumable->quantity }}" value="1" required class="rounded-lg border-slate-300 px-3 py-2 w-32">
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Дата</label>
-                <input type="date" name="moved_at" value="{{ now()->format('Y-m-d') }}" class="rounded border-gray-300 px-3 py-2">
+                <input type="date" name="moved_at" value="{{ now()->format('Y-m-d') }}" class="rounded-lg border-slate-300 px-3 py-2">
             </div>
             <div class="flex-1 min-w-[10rem]">
                 <label class="block text-sm font-medium text-slate-700 mb-1">Причина / примечание</label>
-                <input type="text" name="reason" maxlength="255" class="rounded border-gray-300 px-3 py-2 w-full">
+                <input type="text" name="reason" maxlength="255" class="rounded-lg border-slate-300 px-3 py-2 w-full">
             </div>
             <button type="submit" class="btn-primary">Выдать</button>
         </form>
@@ -117,21 +117,21 @@
         <h2 class="text-lg font-semibold text-slate-900 mb-4">Движения остатка</h2>
 
         @if($consumable->movements->isEmpty())
-        <p class="text-sm text-gray-500">Движений пока нет</p>
+        <p class="text-sm text-slate-500">Движений пока нет</p>
         @else
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Основание</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кем</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Дата</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Тип</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кол-во</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Основание</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кем</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Действия</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-slate-200">
                     @foreach($consumable->movements as $movement)
                     <tr>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $movement->moved_at->format('d.m.Y') }}</td>
@@ -146,7 +146,7 @@
                         <td class="px-4 py-3">
                             {{ $movement->reason ?: '—' }}
                             @if($movement->equipment)
-                            <div class="text-xs text-gray-400">
+                            <div class="text-xs text-slate-400">
                                 Оборудование:
                                 <a href="{{ route('equipment.show', $movement->equipment) }}" class="text-blue-600 hover:text-blue-800">
                                     {{ $movement->equipment->inventory_number }}
@@ -154,7 +154,7 @@
                             </div>
                             @endif
                             @if($movement->purchase)
-                            <div class="text-xs text-gray-400">
+                            <div class="text-xs text-slate-400">
                                 Закупка:
                                 <a href="{{ route('purchases.show', $movement->purchase) }}" class="text-blue-600 hover:text-blue-800">
                                     {{ $movement->purchase->number }}
@@ -162,7 +162,7 @@
                             </div>
                             @endif
                             @if($movement->consumableWriteOff)
-                            <div class="text-xs text-gray-400">
+                            <div class="text-xs text-slate-400">
                                 Акт списания:
                                 <a href="{{ route('consumable-write-offs.show', $movement->consumableWriteOff) }}" class="text-blue-600 hover:text-blue-800">
                                     {{ $movement->consumableWriteOff->number }}
@@ -170,14 +170,14 @@
                             </div>
                             @endif
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ $movement->movedByUser->name ?? '—' }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-slate-600">{{ $movement->movedByUser->name ?? '—' }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             @if($movement->isOutcome() && !$movement->consumable_write_off_id)
                             <form action="{{ route('consumables.movements.destroy', [$consumable, $movement]) }}" method="POST"
                                   onsubmit="return confirm('Отменить выдачу? Количество вернётся на склад.')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-gray-500 hover:text-gray-700">Отменить</button>
+                                <button type="submit" class="text-slate-500 hover:text-slate-700">Отменить</button>
                             </form>
                             @endif
                         </td>
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     data.data.forEach(function (item) {
                         const btn = document.createElement('button');
                         btn.type = 'button';
-                        btn.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-100';
+                        btn.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-slate-100';
                         btn.textContent = item.inventory_number + (item.name ? ' — ' + item.name : '');
                         btn.addEventListener('click', function () {
                             input.value = btn.textContent;

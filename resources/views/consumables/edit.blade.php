@@ -3,13 +3,13 @@
 @section('title', 'Изменить расходник - ICT Help')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-6 py-8">
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">Изменить расходник</h1>
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <h1 class="text-2xl font-bold text-slate-900 mb-6">Изменить расходник</h1>
 
             @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
                     <ul>
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -23,9 +23,9 @@
                 @method('PUT')
 
                 <div class="mb-4">
-                    <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Название *</label>
+                    <label for="name" class="block text-slate-700 text-sm font-bold mb-2">Название *</label>
                     <input type="text" name="name" id="name"
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('name') border-red-500 @enderror"
+                           class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                            value="{{ old('name', $consumable->name) }}" required minlength="2" maxlength="255">
                     @error('name')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -33,9 +33,9 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="category" class="block text-gray-700 text-sm font-bold mb-2">Категория</label>
+                    <label for="category" class="block text-slate-700 text-sm font-bold mb-2">Категория</label>
                     <input type="text" name="category" id="category"
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('category') border-red-500 @enderror"
+                           class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('category') border-red-500 @enderror"
                            value="{{ old('category', $consumable->category) }}" maxlength="255">
                     @error('category')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -44,20 +44,20 @@
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label for="min_quantity" class="block text-gray-700 text-sm font-bold mb-2">Мин. остаток</label>
+                        <label for="min_quantity" class="block text-slate-700 text-sm font-bold mb-2">Мин. остаток</label>
                         <input type="number" name="min_quantity" id="min_quantity" min="0"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('min_quantity') border-red-500 @enderror"
+                               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('min_quantity') border-red-500 @enderror"
                                value="{{ old('min_quantity', $consumable->min_quantity) }}">
-                        <p class="text-xs text-gray-500 mt-1">Текущий остаток: {{ $consumable->quantity }} {{ $consumable->unit }} — меняется только через приход/расход</p>
+                        <p class="text-xs text-slate-500 mt-1">Текущий остаток: {{ $consumable->quantity }} {{ $consumable->unit }} — меняется только через приход/расход</p>
                         @error('min_quantity')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="unit" class="block text-gray-700 text-sm font-bold mb-2">Ед. измерения</label>
+                        <label for="unit" class="block text-slate-700 text-sm font-bold mb-2">Ед. измерения</label>
                         <input type="text" name="unit" id="unit" maxlength="20"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('unit') border-red-500 @enderror"
+                               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('unit') border-red-500 @enderror"
                                value="{{ old('unit', $consumable->unit) }}">
                         @error('unit')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -66,9 +66,9 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="room_id" class="block text-gray-700 text-sm font-bold mb-2">Место хранения (кабинет)</label>
+                    <label for="room_id" class="block text-slate-700 text-sm font-bold mb-2">Место хранения (кабинет)</label>
                     <select name="room_id" id="room_id"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('room_id') border-red-500 @enderror">
+                            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_id') border-red-500 @enderror">
                         <option value="">Не указано</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('room_id', $consumable->room_id) == $room->id ? 'selected' : '' }}>
@@ -82,9 +82,9 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="responsible_user_id" class="block text-gray-700 text-sm font-bold mb-2">Ответственный</label>
+                    <label for="responsible_user_id" class="block text-slate-700 text-sm font-bold mb-2">Ответственный</label>
                     <select name="responsible_user_id" id="responsible_user_id"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('responsible_user_id') border-red-500 @enderror">
+                            class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('responsible_user_id') border-red-500 @enderror">
                         <option value="">Не указан</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}" {{ old('responsible_user_id', $consumable->responsible_user_id) == $user->id ? 'selected' : '' }}>
@@ -98,9 +98,9 @@
                 </div>
 
                 <div class="mb-6">
-                    <label for="notes" class="block text-gray-700 text-sm font-bold mb-2">Примечания</label>
+                    <label for="notes" class="block text-slate-700 text-sm font-bold mb-2">Примечания</label>
                     <textarea name="notes" id="notes" rows="3" maxlength="1000"
-                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('notes') border-red-500 @enderror">{{ old('notes', $consumable->notes) }}</textarea>
+                              class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('notes') border-red-500 @enderror">{{ old('notes', $consumable->notes) }}</textarea>
                     @error('notes')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -108,10 +108,10 @@
 
                 <div class="flex items-center justify-between">
                     <button type="submit"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            class="btn-primary">
                         Сохранить
                     </button>
-                    <a href="{{ route('consumables.show', $consumable) }}" class="text-gray-600 hover:text-gray-800 font-medium">
+                    <a href="{{ route('consumables.show', $consumable) }}" class="text-slate-600 hover:text-slate-800 font-medium">
                         Отмена
                     </a>
                 </div>

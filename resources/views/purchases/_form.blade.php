@@ -17,59 +17,59 @@
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <div>
-        <label for="number" class="block text-gray-700 text-sm font-bold mb-2">Номер закупки *</label>
+        <label for="number" class="block text-slate-700 text-sm font-bold mb-2">Номер закупки *</label>
         <input type="text" name="number" id="number" maxlength="50" required
-               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('number') border-red-500 @enderror"
+               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('number') border-red-500 @enderror"
                value="{{ old('number', $purchase->number ?? '') }}">
         @error('number')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
     </div>
     <div>
-        <label for="date" class="block text-gray-700 text-sm font-bold mb-2">Дата *</label>
+        <label for="date" class="block text-slate-700 text-sm font-bold mb-2">Дата *</label>
         <input type="date" name="date" id="date" required
-               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('date') border-red-500 @enderror"
+               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('date') border-red-500 @enderror"
                value="{{ old('date', $purchase && $purchase->date ? $purchase->date->format('Y-m-d') : now()->format('Y-m-d')) }}">
         @error('date')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
     </div>
     <div>
-        <label for="supplier" class="block text-gray-700 text-sm font-bold mb-2">Поставщик *</label>
+        <label for="supplier" class="block text-slate-700 text-sm font-bold mb-2">Поставщик *</label>
         <input type="text" name="supplier" id="supplier" maxlength="255" required
-               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('supplier') border-red-500 @enderror"
+               class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('supplier') border-red-500 @enderror"
                value="{{ old('supplier', $purchase->supplier ?? '') }}">
         @error('supplier')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 </div>
 
 <div class="mb-6">
-    <label for="comment" class="block text-gray-700 text-sm font-bold mb-2">Комментарий</label>
+    <label for="comment" class="block text-slate-700 text-sm font-bold mb-2">Комментарий</label>
     <textarea name="comment" id="comment" rows="2" maxlength="1000"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">{{ old('comment', $purchase->comment ?? '') }}</textarea>
+              class="w-full rounded-lg border-slate-300 px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('comment', $purchase->comment ?? '') }}</textarea>
     @error('comment')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
 </div>
 
 <div class="mb-6">
     <div class="flex items-center justify-between mb-2">
-        <label class="block text-gray-700 text-sm font-bold">Позиции закупки *</label>
+        <label class="block text-slate-700 text-sm font-bold">Позиции закупки *</label>
         <button type="button" id="add-item-row" class="btn-secondary text-sm py-1.5">+ Добавить позицию</button>
     </div>
     @error('items')<p class="text-red-500 text-xs mb-2">{{ $message }}</p>@enderror
 
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50">
                 <tr>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Расходник / категория оборудования</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Наименование</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ед. измер.</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена за ед., руб.</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Стоимость, руб.</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Тип</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Расходник / категория оборудования</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Наименование</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Кол-во</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Ед. измер.</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Цена за ед., руб.</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Стоимость, руб.</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase"></th>
                 </tr>
             </thead>
-            <tbody id="items-body" class="bg-white divide-y divide-gray-200"></tbody>
+            <tbody id="items-body" class="bg-white divide-y divide-slate-200"></tbody>
             <tfoot>
-                <tr class="bg-gray-50 font-semibold">
+                <tr class="bg-slate-50 font-semibold">
                     <td class="px-3 py-2 text-right" colspan="6">Итого:</td>
                     <td class="px-3 py-2" id="items-total">0,00</td>
                     <td></td>
@@ -77,25 +77,25 @@
             </tfoot>
         </table>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Позиция «Оборудование» — при проведении закупки заведёт в инвентарь указанное количество единиц (инвентарный номер проставляется позже вручную). Позиция «Расходник» — увеличит остаток выбранного расходника.</p>
+    <p class="text-xs text-slate-500 mt-2">Позиция «Оборудование» — при проведении закупки заведёт в инвентарь указанное количество единиц (инвентарный номер проставляется позже вручную). Позиция «Расходник» — увеличит остаток выбранного расходника.</p>
 </div>
 
 <template id="item-row-template">
     <tr class="item-row">
         <td class="px-3 py-2 align-top">
-            <select name="items[__INDEX__][item_type]" class="item-type rounded border-gray-300 px-2 py-1.5 w-full">
+            <select name="items[__INDEX__][item_type]" class="item-type rounded-lg border-slate-300 px-2 py-1.5 w-full">
                 <option value="consumable">Расходник</option>
                 <option value="equipment">Оборудование</option>
             </select>
         </td>
         <td class="px-3 py-2 align-top">
-            <select name="items[__INDEX__][consumable_id]" class="consumable-select rounded border-gray-300 px-2 py-1.5 w-full">
+            <select name="items[__INDEX__][consumable_id]" class="consumable-select rounded-lg border-slate-300 px-2 py-1.5 w-full">
                 <option value="">— выберите расходник —</option>
                 @foreach($consumables as $consumable)
                 <option value="{{ $consumable->id }}">{{ $consumable->name }}</option>
                 @endforeach
             </select>
-            <select name="items[__INDEX__][equipment_category_id]" class="category-select hidden rounded border-gray-300 px-2 py-1.5 w-full">
+            <select name="items[__INDEX__][equipment_category_id]" class="category-select hidden rounded-lg border-slate-300 px-2 py-1.5 w-full">
                 <option value="">— категория (необязательно) —</option>
                 @foreach($categories as $category)
                 <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -103,18 +103,18 @@
             </select>
         </td>
         <td class="px-3 py-2 align-top">
-            <input type="text" name="items[__INDEX__][name]" maxlength="255" required class="item-name rounded border-gray-300 px-2 py-1.5 w-full">
+            <input type="text" name="items[__INDEX__][name]" maxlength="255" required class="item-name rounded-lg border-slate-300 px-2 py-1.5 w-full">
         </td>
         <td class="px-3 py-2 align-top">
-            <input type="number" name="items[__INDEX__][quantity]" min="1" value="1" required class="item-quantity rounded border-gray-300 px-2 py-1.5 w-20">
+            <input type="number" name="items[__INDEX__][quantity]" min="1" value="1" required class="item-quantity rounded-lg border-slate-300 px-2 py-1.5 w-20">
         </td>
         <td class="px-3 py-2 align-top">
-            <input type="text" name="items[__INDEX__][unit]" maxlength="32" value="шт." class="item-unit rounded border-gray-300 px-2 py-1.5 w-20">
+            <input type="text" name="items[__INDEX__][unit]" maxlength="32" value="шт." class="item-unit rounded-lg border-slate-300 px-2 py-1.5 w-20">
         </td>
         <td class="px-3 py-2 align-top">
-            <input type="number" name="items[__INDEX__][unit_price]" min="0" step="0.01" value="0" required class="item-price rounded border-gray-300 px-2 py-1.5 w-28">
+            <input type="number" name="items[__INDEX__][unit_price]" min="0" step="0.01" value="0" required class="item-price rounded-lg border-slate-300 px-2 py-1.5 w-28">
         </td>
-        <td class="px-3 py-2 align-top text-sm text-gray-700 item-sum whitespace-nowrap">0,00</td>
+        <td class="px-3 py-2 align-top text-sm text-slate-700 item-sum whitespace-nowrap">0,00</td>
         <td class="px-3 py-2 align-top">
             <button type="button" class="remove-item-row text-red-600 hover:text-red-800 text-sm">Удалить</button>
         </td>
