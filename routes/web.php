@@ -9,6 +9,7 @@ use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\ConsumableWriteOffController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
+use App\Http\Controllers\TmcRequestController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\WriteOffController;
 use App\Http\Controllers\TicketController;
@@ -453,6 +454,19 @@ Route::middleware("auth")->group(function () {
             WriteOffController::class,
             "destroy",
         ])->name("write-offs.destroy");
+
+        // Заявки на приобретение ТМЦ — простой заполняемый/печатаемый лист.
+        Route::get("/tmc-requests/{tmcRequest}/document", [
+            TmcRequestController::class,
+            "document",
+        ])->name("tmc-requests.document");
+        Route::resource("/tmc-requests", TmcRequestController::class)
+            ->parameters(["tmc-requests" => "tmcRequest"])
+            ->except(["show"]);
+        Route::get("/tmc-requests/{tmcRequest}", [
+            TmcRequestController::class,
+            "show",
+        ])->name("tmc-requests.show");
 
         // Маршруты для закупок
         Route::resource("/purchases", PurchaseController::class);
