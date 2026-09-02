@@ -32,6 +32,49 @@ if (cfg) {
     let connectSource = null;
     let selectedId = null;
 
+    // ---- zoom (масштаб рабочей области) ------------------------------
+
+    const ZOOM_MIN = 0.4;
+    const ZOOM_MAX = 2.5;
+    const ZOOM_STEP = 0.1;
+    const zoomStorageKey = `topology-zoom-${cfg.diagramId || "default"}`;
+
+    let zoom = parseFloat(localStorage.getItem(zoomStorageKey)) || 1;
+    const zoomLabel = document.getElementById("zoom-label");
+
+    function applyZoom() {
+        zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
+        canvas.style.transformOrigin = "0 0";
+        canvas.style.transform = `scale(${zoom})`;
+        if (zoomLabel) zoomLabel.textContent = Math.round(zoom * 100) + "%";
+        localStorage.setItem(zoomStorageKey, zoom);
+    }
+
+    document.getElementById("zoom-in")?.addEventListener("click", () => {
+        zoom += ZOOM_STEP;
+        applyZoom();
+    });
+    document.getElementById("zoom-out")?.addEventListener("click", () => {
+        zoom -= ZOOM_STEP;
+        applyZoom();
+    });
+    document.getElementById("zoom-reset")?.addEventListener("click", () => {
+        zoom = 1;
+        applyZoom();
+    });
+
+    // Ctrl/Cmd + колесо мыши над холстом — тоже масштабирует область.
+    document.getElementById("canvas-scroll")?.addEventListener(
+        "wheel",
+        (evt) => {
+            if (!evt.ctrlKey && !evt.metaKey) return;
+            evt.preventDefault();
+            zoom += evt.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+            applyZoom();
+        },
+        { passive: false },
+    );
+
     // ---- helpers ----------------------------------------------------
 
     function url(template, id) {
@@ -73,8 +116,13 @@ if (cfg) {
         return nodes.find((n) => n.id === id);
     }
 
+    function nodeScale(node) {
+        return node.scale || 1;
+    }
+
     function center(node) {
-        return { x: node.pos_x + W / 2, y: node.pos_y + H / 2 };
+        const s = nodeScale(node);
+        return { x: node.pos_x + (W * s) / 2, y: node.pos_y + (H * s) / 2 };
     }
 
     // Экранные координаты события → координаты SVG (учёт прокрутки/масштаба).
@@ -102,15 +150,33 @@ if (cfg) {
     function render() {
         renderLinks();
         renderNodes();
+        growCanvasToFit();
+    }
+
+    // Пределы рабочей области расширяются, когда узел выходит за них
+    // (перетаскиванием или увеличением индивидуального масштаба), а не
+    // остаются фиксированными.
+    function growCanvasToFit() {
+        const margin = 200;
+        let maxX = 2000;
+        let maxY = 1400;
+        for (const node of nodes) {
+            const s = nodeScale(node);
+            maxX = Math.max(maxX, node.pos_x + W * s + margin);
+            maxY = Math.max(maxY, node.pos_y + H * s + margin);
+        }
+        canvas.setAttribute("width", Math.round(maxX));
+        canvas.setAttribute("height", Math.round(maxY));
     }
 
     function renderNodes() {
         nodesLayer.innerHTML = "";
         for (const node of nodes) {
+            const s = nodeScale(node);
             const g = el("g", {
                 class: "topo-node",
                 "data-id": node.id,
-                transform: `translate(${node.pos_x},${node.pos_y})`,
+                transform: `translate(${node.pos_x},${node.pos_y}) scale(${s})`,
             });
             g.style.cursor = "move";
 
@@ -299,6 +365,7 @@ if (cfg) {
     const pType = document.getElementById("panel-type");
     const pIp = document.getElementById("panel-ip");
     const pRoom = document.getElementById("panel-room");
+    const pScale = document.getElementById("panel-scale");
 
     function selectNode(node) {
         selectedId = node.id;
@@ -306,6 +373,7 @@ if (cfg) {
         pType.value = node.type || "other";
         pIp.value = node.ip_address || "";
         pRoom.value = node.room_id || "";
+        if (pScale) pScale.value = String(nodeScale(node));
         panel.classList.remove("hidden");
         render();
     }
@@ -327,6 +395,7 @@ if (cfg) {
                 type: pType.value,
                 ip_address: pIp.value || null,
                 room_id: pRoom.value || null,
+                scale: pScale ? parseFloat(pScale.value) || 1 : undefined,
             });
             Object.assign(node, updated);
             render();
@@ -415,5 +484,6 @@ if (cfg) {
     document.addEventListener("mousemove", onPointerMove);
     document.addEventListener("mouseup", onPointerUp);
 
+    applyZoom();
     render();
 }

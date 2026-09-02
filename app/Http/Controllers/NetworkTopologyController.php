@@ -213,6 +213,7 @@ class NetworkTopologyController extends Controller
             "room_id" => "nullable|exists:rooms,id",
             "pos_x" => "nullable|integer",
             "pos_y" => "nullable|integer",
+            "scale" => "nullable|numeric|min:0.5|max:2",
         ]);
     }
 
@@ -229,6 +230,7 @@ class NetworkTopologyController extends Controller
                 : null,
             "pos_x" => $node->pos_x,
             "pos_y" => $node->pos_y,
+            "scale" => (float) $node->scale,
         ];
     }
 

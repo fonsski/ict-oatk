@@ -15,11 +15,13 @@ class NetworkNode extends Model
         'room_id',
         'pos_x',
         'pos_y',
+        'scale',
     ];
 
     protected $casts = [
         'pos_x' => 'integer',
         'pos_y' => 'integer',
+        'scale' => 'decimal:2',
     ];
 
     /**

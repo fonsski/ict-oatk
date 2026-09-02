@@ -30,11 +30,19 @@
                 </select>
                 <button type="button" id="add-node-btn" class="btn-primary py-1.5 text-sm">Добавить узел</button>
                 <button type="button" id="connect-btn" class="btn-secondary py-1.5 text-sm">Режим соединения</button>
-                <span class="text-sm text-slate-500">Перетаскивайте узлы мышью. Клик по узлу — свойства.</span>
+
+                <div class="flex items-center gap-1 ml-auto border border-slate-200 rounded-lg px-1 py-1">
+                    <button type="button" id="zoom-out" title="Уменьшить масштаб области" class="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded">−</button>
+                    <span id="zoom-label" class="text-xs text-slate-500 w-10 text-center select-none">100%</span>
+                    <button type="button" id="zoom-in" title="Увеличить масштаб области" class="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded">+</button>
+                    <button type="button" id="zoom-reset" title="Сбросить масштаб" class="ml-1 text-xs text-slate-500 hover:text-slate-700 px-1.5">100%</button>
+                </div>
+
+                <span class="text-sm text-slate-500 w-full">Перетаскивайте узлы мышью. Клик по узлу — свойства. Ctrl/⌘ + колесо мыши над схемой — масштаб области.</span>
             </div>
 
-            <div class="card p-0 overflow-auto" style="max-height:70vh">
-                <svg id="topology-canvas" width="2000" height="1400" class="bg-slate-50 select-none" style="min-width:100%">
+            <div id="canvas-scroll" class="card p-0 overflow-auto" style="max-height:70vh">
+                <svg id="topology-canvas" width="2000" height="1400" class="bg-slate-50 select-none" style="transform-origin:0 0">
                     <g id="links-layer"></g>
                     <g id="nodes-layer"></g>
                 </svg>
@@ -73,6 +81,17 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Масштаб узла</label>
+                    <select id="panel-scale" class="form-input">
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">Размер этой карточки на схеме, независимо от масштаба всей области.</p>
+                </div>
                 <div class="flex items-center justify-between pt-2">
                     <button type="button" id="panel-save" class="btn-primary py-1.5 text-sm">Сохранить</button>
                     <button type="button" id="panel-delete" class="text-sm font-medium text-red-600 hover:text-red-800">Удалить узел</button>
@@ -87,7 +106,7 @@
         'id' => $n->id, 'label' => $n->label, 'type' => $n->type,
         'ip_address' => $n->ip_address, 'room_id' => $n->room_id,
         'room_label' => $n->room ? $n->room->display_label : null,
-        'pos_x' => $n->pos_x, 'pos_y' => $n->pos_y,
+        'pos_x' => $n->pos_x, 'pos_y' => $n->pos_y, 'scale' => (float) $n->scale,
     ])->values();
     $linksData = $diagram->links->map(fn($l) => [
         'id' => $l->id, 'source_id' => $l->source_id, 'target_id' => $l->target_id, 'label' => $l->label,
@@ -96,6 +115,7 @@
 <script>
     window.topologyConfig = {
         csrf: '{{ csrf_token() }}',
+        diagramId: {{ $diagram->id }},
         types: @json($types),
         nodes: @json($nodesData),
         links: @json($linksData),

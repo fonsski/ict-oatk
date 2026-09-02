@@ -11,8 +11,8 @@
     if ($nodes->count()) {
         $minX = $nodes->min('pos_x') - 20;
         $minY = $nodes->min('pos_y') - 20;
-        $maxX = $nodes->max(fn($n) => $n->pos_x) + $W + 20;
-        $maxY = $nodes->max(fn($n) => $n->pos_y) + $H + 40;
+        $maxX = $nodes->max(fn($n) => $n->pos_x + $W * (float) $n->scale) + 20;
+        $maxY = $nodes->max(fn($n) => $n->pos_y + $H * (float) $n->scale) + 40;
     } else {
         $minX = 0; $minY = 0; $maxX = 800; $maxY = 400;
     }
@@ -20,7 +20,8 @@
     $vbH = max(1, $maxY - $minY);
     $centers = [];
     foreach ($nodes as $n) {
-        $centers[$n->id] = ['x' => $n->pos_x + $W / 2, 'y' => $n->pos_y + $H / 2];
+        $s = (float) $n->scale;
+        $centers[$n->id] = ['x' => $n->pos_x + ($W * $s) / 2, 'y' => $n->pos_y + ($H * $s) / 2];
     }
 @endphp
 <!DOCTYPE html>
@@ -74,7 +75,7 @@
 
             {{-- Узлы --}}
             @foreach($nodes as $node)
-            <g transform="translate({{ $node->pos_x }},{{ $node->pos_y }})">
+            <g transform="translate({{ $node->pos_x }},{{ $node->pos_y }}) scale({{ (float) $node->scale }})">
                 <rect width="{{ $W }}" height="{{ $H }}" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
                 <text x="12" y="30" font-size="22">{{ $icons[$node->type] ?? $icons['other'] }}</text>
                 <text x="42" y="27" font-size="13" font-weight="600" fill="#0f172a">{{ \Illuminate\Support\Str::limit($node->label, 16) }}</text>
