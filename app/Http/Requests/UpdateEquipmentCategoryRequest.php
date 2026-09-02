@@ -28,7 +28,7 @@ class UpdateEquipmentCategoryRequest extends FormRequest
                 'string',
                 'min:2',
                 'max:255',
-                Rule::unique('equipment_categories', 'name')->ignore($this->route('equipmentCategory')->id)
+                Rule::unique('equipment_categories', 'name')->ignore($this->route('equipment_category')->id)
             ],
             'description' => 'nullable|string|min:5|max:1000',
             'has_operating_system' => 'boolean',
