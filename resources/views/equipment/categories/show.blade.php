@@ -73,7 +73,9 @@
                         @foreach($equipment as $item)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-slate-900">{{ $item->inventory_number }} @if($item->name) — <span class="text-slate-700">{{ $item->name }}</span>@endif</div>
+                                <a href="{{ route('equipment.show', $item) }}" class="text-sm font-medium text-slate-900 hover:text-blue-600">
+                                    {{ $item->inventory_number }} @if($item->name) — <span class="text-slate-700">{{ $item->name }}</span>@endif
+                                </a>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
