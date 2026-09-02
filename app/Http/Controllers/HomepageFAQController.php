@@ -66,7 +66,7 @@ class HomepageFAQController extends Controller
 
         $faq = new HomepageFAQ();
         $faq->title = $data["title"];
-        $faq->slug = Str::slug($data["title"]);
+        $faq->slug = $this->uniqueSlug($data["title"]);
         $faq->excerpt = $data["excerpt"] ?? null;
         $faq->markdown = $data["content"];
 
@@ -120,7 +120,7 @@ class HomepageFAQController extends Controller
         $data = $request->validated();
 
         $homepageFaq->title = $data["title"];
-        $homepageFaq->slug = Str::slug($data["title"]);
+        $homepageFaq->slug = $this->uniqueSlug($data["title"], $homepageFaq->id);
         $homepageFaq->excerpt = $data["excerpt"] ?? null;
         $homepageFaq->markdown = $data["content"];
 
@@ -349,6 +349,29 @@ class HomepageFAQController extends Controller
                 500,
             );
         }
+    }
+
+    /**
+     * Подобрать уникальный slug: без этого второй FAQ с тем же (или
+     * транслитерирующимся в тот же) заголовком падал с ошибкой уникального
+     * индекса вместо сохранения — не было способа добавить похожий вопрос.
+     */
+    private function uniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title) ?: "faq";
+        $slug = $base;
+        $suffix = 2;
+
+        while (
+            HomepageFAQ::where("slug", $slug)
+                ->when($ignoreId, fn($q) => $q->where("id", "!=", $ignoreId))
+                ->exists()
+        ) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     /**
