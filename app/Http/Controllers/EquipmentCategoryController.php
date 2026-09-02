@@ -108,9 +108,12 @@ class EquipmentCategoryController extends Controller
             ->with(["status", "room"])
             ->paginate(15);
 
+        // Вью написана под $category — параметр биндинга называется иначе.
+        $category = $equipmentCategory;
+
         return view(
             "equipment.categories.show",
-            compact("equipmentCategory", "equipment"),
+            compact("equipmentCategory", "equipment", "category"),
         );
     }
 
@@ -128,7 +131,13 @@ class EquipmentCategoryController extends Controller
             abort(403, "У вас нет прав на управление категориями оборудования");
         }
 
-        return view("equipment.categories.edit", compact("equipmentCategory"));
+        // Вью написана под $category — параметр биндинга называется иначе.
+        $category = $equipmentCategory;
+
+        return view(
+            "equipment.categories.edit",
+            compact("equipmentCategory", "category"),
+        );
     }
 
     /**
