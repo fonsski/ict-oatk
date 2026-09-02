@@ -143,7 +143,21 @@ log "Перезапуск сервисов"
 systemctl daemon-reload
 systemctl restart ict-help-queue.service
 systemctl restart ict-help-reverb.service
+
+# php-fpm держит скомпилированный код в opcache. При выключенном
+# opcache.validate_timestamps (типичная production-оптимизация) новый код
+# после git reset --hard не подхватится, пока сам php-fpm не перезапустится
+# — сайт продолжит молча отвечать старой версией. Перезапускаем явно, а не
+# полагаемся на настройки opcache конкретного сервера.
+PHP_FPM_UNIT="$(systemctl list-unit-files --no-legend 'php*-fpm.service' \
+    | awk '{print $1}' | head -n1)"
+if [[ -n "${PHP_FPM_UNIT}" ]]; then
+    systemctl restart "${PHP_FPM_UNIT}"
+else
+    warn "Юнит php-fpm не найден — перезапустите вручную, иначе код может не обновиться в памяти"
+fi
+
 systemctl reload nginx
-echo "  очередь, reverb, nginx"
+echo "  очередь, reverb, php-fpm, nginx"
 
 log "Обновление завершено"

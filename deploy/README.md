@@ -212,6 +212,36 @@ sudo bash /var/www/ict-help/deploy/update.sh
 Если что-то пойдёт не так, сайт всё равно выйдет из режима обслуживания —
 это гарантирует `trap` внутри скрипта.
 
+Помимо кода, скрипт перезапускает `queue`, `reverb` и **`php-fpm`**. Рестарт
+php-fpm обязателен: если на сервере включена оптимизация
+`opcache.validate_timestamps=0`, php-fpm держит скомпилированный код в
+памяти и не увидит новых файлов после `git reset --hard`, пока сам не
+перезапустится — сайт продолжит молча отвечать старой версией.
+
+### Проверить состояние в любой момент — `healthcheck.sh`
+
+```bash
+sudo bash /var/www/ict-help/deploy/healthcheck.sh
+```
+
+Только читает состояние, ничего не меняет — можно гонять на живом сайте
+когда угодно, хоть по расписанию. Проверяет разом:
+
+- какой коммит реально на сервере и не отстал ли от `origin/main`;
+- нет ли незакоммиченных ручных правок кода;
+- активны ли `mysql`, `nginx`, `php-fpm`, `ict-help-queue`, `ict-help-reverb`,
+  `ict-help-scheduler.timer`;
+- место на диске и память;
+- `APP_ENV`, `APP_DEBUG`, `APP_KEY`, `LOG_CHANNEL` в `.env`;
+- доступны ли `storage/` и `bootstrap/cache/` для записи веб-пользователю;
+- есть ли сегодня ошибки в журнале;
+- отвечает ли БД и нет ли непрогнанных миграций;
+- отвечает ли сайт по HTTP.
+
+Каждый пункт помечен ✓ (порядок), `!` (стоит посмотреть) или ✗ (критично).
+Код выхода `1`, если есть хоть один ✗ — удобно дёргать из cron/мониторинга.
+`deploy/release.sh` запускает его сам после каждого выката.
+
 ### `detected dubious ownership` при получении кода
 
 ```
@@ -266,10 +296,15 @@ FAQ главной — **в production не заливаются**. Они пр�
 чей шаблон изменился, падает с 500.
 
 Сначала посмотрите настоящую причину. На странице ошибки есть
-«Идентификатор ошибки» — тот же номер лежит в журнале:
+«Идентификатор ошибки» — тот же номер лежит в журнале. Имя файла зависит от
+`LOG_CHANNEL` в `.env`: при `LOG_CHANNEL=single` это `laravel.log`, при
+`LOG_CHANNEL=daily` (используется в `.env.production.example`) — файл на
+каждый день отдельно, `laravel-ГГГГ-ММ-ДД.log`. Если не уверены, что стоит —
+проще всего посмотреть, что реально лежит в каталоге, и искать по всем:
 
 ```bash
-grep <идентификатор> /var/www/ict-help/storage/logs/laravel.log
+ls -la /var/www/ict-help/storage/logs/
+grep -a <идентификатор> /var/www/ict-help/storage/logs/laravel*.log
 ```
 
 Строка вида `Failed to open stream: Permission denied` подтверждает догадку.
@@ -294,10 +329,11 @@ sudo -u www-data php artisan route:cache
 **Посмотреть логи:**
 
 ```bash
-tail -f /var/www/ict-help/storage/logs/laravel.log   # приложение
-tail -f /var/www/ict-help/storage/logs/queue.log     # очередь
-journalctl -u ict-help-reverb -f                     # websocket
-tail -f /var/log/nginx/ict-help.error.log            # nginx
+ls /var/www/ict-help/storage/logs/                    # имя файла зависит от LOG_CHANNEL
+tail -f /var/www/ict-help/storage/logs/laravel-*.log  # приложение (LOG_CHANNEL=daily)
+tail -f /var/www/ict-help/storage/logs/queue.log      # очередь
+journalctl -u ict-help-reverb -f                      # websocket
+tail -f /var/log/nginx/ict-help.error.log             # nginx
 ```
 
 **Перезапустить фоновые сервисы:**
