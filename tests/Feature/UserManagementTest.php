@@ -59,6 +59,35 @@ class UserManagementTest extends TestCase
     }
 
     /**
+     * На боевом сервере общий обработчик исключений отвечал страницей 500 на
+     * любую ошибку валидации, и вместо «пароль слишком простой» сотрудник
+     * видел «Внутренняя ошибка сервера».
+     */
+    public function test_validation_errors_are_shown_in_production_not_a_500(): void
+    {
+        $this->app["env"] = "production";
+        // Вне окружения testing Laravel включает проверку CSRF, а токена в
+        // тестовом запросе нет; здесь проверяется только обработка ошибок.
+        $this->withoutMiddleware(
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        );
+
+        $response = $this->actingAs($this->master())
+            ->from(route("user.create"))
+            ->post(route("user.store"), [
+                "name" => "Слабый Пароль",
+                "phone" => "+7 900 123-45-67",
+                "role_id" => $this->technicianRoleId(),
+                "password" => "12345678",
+                "password_confirmation" => "12345678",
+            ]);
+
+        $response->assertRedirect(route("user.create"));
+        $response->assertSessionHasErrors("password");
+        $this->assertDatabaseMissing("users", ["name" => "Слабый Пароль"]);
+    }
+
+    /**
      * Телефон — это логин, и хранить его надо в том же виде, в каком его
      * потом ищет вход в систему. Иначе человек не сможет войти под своим
      * же номером, набранным чуть иначе.

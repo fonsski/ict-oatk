@@ -88,6 +88,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Регистрация обработчика для всех остальных исключений
         $exceptions->renderable(function (\Throwable $e) {
+            // Ошибки валидации и готовые ответы (редиректы) Laravel
+            // обрабатывает сам. Без этой проверки на боевом сервере любая
+            // ошибка в форме превращалась в страницу 500, а пользователь
+            // не видел, что именно нужно исправить.
+            if (
+                $e instanceof \Illuminate\Validation\ValidationException ||
+                $e instanceof \Illuminate\Http\Exceptions\HttpResponseException
+            ) {
+                return null;
+            }
+
             if (app()->environment("production")) {
                 return response()->view(
                     "errors.500",

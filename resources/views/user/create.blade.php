@@ -114,7 +114,7 @@
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-slate-500">Пароль должен содержать минимум 8 символов</p>
+                    <p class="mt-1 text-sm text-slate-500">Минимум 8 символов, обязательно строчная и заглавная буква и цифра</p>
                 </div>
 
                 <!-- Password Confirmation -->
