@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentImportController;
 use App\Http\Controllers\EquipmentCategoryController;
 use App\Http\Controllers\EquipmentServiceController;
 use App\Http\Controllers\EquipmentKnowledgeController;
@@ -255,6 +256,17 @@ Route::middleware("auth")->group(function () {
             ->name("calendar.documents.download");
         Route::delete("/calendar/documents/{document}", [CalendarDocumentController::class, "destroy"])
             ->name("calendar.documents.destroy");
+    });
+
+    // Массовый импорт оборудования из CSV/JSON (только admin и master).
+    Route::middleware([
+        "auth",
+        \App\Http\Middleware\CheckRole::class . ":admin,master",
+    ])->prefix("equipment-import")->name("equipment.import.")->group(function () {
+        Route::get("/", [EquipmentImportController::class, "create"])->name("create");
+        Route::get("/template", [EquipmentImportController::class, "template"])->name("template");
+        Route::post("/preview", [EquipmentImportController::class, "preview"])->name("preview");
+        Route::post("/", [EquipmentImportController::class, "store"])->name("store");
     });
 
     // Ресурс equipment полностью доступен только для ролей admin, master и technician

@@ -10,6 +10,7 @@
         <div class="flex gap-2">
             @if(auth()->user()->hasRole(['admin', 'master']))
             <a href="{{ route('write-offs.index') }}" class="btn-secondary">Акты списания</a>
+            <a href="{{ route('equipment.import.create') }}" class="btn-secondary">Импорт из файла</a>
             @endif
             <a href="{{ route('equipment.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 Добавить оборудование
