@@ -892,7 +892,7 @@ if (action === 'change-status' && status) {
             button.classList.remove('bg-slate-200');
         });
 
-        return fetch(`{{ route('api.tickets.status', ['ticket' => 0]) }}`.replace('0', ticketId), {
+        return fetch(`{{ route('api.tickets.status', ['ticket' => '__ID__']) }}`.replace('__ID__', ticketId), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -927,7 +927,7 @@ if (action === 'change-status' && status) {
     function setTicketAssignee(ticketId, assigneeId) {
         window.currentActionTicketId = ticketId;
 
-        fetch(`{{ route('api.tickets.assign', ['ticket' => 0]) }}`.replace('0', ticketId), {
+        fetch(`{{ route('api.tickets.assign', ['ticket' => '__ID__']) }}`.replace('__ID__', ticketId), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1026,7 +1026,7 @@ if (action === 'change-status' && status) {
                     const technicianId = document.getElementById('technician-select').value;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                    fetch(`{{ route('api.tickets.assign', ['ticket' => 0]) }}`.replace('0', ticketId), {
+                    fetch(`{{ route('api.tickets.assign', ['ticket' => '__ID__']) }}`.replace('__ID__', ticketId), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
