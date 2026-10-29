@@ -8,10 +8,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mobile menu toggle
     if (mobileButton) {
+        const menu = document.getElementById('mobile-menu');
+        const backdrop = document.getElementById('sidebar-backdrop');
+
+        const setMenu = function(open) {
+            if (!menu) {
+                return;
+            }
+            menu.classList.toggle('is-open', open);
+            if (backdrop) {
+                backdrop.classList.toggle('is-open', open);
+            }
+            mobileButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+
         mobileButton.addEventListener('click', function() {
-            const menu = document.getElementById('mobile-menu');
-            if (menu) {
-                menu.classList.toggle('hidden');
+            setMenu(!(menu && menu.classList.contains('is-open')));
+        });
+
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                setMenu(false);
+            });
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                setMenu(false);
             }
         });
     }

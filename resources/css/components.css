@@ -418,11 +418,11 @@
 }
 
 
-.form-input:invalid {
+.form-input:user-invalid {
     @apply border-red-500;
 }
 
-.form-input:invalid:focus {
+.form-input:user-invalid:focus {
     @apply ring-red-500 border-red-500;
 }
 

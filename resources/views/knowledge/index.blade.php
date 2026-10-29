@@ -3,59 +3,39 @@
 @section('title', 'База знаний - ICT Help')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-12">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center">
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 w-16 h-16 rounded-full flex items-center justify-center mr-4">
-                        <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-4xl font-bold text-gray-900 mb-1">База знаний</h1>
-                        <p class="text-xl text-gray-600 max-w-3xl">
-                            Найдите ответы на часто задаваемые вопросы и инструкции по решению технических проблем
-                        </p>
-                    </div>
-                </div>
-
-                <div>
-                    @php
-                    $user = auth()->user();
-                    $role = optional($user)->role ? optional($user->role)->slug : null;
-                    @endphp
-
-                    @if($user && in_array($role, ['admin','master','technician']))
-                    <div class="flex items-center gap-3">
-                        <a href="{{ route('knowledge.drafts') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                            Мои черновики
-                            @if(($myDraftsCount ?? 0) > 0)
-                            <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">{{ $myDraftsCount }}</span>
-                            @endif
-                        </a>
-                        @if(in_array($role, ['admin','master']))
-                        <a href="{{ route('knowledge.archive') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                            Архив
-                        </a>
-                        <a href="{{ route('knowledge.trashed') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                            Корзина
-                        </a>
-                        @endif
-                        <a href="{{ route('knowledge.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                            Добавить статью
-                        </a>
-                    </div>
-                    @endif
-                </div>
+<div class="container-width section-padding">
+    <div>
+        <!-- Заголовок -->
+        <div class="page-head">
+            <div>
+                <h1 class="page-title">База знаний</h1>
+                <p class="page-sub">Инструкции и ответы на частые вопросы по технике.</p>
             </div>
+
+            @php
+            $user = auth()->user();
+            $role = optional($user)->role ? optional($user->role)->slug : null;
+            @endphp
+
+            @if($user && in_array($role, ['admin','master','technician']))
+            <div class="page-actions">
+                <a href="{{ route('knowledge.drafts') }}" class="btn-secondary btn-sm">
+                    Мои черновики
+                    @if(($myDraftsCount ?? 0) > 0)
+                    <span class="ml-2 inline-flex items-center justify-center px-1.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">{{ $myDraftsCount }}</span>
+                    @endif
+                </a>
+                @if(in_array($role, ['admin','master']))
+                <a href="{{ route('knowledge.archive') }}" class="btn-secondary btn-sm">Архив</a>
+                <a href="{{ route('knowledge.trashed') }}" class="btn-secondary btn-sm">Корзина</a>
+                @endif
+                <a href="{{ route('knowledge.create') }}" class="btn-primary btn-sm">Добавить статью</a>
+            </div>
+            @endif
         </div>
 
         <!-- Search and Filters -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
             <form action="{{ route('knowledge.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
                     <div class="relative">
@@ -68,11 +48,11 @@
                             value="{{ request('search') }}"
                             placeholder="Поиск по заголовку, тексту и тегам..."
                             maxlength="100"
-                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center space-x-2">
                         <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -86,7 +66,7 @@
                             <line x1="17" y1="16" x2="23" y2="16"></line>
                         </svg>
                         <select name="category"
-                            class="border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent py-2 pl-2 pr-8 text-sm">
+                            class="border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent py-2 pl-2 pr-8 text-sm">
                             <option value="">Все категории</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
@@ -96,7 +76,7 @@
                         </select>
                     </div>
                     <button type="submit"
-                        class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Поиск
                     </button>
                 </div>
@@ -106,12 +86,12 @@
         <!-- Articles Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($articles as $article)
-            <article class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <article class="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-150">
                 <a href="{{ route('knowledge.show', $article) }}" class="block p-6">
                     <div class="flex items-center justify-between mb-4">
                         @if($article->category)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white"
-                              style="background-color: {{ $article->category->color }}">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium cat-chip"
+                              style="--chip: {{ $article->category->color }}">
                             {{ $article->category->name }}
                         </span>
                         @else

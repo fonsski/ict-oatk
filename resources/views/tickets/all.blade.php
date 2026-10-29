@@ -4,155 +4,142 @@
 
 @section('content')
 <div class="container-width section-padding">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-slate-900 mb-2">Все заявки</h1>
-            <p class="text-slate-600">Управление всеми заявками в системе</p>
-        </div>
-        <div class="flex items-center gap-4 mt-4 sm:mt-0">
-            <div class="flex items-center gap-2 text-sm text-slate-600">
-                <div class="w-2 h-2 bg-green-500 rounded-full" id="status-indicator"></div>
+    <!-- Заголовок: название, время обновления и два действия -->
+    <div class="page-head">
+        <h1 class="page-title">Все заявки</h1>
+        <div class="page-actions">
+            <div class="freshness">
+                <span class="freshness-dot bg-green-500" id="status-indicator"></span>
                 <span id="last-updated">Загрузка...</span>
             </div>
-            <button id="refresh-btn" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button id="refresh-btn" class="btn-secondary btn-sm">
+                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="23,4 23,10 17,10"></polyline>
                     <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
                 </svg>
                 Обновить
             </button>
-            <a href="{{ route('tickets.create') }}" class="btn-primary">
-                Новая заявка
+            <a href="{{ route('tickets.create') }}" class="btn-primary btn-sm">Новая заявка</a>
+        </div>
+    </div>
+
+    <!-- Счётчики по статусам: они же фильтр списка -->
+    @php
+        $statusNow = request('status');
+        $countCards = [
+            ['', 'Всего', 'total-count', $tickets->total() ?? 0],
+            ['open', 'Открытые', 'open-count', $tickets->where('status', 'open')->count()],
+            ['in_progress', 'В работе', 'progress-count', $tickets->where('status', 'in_progress')->count()],
+            ['resolved', 'Решённые', 'resolved-count', $tickets->where('status', 'resolved')->count()],
+            ['closed', 'Закрытые', 'closed-count', $tickets->where('status', 'closed')->count()],
+        ];
+    @endphp
+    <div class="count-cards" id="stats-cards">
+        @foreach ($countCards as [$statusValue, $statusLabel, $countId, $countValue])
+            <a href="{{ request()->fullUrlWithQuery(['status' => $statusValue ?: null, 'page' => null]) }}"
+                class="count-card"
+                @if ((string) $statusNow === (string) $statusValue) aria-current="true" @endif>
+                <span class="count-card-label">{{ $statusLabel }}</span>
+                <span class="count-card-value" id="{{ $countId }}">{{ $countValue }}</span>
             </a>
-        </div>
+        @endforeach
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6 mb-8" id="stats-cards">
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-slate-900 mb-1" id="total-count">{{ $tickets->total() ?? 0 }}</div>
-            <div class="text-sm text-slate-600">Всего</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-blue-600 mb-1" id="open-count">{{ $tickets->where('status', 'open')->count() }}</div>
-            <div class="text-sm text-slate-600">Открытые</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-yellow-600 mb-1" id="progress-count">{{ $tickets->where('status', 'in_progress')->count() }}</div>
-            <div class="text-sm text-slate-600">В работе</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-green-600 mb-1" id="resolved-count">{{ $tickets->where('status', 'resolved')->count() }}</div>
-            <div class="text-sm text-slate-600">Решённые</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-slate-600 mb-1" id="closed-count">{{ $tickets->where('status', 'closed')->count() }}</div>
-            <div class="text-sm text-slate-600">Закрытые</div>
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="card p-6 mb-8">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-slate-900">Фильтры</h3>
-            <button type="button" id="toggle-filters" class="md:hidden btn-outline py-1 px-3 text-sm">
+    <!-- Фильтры -->
+    <div class="filter-panel">
+        <div class="flex justify-between items-center md:hidden mb-3">
+            <span class="text-sm font-medium text-slate-900">Фильтры</span>
+            <button type="button" id="toggle-filters" class="btn-secondary btn-sm">
                 <span class="show-text">Показать фильтры</span>
                 <span class="hide-text hidden">Скрыть фильтры</span>
             </button>
         </div>
         <div class="filters-container md:block">
-            <form id="filters-form" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <!-- Большое поле поиска сверху -->
-            <div class="sm:col-span-3 md:col-span-3 lg:col-span-6 mb-4">
-                <label for="search" class="form-label">Поиск</label>
-                <div class="relative">
-                    <input type="text" id="search" name="search" value="{{ request('search') }}"
-                       placeholder="Поиск по заявкам..." class="search-input">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-6 w-6 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="M21 21l-4.35-4.35"></path>
-                        </svg>
+            <form id="filters-form" method="GET" class="filter-grid">
+                <div class="filter-search">
+                    <label for="search" class="form-label">Поиск</label>
+                    <div class="relative">
+                        <input type="text" id="search" name="search" value="{{ request('search') }}"
+                            placeholder="Номер, тема или заявитель" class="search-input">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="M21 21l-4.35-4.35"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div>
-                <label for="status" class="form-label">Статус</label>
-                <select id="status" name="status" class="form-input">
-                    <option value="">Все статусы</option>
-                    <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Открытые</option>
-                    <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>В работе</option>
-                    <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Решенные</option>
-                    <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Закрытые</option>
-                </select>
-            </div>
-            <div>
-                <label for="priority" class="form-label">Приоритет</label>
-                <select id="priority" name="priority" class="form-input">
-                    <option value="">Все приоритеты</option>
-                    <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>Низкий</option>
-                    <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>Средний</option>
-                    <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>Высокий</option>
-                    <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Срочный</option>
-                </select>
-            </div>
-            <div>
-                <label for="category" class="form-label">Категория</label>
-                <select id="category" name="category" class="form-input">
-                    <option value="">Все категории</option>
-                    @foreach($categories ?? [] as $category)
-                        <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
-                            {{ format_ticket_category($category) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label for="location_id" class="form-label">Расположение</label>
-                <select id="location_id" name="location_id" class="form-input">
-                    <option value="">Все расположения</option>
-                    @foreach($locations ?? [] as $location)
-                        <option value="{{ $location->id }}" {{ request('location_id') == $location->id ? 'selected' : '' }}>
-                            {{ $location->name ?? 'Без названия' }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label for="room_id" class="form-label">Кабинет</label>
-                <select id="room_id" name="room_id" class="form-input">
-                    <option value="">Все кабинеты</option>
-                    @foreach($rooms ?? [] as $room)
-                        <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room?->display_label ?? 'б/н' }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label for="assigned_to" class="form-label">Назначено</label>
-                <select id="assigned_to" name="assigned_to" class="form-input">
-                    <option value="">Все исполнители</option>
-                    <option value="unassigned" {{ request('assigned_to') == 'unassigned' ? 'selected' : '' }}>Не назначено</option>
-                    @foreach($assignable ?? [] as $user)
-                        <option value="{{ $user->id }}" {{ request('assigned_to') == $user->id ? 'selected' : '' }}>
-                            {{ $user->name ?? 'Пользователь #'.$user->id }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                <div>
+                    <label for="status" class="form-label">Статус</label>
+                    <select id="status" name="status" class="form-input">
+                        <option value="">Все статусы</option>
+                        <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Открытые</option>
+                        <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>В работе</option>
+                        <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Решённые</option>
+                        <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Закрытые</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="priority" class="form-label">Приоритет</label>
+                    <select id="priority" name="priority" class="form-input">
+                        <option value="">Все приоритеты</option>
+                        <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>Низкий</option>
+                        <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>Средний</option>
+                        <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>Высокий</option>
+                        <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Срочный</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="category" class="form-label">Категория</label>
+                    <select id="category" name="category" class="form-input">
+                        <option value="">Все категории</option>
+                        @foreach($categories ?? [] as $category)
+                            <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
+                                {{ format_ticket_category($category) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="location_id" class="form-label">Расположение</label>
+                    <select id="location_id" name="location_id" class="form-input">
+                        <option value="">Все расположения</option>
+                        @foreach($locations ?? [] as $location)
+                            <option value="{{ $location->id }}" {{ request('location_id') == $location->id ? 'selected' : '' }}>
+                                {{ $location->name ?? 'Без названия' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="room_id" class="form-label">Кабинет</label>
+                    <select id="room_id" name="room_id" class="form-input">
+                        <option value="">Все кабинеты</option>
+                        @foreach($rooms ?? [] as $room)
+                            <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
+                                {{ $room?->display_label ?? 'б/н' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="assigned_to" class="form-label">Назначено</label>
+                    <select id="assigned_to" name="assigned_to" class="form-input">
+                        <option value="">Все исполнители</option>
+                        <option value="unassigned" {{ request('assigned_to') == 'unassigned' ? 'selected' : '' }}>Не назначено</option>
+                        @foreach($assignable ?? [] as $user)
+                            <option value="{{ $user->id }}" {{ request('assigned_to') == $user->id ? 'selected' : '' }}>
+                                {{ $user->name ?? 'Пользователь #'.$user->id }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <!-- Кнопки под полем поиска -->
-            <div class="sm:col-span-3 md:col-span-3 lg:col-span-6 flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
-                <button type="button" id="clear-filters" class="btn-outline px-6 py-3 sm:w-1/3 w-full">
-                    Сбросить
-                </button>
-                <button type="submit" class="btn-primary px-6 py-3 sm:w-1/3 w-full">
-                    Применить фильтры
-                </button>
-            </div>
+                <div class="filter-actions">
+                    <button type="button" id="clear-filters" class="btn-secondary btn-sm">Сбросить</button>
+                    <button type="submit" class="btn-primary btn-sm">Применить</button>
+                </div>
             </form>
         </div>
     </div>
@@ -186,14 +173,14 @@
             #tickets-container td {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
-                padding: 12px !important;
+                padding: 14px 16px !important;
                 vertical-align: top;
                 line-height: 1.4;
                 max-width: 100%;
                 position: relative;
             }
             #tickets-container tr {
-                border-bottom: 1px solid #f1f5f9;
+                border-bottom: 1px solid #f4f6f8;
             }
             #tickets-container tbody tr:last-child {
                 border-bottom: none;
@@ -211,43 +198,42 @@
                 overflow: hidden;
             }
             #tickets-container .ticket-title {
-                font-size: 17px;
-                font-weight: 600;
-                color: #1e293b;
-                line-height: 1.5;
-                margin-bottom: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #131416;
+                line-height: 1.4;
+                margin-bottom: 4px;
                 display: block;
                 text-decoration: none;
             }
             #tickets-container .ticket-title:hover {
-                color: #2563eb;
+                color: #1b6c80;
                 text-decoration: underline;
             }
             #tickets-container .ticket-description {
-                color: #64748b;
+                color: #5d5f60;
                 font-size: 14px;
-                line-height: 1.6;
-                margin-bottom: 12px;
+                line-height: 1.5;
+                margin-bottom: 8px;
                 max-width: 100%;
                 overflow: hidden;
                 display: -webkit-box;
                 -webkit-box-orient: vertical;
                 -webkit-line-clamp: 2;
-                min-height: 2em;
                 word-break: break-word;
             }
             #tickets-container .ticket-meta {
                 display: flex;
-                gap: 8px;
-                margin-top: 12px;
+                gap: 6px;
+                margin-top: 8px;
                 flex-wrap: wrap;
             }
             #tickets-container .ticket-meta-item {
                 display: inline-flex;
                 align-items: center;
                 font-size: 12px;
-                color: #64748b;
-                background-color: #f1f5f9;
+                color: #5d5f60;
+                background-color: #f4f6f8;
                 padding: 4px 8px;
                 border-radius: 4px;
                 white-space: nowrap;
@@ -260,9 +246,9 @@
                 margin-right: 4px;
             }
             .refresh-button {
-                background-color: #f8fafc;
-                color: #475569;
-                border: 1px solid #e2e8f0;
+                background-color: #ffffff;
+                color: #353638;
+                border: 1px solid #e8eaec;
                 border-radius: 0.375rem;
                 padding: 0.5rem 1rem;
                 font-size: 0.875rem;
@@ -274,11 +260,11 @@
                 transition: all 0.2s;
             }
             .refresh-button:hover {
-                background-color: #f1f5f9;
-                border-color: #cbd5e1;
+                background-color: #f4f6f8;
+                border-color: #cdced1;
             }
             .refresh-button:active {
-                background-color: #e2e8f0;
+                background-color: #e8eaec;
             }
             .refresh-button svg {
                 width: 1rem;
@@ -293,22 +279,23 @@
             }
         </style>
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-5 mt-6 mb-4 gap-4">
-            <h2 class="text-xl font-semibold text-slate-900">Заявки в системе <span class="text-slate-500 text-sm font-normal ml-2">{{ $tickets->total() }} записей</span></h2>
+        <div class="list-head">
+            <h2 class="list-title">Заявки в системе</h2>
+            <span class="list-total">{{ $tickets->total() }} шт.</span>
         </div>
         <div id="tickets-container">
             @if($tickets->count() > 0)
                 <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full">
-                            <thead class="bg-slate-50 border-b border-slate-200">
+                            <thead class="border-b border-slate-200">
                                 <tr>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Заявка</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Заявитель</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Статус</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Приоритет</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold text-slate-900">Исполнитель</th>
-                                    <th class="px-4 py-4 text-center text-sm font-semibold text-slate-900">Действия</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500">Заявка</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500">Заявитель</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500">Статус</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500">Приоритет</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500">Исполнитель</th>
+                                    <th class="px-4 py-2.5 text-center text-xs font-medium text-slate-500">Действия</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200" id="tickets-tbody">
@@ -318,15 +305,15 @@
                     </div>
                 </div>
             @else
-                <div class="text-center py-20 bg-white rounded-lg border border-slate-200 shadow-sm" id="empty-state">
-                    <div class="mx-auto w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-10 h-10 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="text-center py-16 bg-white rounded-lg border border-slate-200" id="empty-state">
+                    <div class="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-medium text-slate-900 mb-2">Заявок не найдено</h3>
-                    <p class="text-slate-600 mb-8 max-w-md mx-auto">Попробуйте изменить параметры фильтра или создайте новую заявку</p>
-                    <a href="{{ route('tickets.create') }}" class="btn-primary btn-lg">
+                    <h3 class="text-base font-medium text-slate-900 mb-2">Заявок не найдено</h3>
+                    <p class="text-slate-600 mb-6 max-w-md mx-auto">Попробуйте изменить параметры фильтра или создайте новую заявку.</p>
+                    <a href="{{ route('tickets.create') }}" class="btn-primary">
                         Создать заявку
                     </a>
                 </div>
@@ -597,8 +584,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('URL заявки:', ticketUrl);
         
         // Упрощенное отображение информации о помещении для экономии места
-        const roomInfo = ticket.room ? `<div class="text-xs text-slate-500 mt-1">🏢 ${ticket.room.number}</div>` :
-                        (ticket.location_name ? `<div class="text-xs text-slate-500 mt-1">📍 ${ticket.location_name}</div>` : '');
+        const roomInfo = ticket.room ? ticket.room.number : (ticket.location_name || '');
         
         // Escape HTML in title and description for safety
         const safeTitle = ticket.title ? ticket.title.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Без названия';
@@ -630,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
                                 </svg>
-                                ${roomInfo.replace(/🏢 |📍 /g, '')}
+                                ${roomInfo}
                             </span>` : ''}
                         </div>
                     </div>

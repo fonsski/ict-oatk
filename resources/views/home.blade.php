@@ -3,390 +3,215 @@
 @section('title', 'Главная - ICT Help')
 
 @section('content')
-<div class="space-y-16">
+<div class="page home">
     @if(session('success'))
-    <div class="max-w-6xl mx-auto px-6 pt-6">
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-md" role="alert">
-            <p class="text-sm text-green-700">{{ session('success') }}</p>
-        </div>
-    </div>
+    <div class="notice notice-success" role="alert">{{ session('success') }}</div>
     @endif
 
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-hidden">
-        <div class="absolute inset-0 bg-black/10"></div>
-        <div class="relative max-w-6xl mx-auto px-6 py-20">
-            <div class="text-center text-white">
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 leading-tight">
-                    Служба технической поддержки
-                </h1>
-                <p class="text-xl sm:text-2xl text-slate-200 mb-10 max-w-3xl mx-auto leading-relaxed">
-                    Мы здесь, чтобы помочь вам решить любые технические вопросы быстро и эффективно
-                </p>
-
-                @guest
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="{{ route('tickets.create') }}"
-                        class="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-semibold rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                        Подать заявку
-                    </a>
-                    <a href="{{ route('login') }}"
-                        class="inline-flex items-center justify-center px-8 py-4 border border-white text-white font-semibold rounded-lg hover:bg-white hover:text-slate-900 transition-colors duration-200">
-                        Войти в систему
-                    </a>
-                </div>
-                @endguest
+    @guest
+    <!-- Первый экран гостя: что это, что делать и как это устроено -->
+    <div class="intro-grid">
+        <section class="intro">
+            <h1 class="intro-title">Заявка в службу поддержки колледжа</h1>
+            <p class="intro-text">Опишите проблему и укажите кабинет: техник возьмёт заявку в работу, а ход выполнения будет виден в разделе «Мои заявки». Регистрация не нужна.</p>
+            <div class="intro-actions">
+                <a href="{{ route('tickets.create') }}" class="btn-primary">Подать заявку</a>
+                <a href="{{ route('login') }}" class="btn-secondary">Войти</a>
             </div>
+            <p class="intro-note">Срочно? Звоните <a href="tel:+79503362989">+7 (950) 336-29-89</a>, пн–пт 8:30–17:00.</p>
+        </section>
 
-            @auth
-            <!-- Quick Actions Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-20">
-                <a href="{{ route('tickets.create') }}"
-                    class="group bg-white/5 backdrop-blur-sm rounded-xl p-6 text-white hover:bg-white/10 transition-all duration-200">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold mb-2">Подать заявку</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed">Создайте новую заявку в службу поддержки</p>
-                        </div>
-                    </div>
-                </a>
+        <section class="steps">
+            <h2 class="section-title">Как это работает</h2>
+            <ol class="steps-list">
+                <li>
+                    <h3>Опишите проблему</h3>
+                    <p>Укажите кабинет и оборудование, коротко расскажите, что случилось.</p>
+                </li>
+                <li>
+                    <h3>Заявку возьмёт техник</h3>
+                    <p>В «Моих заявках» видно, кто назначен исполнителем и в каком статусе заявка.</p>
+                </li>
+                <li>
+                    <h3>Решение и закрытие</h3>
+                    <p>Когда проблема устранена, заявка получает статус «Решена», затем «Закрыта».</p>
+                </li>
+            </ol>
+        </section>
+    </div>
+    @endguest
 
-                @if(auth()->user()->hasRole(['admin', 'master', 'technician']))
-                <a href="{{ route('knowledge.index') }}"
-                    class="group bg-white/5 backdrop-blur-sm rounded-xl p-6 text-white hover:bg-white/10 transition-all duration-200">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold mb-2">База знаний</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed">Найдите ответы на часто задаваемые вопросы</p>
-                        </div>
-                    </div>
-                </a>
-                @endif
+    @auth
+    <div class="page-head">
+        <h1 class="page-title">Главная</h1>
+    </div>
+    @endauth
 
-                @if(user_can_manage_equipment())
-                <a href="{{ route('equipment.index') }}"
-                    class="group bg-white/5 backdrop-blur-sm rounded-xl p-6 text-white hover:bg-white/10 transition-all duration-200">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-violet-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold mb-2">Управление оборудованием</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed">Просмотр и управление техническим оборудованием</p>
-                        </div>
-                    </div>
-                </a>
-                @elseif(user_is_technician())
-                <a href="{{ route('all-tickets.index') }}"
-                    class="group bg-white/5 backdrop-blur-sm rounded-xl p-6 text-white hover:bg-white/10 transition-all duration-200">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-violet-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 11l3 3L22 4"></path>
-                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold mb-2">Все заявки</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed">Управление всеми заявками в системе</p>
-                        </div>
-                    </div>
-                </a>
-                @else
-                <a href="{{ route('tickets.index') }}"
-                    class="group bg-white/5 backdrop-blur-sm rounded-xl p-6 text-white hover:bg-white/10 transition-all duration-200">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-violet-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 12h6m-6 3h6m2 5H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2m6 0h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2M9 4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold mb-2">Мои заявки</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed">Отследите статус ваших обращений</p>
-                        </div>
-                    </div>
-                </a>
-                @endif
-            </div>
-            @endauth
-        </div>
-    </section>
-
-    <!-- Tickets Dashboard for Technicians -->
+    <!-- Активные заявки для сотрудников -->
     @if(user_can_manage_tickets())
-    <section class="max-w-6xl mx-auto px-6 py-8">
-        <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-8">
-            <!-- Header -->
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 md:gap-0">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-900 mb-2">Активные заявки</h2>
-                    <p class="text-slate-600">Заявки, требующие вашего внимания</p>
+    <section class="card home-tickets">
+        <div class="list-head list-head--wrap">
+            <h2 class="list-title">Активные заявки</h2>
+            <div class="page-actions">
+                <div class="freshness">
+                    <span class="freshness-dot bg-green-500" id="tech-status-indicator"></span>
+                    <span id="tech-last-updated">Загружено</span>
                 </div>
-                <div class="flex items-center gap-4 flex-wrap">
-                    <div class="flex items-center gap-2 text-sm text-slate-600">
-                        <div class="w-2 h-2 bg-green-500 rounded-full" id="tech-status-indicator"></div>
-                        <span id="tech-last-updated">Загружено</span>
-                    </div>
-                    <button id="tech-refresh-btn" class="btn-secondary btn-sm flex items-center gap-2 hover:bg-slate-100 transition duration-200">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23,4 23,10 17,10"></polyline>
-                            <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
-                        </svg>
-                        Обновить
-                    </button>
-                    <a href="{{ route('all-tickets.index') }}" class="btn-primary btn-sm">
-                        Все заявки
-                    </a>
-                    <button id="test-api-btn" class="btn-secondary btn-sm flex items-center gap-2 hover:bg-slate-100 transition duration-200">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 12l2 2 4-4"></path>
-                            <circle cx="12" cy="12" r="9"></circle>
-                        </svg>
-                        Тест API
-                    </button>
-                </div>
+                <button id="tech-refresh-btn" class="btn-secondary btn-sm">
+                    <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23,4 23,10 17,10"></polyline>
+                        <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
+                    </svg>
+                    Обновить
+                </button>
+                <button id="test-api-btn" class="btn-secondary btn-sm">Тест API</button>
+                <a href="{{ route('all-tickets.index') }}" class="btn-primary btn-sm">Все заявки</a>
             </div>
+        </div>
 
-            <!-- Stats -->
-            @if(isset($ticketStats))
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                <div class="bg-slate-50 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div class="text-2xl font-bold text-slate-900 mb-1 uppercase tracking-wide" id="tech-total-count">{{ $ticketStats['total'] }}</div>
-                    <div class="text-sm text-slate-600">Всего</div>
-                </div>
-                <div class="bg-blue-50 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div class="text-2xl font-bold text-blue-600 mb-1 uppercase tracking-wide" id="tech-open-count">{{ $ticketStats['open'] }}</div>
-                    <div class="text-sm text-slate-600">Открытые</div>
-                </div>
-                <div class="bg-yellow-50 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div class="text-2xl font-bold text-yellow-600 mb-1 uppercase tracking-wide" id="tech-progress-count">{{ $ticketStats['in_progress'] }}</div>
-                    <div class="text-sm text-slate-600">В работе</div>
-                </div>
-                <div class="bg-green-50 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div class="text-2xl font-bold text-green-600 mb-1 uppercase tracking-wide" id="tech-resolved-count">{{ $ticketStats['resolved'] }}</div>
-                    <div class="text-sm text-slate-600">Решённые</div>
-                </div>
-                <div class="bg-slate-50 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div class="text-2xl font-bold text-slate-600 mb-1 uppercase tracking-wide" id="tech-closed-count">{{ $ticketStats['closed'] }}</div>
-                    <div class="text-sm text-slate-600">Закрытые</div>
-                </div>
+        @if(isset($ticketStats))
+        <div class="kpi-strip">
+            <div class="kpi-cell">
+                <span class="kpi-label">Всего</span>
+                <span class="kpi-value" id="tech-total-count">{{ $ticketStats['total'] }}</span>
             </div>
-            @endif
+            <div class="kpi-cell">
+                <span class="kpi-label">Открытые</span>
+                <span class="kpi-value" id="tech-open-count">{{ $ticketStats['open'] }}</span>
+            </div>
+            <div class="kpi-cell">
+                <span class="kpi-label">В работе</span>
+                <span class="kpi-value" id="tech-progress-count">{{ $ticketStats['in_progress'] }}</span>
+            </div>
+            <div class="kpi-cell">
+                <span class="kpi-label">Решённые</span>
+                <span class="kpi-value" id="tech-resolved-count">{{ $ticketStats['resolved'] }}</span>
+            </div>
+            <div class="kpi-cell">
+                <span class="kpi-label">Закрытые</span>
+                <span class="kpi-value" id="tech-closed-count">{{ $ticketStats['closed'] }}</span>
+            </div>
+        </div>
+        @endif
 
-            <!-- Tickets Table -->
-            <div class="overflow-x-auto rounded-lg border border-slate-200">
-                <table class="min-w-[700px] w-full">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-[700px] w-full">
+                <thead class="border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-2.5 text-left">Заявка</th>
+                        <th class="px-4 py-2.5 text-left">Статус</th>
+                        <th class="px-4 py-2.5 text-left">Приоритет</th>
+                        <th class="px-4 py-2.5 text-left">Заявитель</th>
+                        <th class="px-4 py-2.5 text-left">Исполнитель</th>
+                        <th class="px-4 py-2.5 text-left">Дата</th>
+                        <th class="px-4 py-2.5 text-left">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200" id="tech-tickets-tbody">
+                    @if(isset($tickets) && $tickets->count() > 0)
+                        @foreach($tickets->take(10) as $ticket)
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Заявка</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Статус</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Приоритет</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Заявитель</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Исполнитель</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Дата</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wide">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200" id="tech-tickets-tbody">
-                        @if(isset($tickets) && $tickets->count() > 0)
-                            @foreach($tickets->take(10) as $ticket)
-                            <tr>
-                                <td class="px-4 py-3">
-                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block" title="{{ $ticket->title }}">
-                                        <span class="line-clamp-1">{{ Str::limit($ticket->title, 50) }}</span>
-                                    </a>
-                                </td>
-                                <td class="px-4 py-3">
-                                    @php
-                                        $statusColors = [
-                                            'open' => 'bg-blue-100 text-blue-800',
-                                            'in_progress' => 'bg-yellow-100 text-yellow-800',
-                                            'resolved' => 'bg-green-100 text-green-800',
-                                            'closed' => 'bg-slate-100 text-slate-800'
-                                        ];
-                                        $statusLabels = [
-                                            'open' => 'Открыта',
-                                            'in_progress' => 'В работе',
-                                            'resolved' => 'Решена',
-                                            'closed' => 'Закрыта'
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex items-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}" title="Статус: {{ $statusLabels[$ticket->status] ?? $ticket->status }}">
-                                        {{ $statusLabels[$ticket->status] ?? $ticket->status }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span class="inline-flex items-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" title="Приоритет: {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}">
-                                        {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="text-sm text-slate-900" title="{{ $ticket->reporter_name ?: '—' }}">{{ $ticket->reporter_name ?: '—' }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    @if($ticket->assignedTo)
-                                        <div class="text-sm text-slate-900" title="{{ $ticket->assignedTo->name }}">{{ $ticket->assignedTo->name }}</div>
-                                    @else
-                                        <span class="text-sm text-slate-500 italic" title="Исполнитель не назначен">Не назначен</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="text-sm text-slate-600">{{ $ticket->created_at->format('d.m H:i') }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center justify-center">
-                                        <div class="relative z-50" data-dropdown>
-                                            <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-all duration-300 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                                                </svg>
-                                            </button>
-                                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
-                                                <div class="py-1">
-                                                    <a href="{{ route('tickets.show', $ticket) }}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
-                                                    @if($ticket->status === 'open' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
-                                                        <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
-                                                            @csrf
-                                                            <button type="submit" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">
-                                                                Взять в работу
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
+                            <td class="px-4 py-3">
+                                <a href="{{ route('tickets.show', $ticket) }}" class="text-slate-900 font-medium hover:text-blue-600 transition-colors duration-200 break-words max-w-xs inline-block" title="{{ $ticket->title }}">
+                                    <span class="line-clamp-1">{{ Str::limit($ticket->title, 50) }}</span>
+                                </a>
+                            </td>
+                            <td class="px-4 py-3">
+                                @php
+                                    $statusColors = [
+                                        'open' => 'bg-blue-100 text-blue-800',
+                                        'in_progress' => 'bg-yellow-100 text-yellow-800',
+                                        'resolved' => 'bg-green-100 text-green-800',
+                                        'closed' => 'bg-slate-100 text-slate-800'
+                                    ];
+                                    $statusLabels = [
+                                        'open' => 'Открыта',
+                                        'in_progress' => 'В работе',
+                                        'resolved' => 'Решена',
+                                        'closed' => 'Закрыта'
+                                    ];
+                                @endphp
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-800' }}" title="Статус: {{ $statusLabels[$ticket->status] ?? $ticket->status }}">
+                                    {{ $statusLabels[$ticket->status] ?? $ticket->status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-medium {{ $ticket->priority == 'urgent' ? 'bg-red-200 text-red-900' : get_priority_badge_class($ticket->priority) }}" title="Приоритет: {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}">
+                                    {{ $ticket->priority == 'urgent' ? 'Срочный' : format_ticket_priority($ticket->priority) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="text-sm text-slate-900" title="{{ $ticket->reporter_name ?: '—' }}">{{ $ticket->reporter_name ?: '—' }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($ticket->assignedTo)
+                                    <div class="text-sm text-slate-900" title="{{ $ticket->assignedTo->name }}">{{ $ticket->assignedTo->name }}</div>
+                                @else
+                                    <span class="text-sm text-slate-500" title="Исполнитель не назначен">Не назначен</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="text-sm text-slate-600">{{ $ticket->created_at->format('d.m H:i') }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center">
+                                    <div class="relative z-50" data-dropdown>
+                                        <button type="button" class="text-slate-500 hover:text-slate-700 p-2 transition-colors duration-150 rounded-full hover:bg-slate-100" data-dropdown-toggle title="Действия">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                            </svg>
+                                        </button>
+                                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-50 hidden animate-fade-in" data-dropdown-menu style="min-width: 10rem; max-width: 12rem;">
+                                            <div class="py-1">
+                                                <a href="{{ route('tickets.show', $ticket) }}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">Просмотр заявки</a>
+                                                @if($ticket->status === 'open' && Auth::check() && Auth::user()->role && in_array(Auth::user()->role->slug, ['admin', 'master', 'technician']))
+                                                    <form action="{{ route('tickets.start', $ticket) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit" class="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 transition">
+                                                            Взять в работу
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">
-                                    <div class="flex flex-col items-center">
-                                        <svg class="w-12 h-12 text-slate-400 mb-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2m16-7H4m16 0l-2-2m2 2l-2 2M4 13l2-2m-2 2l2 2" />
-                                        </svg>
-                                        <p class="text-lg font-medium mb-1">Пока нет заявок</p>
-                                        <p class="text-sm">Новые заявки будут появляться здесь автоматически</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="7" class="px-4 py-10 text-center text-slate-500">
+                                <p class="text-sm font-medium text-slate-900 mb-1">Пока нет заявок</p>
+                                <p class="text-sm">Новые заявки будут появляться здесь автоматически.</p>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
         </div>
     </section>
     @endif
 
+    <!-- Частые вопросы: доступны всем, включая неавторизованных посетителей -->
+    <section class="faq">
+        <h2 class="section-title">Часто возникающие проблемы</h2>
 
-    <!-- Features Section -->
-    <section class="max-w-6xl mx-auto px-6">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Почему выбирают нас?</h2>
-            <p class="text-lg text-slate-600 max-w-2xl mx-auto">Мы предоставляем качественную техническую поддержку с использованием современных технологий</p>
+        @if(isset($faqs) && $faqs->count())
+        <div class="faq-list">
+            @foreach($faqs as $faq)
+            <a href="{{ route('homepage-faq.show', $faq->slug) }}" class="faq-row">
+                <div class="faq-row-text">
+                    <h3 class="faq-title">{{ $faq->title }}</h3>
+                    <p class="faq-excerpt line-clamp-2">{{ $faq->excerpt ?? Str::limit(strip_tags($faq->content), 120) }}</p>
+                </div>
+                <span class="faq-date">{{ $faq->created_at ? $faq->created_at->format('d.m.Y') : '—' }}</span>
+            </a>
+            @endforeach
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="text-center">
-                <div class="mx-auto w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mb-6">
-                    <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 6v6l4 2"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-slate-900 mb-3">Быстрый отклик</h3>
-                <p class="text-slate-600">Мы стараемся отвечать на заявки как можно быстрее</p>
-            </div>
-
-            <div class="text-center">
-                <div class="mx-auto w-16 h-16 bg-emerald-500 rounded-xl flex items-center justify-center mb-6">
-                    <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 10 12 5 2 10l10 5 10-5Z"></path>
-                        <path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"></path>
-                        <path d="M22 10v6"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-slate-900 mb-3">Экспертная поддержка</h3>
-                <p class="text-slate-600">Наши специалисты имеют большой опыт решения технических проблем</p>
-            </div>
-
-            <div class="text-center">
-                <div class="mx-auto w-16 h-16 bg-violet-500 rounded-xl flex items-center justify-center mb-6">
-                    <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-slate-900 mb-3">Высокое качество</h3>
-                <p class="text-slate-600">Мы гарантируем качественное решение всех технических вопросов</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section: доступна всем, включая неавторизованных посетителей -->
-    <section class="max-w-6xl mx-auto px-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-                <div class="mb-6 lg:mb-0">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-2">Часто возникающие проблемы</h2>
-                    <p class="text-slate-600">Найдите быстрые ответы на популярные вопросы</p>
-                </div>
-            </div>
-
-            @if(isset($faqs) && $faqs->count())
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($faqs as $faq)
-                <article class="group border border-slate-200 rounded-xl p-6 hover:shadow-md hover:border-slate-300 transition-all duration-200">
-                    <a href="{{ route('homepage-faq.show', $faq->slug) }}" class="block">
-                        <h3 class="text-lg font-semibold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
-                            {{ $faq->title }}
-                        </h3>
-                        <p class="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                            {{ $faq->excerpt ?? Str::limit(strip_tags($faq->content), 120) }}
-                        </p>
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-slate-500">
-                                {{ $faq->created_at ? $faq->created_at->format('d.m.Y') : '—' }}
-                            </div>
-                            <div class="text-blue-600 group-hover:text-blue-700 transition-colors duration-200">
-                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                            </div>
-                        </div>
-                    </a>
-                </article>
-                @endforeach
-            </div>
-            @else
-            <div class="text-center py-12">
-                <div class="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                    <svg class="w-8 h-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-medium text-slate-900 mb-2">Пока нет часто задаваемых вопросов</h3>
-                <p class="text-slate-600">Мы работаем над наполнением базы знаний</p>
-            </div>
-            @endif
-        </div>
+        @else
+        <p class="empty-note">Пока нет часто задаваемых вопросов: ответы появятся здесь, когда их добавят.</p>
+        @endif
     </section>
 
     @if(user_can_manage_tickets())
@@ -1131,26 +956,5 @@
     @endpush
     @endif
 
-    <!-- CTA Section -->
-    @guest
-    <section class="max-w-6xl mx-auto px-6">
-        <div class="bg-slate-900 rounded-2xl p-8 text-center text-white">
-            <h2 class="text-3xl font-bold mb-4">Готовы начать?</h2>
-            <p class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-                Опишите проблему — и наши специалисты помогут её решить. Регистрация не требуется.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="{{ route('tickets.create') }}"
-                    class="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-semibold rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                    Подать заявку
-                </a>
-                <a href="{{ route('login') }}"
-                    class="inline-flex items-center justify-center px-8 py-4 border border-white text-white font-semibold rounded-lg hover:bg-white hover:text-slate-900 transition-colors duration-200">
-                    Войти в систему
-                </a>
-            </div>
-        </div>
-    </section>
-    @endguest
 </div>
 @endsection

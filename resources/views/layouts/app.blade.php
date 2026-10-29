@@ -9,454 +9,228 @@
     @vite(['resources/css/app.css', 'resources/css/layout.css', 'resources/js/app.js', 'resources/js/layout.js'])
 </head>
 
-<body class="min-h-screen bg-gray-50">
-    <!-- Шапка -->
-    <header class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Лого -->
-                <a href="{{ route('home') }}" class="flex items-center space-x-2 shrink-0">
-                    <div
-                        class="w-8 h-8 shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <path d="M11.42 15.17 17.25 21a2.652 2.652 0 0 0 3.75-3.75l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437"></path>
-                        </svg>
-                    </div>
-                    <span class="text-xl font-bold text-gray-900 whitespace-nowrap">ICT Help</span>
+@php
+    // Пункты меню собираются один раз: тот же список служит боковой панелью
+    // на компьютере и выезжающим меню на телефоне. Права проверяются теми же
+    // условиями, что и раньше.
+    $isStaff = auth()->check() && auth()->user()->hasRole(['admin', 'master', 'technician']);
+
+    $navGroups = [];
+
+    if (auth()->check()) {
+        $work = [
+            ['Главная', 'home', request()->routeIs('home')],
+            ['Мои заявки', 'tickets.index', request()->routeIs('tickets.index')],
+        ];
+        if (user_can_manage_tickets()) {
+            $work[] = ['Все заявки', 'all-tickets.index', request()->routeIs('all-tickets.*')];
+        }
+        if ($isStaff) {
+            $work[] = ['Календарь', 'calendar.index', request()->routeIs('calendar.*')];
+        }
+        $navGroups['Работа'] = $work;
+
+        if ($isStaff) {
+            $navGroups['Знания и расходники'] = [
+                ['База знаний', 'knowledge.index', request()->routeIs('knowledge.index')],
+                ['Расходники', 'consumables.index', request()->routeIs('consumables.*')],
+                ['Топология', 'topology.index', request()->routeIs('topology.*')],
+            ];
+        }
+
+        if (user_can_manage_users()) {
+            $navGroups['Управление'] = [
+                ['Оборудование', 'equipment.index', request()->routeIs('equipment.*') && !request()->routeIs('equipment.equipment-categories.*')],
+                ['Кабинеты', 'room.index', request()->routeIs('room.*')],
+                ['Пользователи', 'user.index', request()->routeIs('user.*')],
+                ['Закупки', 'purchases.index', request()->routeIs('purchases.*')],
+                ['Заявки ТМЦ', 'tmc-requests.index', request()->routeIs('tmc-requests.*')],
+                ['Документы', 'documents.index', request()->routeIs('documents.*')],
+                ['Операционные системы', 'operating-systems.index', request()->routeIs('operating-systems.*')],
+                ['Категории оборудования', 'equipment.equipment-categories.index', request()->routeIs('equipment.equipment-categories.*')],
+                ['Категории знаний', 'knowledge.categories.index', request()->routeIs('knowledge.categories.*')],
+                ['FAQ главной', 'homepage-faq.index', request()->routeIs('homepage-faq.*')],
+            ];
+        }
+    }
+
+    // Раздел и пункт для строки пути в верхней панели.
+    $crumbGroup = null;
+    $crumbItem = null;
+    foreach ($navGroups as $groupName => $items) {
+        foreach ($items as $item) {
+            if ($item[2]) {
+                $crumbGroup = $groupName;
+                $crumbItem = $item[0];
+                break 2;
+            }
+        }
+    }
+@endphp
+
+<body class="app-body">
+    <a href="#main" class="skip-link">К содержимому</a>
+
+    <div class="frame {{ auth()->check() ? '' : 'frame--guest' }}">
+        @auth
+            <!-- Боковая панель: на телефоне выезжает по кнопке меню -->
+            <aside id="mobile-menu" class="sidebar" aria-label="Основная навигация">
+                <a href="{{ route('home') }}" class="brand">
+                    <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+                        role="presentation">
+                        <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                        <path d="M8 20h8M12 16v4"></path>
+                        <path d="m8.5 10 2.5 2.5 4.5-5"></path>
+                    </svg>
+                    <span class="brand-name">ICT Help</span>
                 </a>
 
-                <!-- Навигация. whitespace-nowrap наследуется всеми пунктами,
-                     чтобы «Подать заявку» не разрывалось на две строки. -->
-                <nav class="hidden xl:flex items-center space-x-1 whitespace-nowrap" role="navigation" aria-label="Основная навигация">
-                    @auth
-                        <a href="{{ route('home') }}"
-                            class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            Главная
-                        </a>
-
-                        <a href="{{ route('tickets.create') }}"
-                            class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('ticket.create') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            Подать заявку
-                        </a>
-
-                        <a href="{{ route('tickets.index') }}"
-                            class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('tickets.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            Мои заявки
-                        </a>
-
-                        @if (user_can_manage_tickets())
-                            <a href="{{ route('all-tickets.index') }}"
-                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('all-tickets.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Все заявки
-                            </a>
-                        @endif
-
-                        @if (auth()->check() &&
-                                auth()->user()->hasRole(['admin', 'master', 'technician']))
-                            <a href="{{ route('calendar.index') }}"
-                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('calendar.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Календарь
-                            </a>
-                            <a href="{{ route('knowledge.index') }}"
-                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                База знаний
-                            </a>
-                            <a href="{{ route('consumables.index') }}"
-                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('consumables.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Расходники
-                            </a>
-                            <a href="{{ route('topology.index') }}"
-                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('topology.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Топология
-                            </a>
-                        @endif
-
-                        @if (user_can_manage_users())
-                            <!-- Админ меню -->
-                            <div class="relative">
-                                <button type="button" id="admin-menu-button"
-                                    class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs(['equipment.*', 'room.*', 'user.*', 'homepage-faq.*']) ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                    <span>Управление</span>
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <polyline points="6,9 12,15 18,9"></polyline>
-                                    </svg>
-                                </button>
-
-                                <!-- Админ меню -->
-                                <div id="admin-dropdown"
-                                    class="hidden absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[100]">
-                                    <div class="py-1">
-                                        <a href="{{ route('equipment.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('equipment.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Оборудование
-                                        </a>
-                                        <a href="{{ route('room.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('room.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Кабинеты
-                                        </a>
-                                        <a href="{{ route('user.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('user.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Пользователи
-                                        </a>
-                                        <a href="{{ route('homepage-faq.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('homepage-faq.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            FAQ главной
-                                        </a>
-                                        <a href="{{ route('knowledge.categories.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('knowledge.categories.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Категории знаний
-                                        </a>
-                                        <a href="{{ route('equipment.equipment-categories.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('equipment.equipment-categories.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Категории оборудования
-                                        </a>
-                                        <a href="{{ route('documents.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('documents.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Документы
-                                        </a>
-                                        <a href="{{ route('purchases.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('purchases.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Закупки
-                                        </a>
-                                        <a href="{{ route('tmc-requests.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('tmc-requests.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Заявки ТМЦ
-                                        </a>
-                                        <a href="{{ route('operating-systems.index') }}"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('operating-systems.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                                            Операционные системы
-                                        </a>
-
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- Notifications Menu -->
-                        @if (user_can_manage_tickets())
-                            <div class="relative">
-                                <button type="button" id="notifications-menu-button"
-                                    class="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
-                                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                        <path d="m13.73 21a2 2 0 0 1-3.46 0"></path>
-                                    </svg>
-                                    <span id="notification-badge"
-                                        class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
-                                </button>
-
-                                <!-- Notifications Dropdown -->
-                                <div id="notifications-dropdown"
-                                    class="hidden absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-[100]">
-                                    <div class="py-2">
-                                        <div class="px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-                                            <h3 class="text-sm font-semibold text-gray-900">Уведомления</h3>
-                                            <button id="mark-all-read"
-                                                class="text-xs text-blue-600 hover:text-blue-700">Отметить все как
-                                                прочитанные</button>
-                                        </div>
-                                        <div id="notifications-list" class="max-h-64 overflow-y-auto">
-                                            <div class="p-4 text-center text-gray-500 text-sm">Загрузка...</div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- User Menu -->
-                        <div class="relative">
-                            <button type="button" id="user-menu-button"
-                                class="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                aria-expanded="false" aria-haspopup="true" aria-label="Меню пользователя">
-                                <span class="max-w-[160px] truncate whitespace-nowrap">{{ auth()->user()->name }}</span>
-                                <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6,9 12,15 18,9"></polyline>
-                                </svg>
-                            </button>
-
-                            <!-- Dropdown Menu -->
-                            <div id="user-dropdown"
-                                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[100]">
-                                <div class="py-1">
-                                    <a href="{{ route('settings.index') }}"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        </svg>
-                                        Настройки
-                                    </a>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit"
-                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                            </svg>
-                                            Выход
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
+                <nav class="nav" aria-label="Разделы">
+                    @foreach ($navGroups as $groupName => $items)
+                        <div class="nav-group">
+                            <div class="nav-group-label">{{ $groupName }}</div>
+                            @foreach ($items as [$label, $routeName, $active])
+                                <a href="{{ route($routeName) }}" class="nav-item"
+                                    @if ($active) aria-current="page" @endif>{{ $label }}</a>
+                            @endforeach
                         </div>
-                    @else
-                        <div class="flex items-center space-x-4">
-                            {{-- Гость тоже видит свои обращения: они закреплены
-                                 за ним долгоживущей cookie. --}}
-                            <a href="{{ route('tickets.index') }}"
-                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('tickets.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Мои заявки
-                            </a>
-
-                            <!-- Войти -->
-                            <a href="{{ route('login') }}"
-                                class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">
-                                Войти
-                            </a>
-
-                            <!-- Подать заявку -->
-                            <a href="{{ route('tickets.create') }}"
-                                class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                Подать заявку
-                            </a>
-                        </div>
-                    @endauth
+                    @endforeach
                 </nav>
 
-                <!-- Кнопка мобильного меню -->
-                <div class="xl:hidden">
-                    <button type="button" id="mobile-menu-button" class="text-gray-500 hover:text-gray-600 p-2">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+                <div class="sidebar-foot">
+                    <div>Служба поддержки колледжа</div>
+                    <a href="tel:+79503362989">+7 (950) 336-29-89</a>
+                    <div>Пн–Пт 8:30–17:00, обед 12:30–13:00</div>
                 </div>
-            </div>
-        </div>
+            </aside>
+            <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+        @endauth
 
-        <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden xl:hidden bg-white border-t border-gray-200 mobile-menu"
-            role="navigation" aria-label="Мобильная навигация">
-            <div class="px-2 pt-2 pb-3 space-y-1">
+        <!-- Верхняя панель -->
+        <header class="topbar">
+            @auth
+                <button type="button" id="mobile-menu-button" class="topbar-menu" aria-label="Открыть меню"
+                    aria-controls="mobile-menu" aria-expanded="false">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"
+                        stroke-linecap="round" role="presentation">
+                        <path d="M4 7h16M4 12h16M4 17h16" />
+                    </svg>
+                </button>
+                <a href="{{ route('home') }}" class="brand brand--compact">
+                    <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+                        role="presentation">
+                        <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                        <path d="M8 20h8M12 16v4"></path>
+                        <path d="m8.5 10 2.5 2.5 4.5-5"></path>
+                    </svg>
+                    <span class="brand-name">ICT Help</span>
+                </a>
+                @if ($crumbItem)
+                    <div class="crumbs" aria-label="Где вы находитесь">
+                        <span class="crumbs-parent">{{ $crumbGroup }}</span>
+                        <span class="crumbs-sep"></span>
+                        <span class="crumbs-current">{{ $crumbItem }}</span>
+                    </div>
+                @endif
+            @else
+                <a href="{{ route('home') }}" class="brand">
+                    <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+                        role="presentation">
+                        <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                        <path d="M8 20h8M12 16v4"></path>
+                        <path d="m8.5 10 2.5 2.5 4.5-5"></path>
+                    </svg>
+                    <span class="brand-name">ICT Help</span>
+                </a>
+            @endauth
+
+            <div class="topbar-actions" role="navigation" aria-label="Действия">
                 @auth
-                    <!-- Главная -->
-                    <a href="{{ route('home') }}"
-                        class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                        Главная
-                    </a>
-
-                    <!-- Подать заявку -->
-                    <a href="{{ route('tickets.create') }}"
-                        class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('ticket.create') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                        Подать заявку
-                    </a>
-
-                    <!-- Мои заявки -->
-                    <a href="{{ route('tickets.index') }}"
-                        class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('tickets.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                        Мои заявки
-                    </a>
+                    <a href="{{ route('tickets.create') }}" class="btn-primary btn-sm topbar-cta">Подать заявку</a>
 
                     @if (user_can_manage_tickets())
-                        <!-- Все заявки -->
-                        <a href="{{ route('all-tickets.index') }}"
-                            class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('all-tickets.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            Все заявки
-                        </a>
-                    @endif
-
-                    @if (auth()->check() &&
-                            auth()->user()->hasRole(['admin', 'master', 'technician']))
-                        <!-- Календарь -->
-                        <a href="{{ route('calendar.index') }}"
-                            class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('calendar.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            Календарь
-                        </a>
-                        <!-- База знаний -->
-                        <a href="{{ route('knowledge.index') }}"
-                            class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('knowledge.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            База знаний
-                        </a>
-                        <!-- Расходники -->
-                        <a href="{{ route('consumables.index') }}"
-                            class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('consumables.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                            Расходники
-                        </a>
-                    @endif
-
-                    @if (user_can_manage_users())
-                        <!-- Управление пользователями -->
-                        <div class="border-t border-gray-200 pt-2 mt-2">
-                            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Управление
-                            </div>
-                            <a href="{{ route('equipment.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('equipment.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Оборудование
-                            </a>
-
-                            <a href="{{ route('room.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('room.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Кабинеты
-                            </a>
-
-                            <a href="{{ route('user.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('user.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Пользователи
-                            </a>
-
-                            <a href="{{ route('homepage-faq.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('homepage-faq.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                FAQ главной
-                            </a>
-                            <a href="{{ route('equipment.equipment-categories.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('equipment.equipment-categories.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Категории оборудования
-                            </a>
-                            <a href="{{ route('documents.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('documents.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Документы
-                            </a>
-                            <a href="{{ route('purchases.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('purchases.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Закупки
-                            </a>
-                            <a href="{{ route('tmc-requests.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('tmc-requests.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Заявки ТМЦ
-                            </a>
-                            <a href="{{ route('operating-systems.index') }}"
-                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('operating-systems.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
-                                Операционные системы
-                            </a>
-                        </div>
-                    @endif
-
-                    <!-- Меню пользователя для мобильных устройств -->
-                    <div class="border-t border-gray-200 pt-4 mt-4">
-                        <div class="flex items-center space-x-3 px-3 py-2">
-                            <span class="text-base font-medium text-gray-900">{{ auth()->user()->name }}</span>
-                        </div>
-
-                        <a href="{{ route('settings.index') }}"
-                            class="block px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50">
-                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            Настройки
-                        </a>
-
-                        <form method="POST" action="{{ route('logout') }}" class="mt-2">
-                            @csrf
-                            <button type="submit"
-                                class="w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50">
-                                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        <div class="relative">
+                            <button type="button" id="notifications-menu-button" class="icon-button"
+                                aria-label="Уведомления" aria-haspopup="true">
+                                <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+                                    stroke-linejoin="round" role="presentation">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="m13.73 21a2 2 0 0 1-3.46 0"></path>
                                 </svg>
-                                Выход
+                                <span id="notification-badge" class="hidden notif-badge">0</span>
                             </button>
-                        </form>
+
+                            <div id="notifications-dropdown"
+                                class="hidden absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-[100]">
+                                <div class="py-2">
+                                    <div class="px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                                        <h3 class="text-sm font-semibold text-gray-900">Уведомления</h3>
+                                        <button id="mark-all-read" class="text-xs text-blue-600 hover:text-blue-700">Отметить
+                                            все как прочитанные</button>
+                                    </div>
+                                    <div id="notifications-list" class="max-h-64 overflow-y-auto">
+                                        <div class="p-4 text-center text-gray-500 text-sm">Загрузка...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="relative">
+                        <button type="button" id="user-menu-button" class="user-button" aria-expanded="false"
+                            aria-haspopup="true" aria-label="Меню пользователя">
+                            <span class="user-name">{{ auth()->user()->name }}</span>
+                            <svg width="16" height="16" class="shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                                stroke-linecap="round" stroke-linejoin="round" role="presentation">
+                                <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
+                        </button>
+
+                        <div id="user-dropdown"
+                            class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-[100]">
+                            <div class="py-1">
+                                <a href="{{ route('settings.index') }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Настройки</a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Выход</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 @else
-                    <div class="space-y-2">
-                        <a href="{{ route('login') }}"
-                            class="block px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600">
-                            Войти
-                        </a>
-
-                        <a href="{{ route('tickets.create') }}"
-                            class="block px-3 py-2 text-base font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Подать заявку
-                        </a>
-                    </div>
+                    {{-- Гость тоже видит свои обращения: они закреплены
+                         за ним долгоживущей cookie. --}}
+                    <a href="{{ route('tickets.index') }}"
+                        class="topbar-link {{ request()->routeIs('tickets.index') ? 'is-active' : '' }}">Мои заявки</a>
+                    <a href="{{ route('login') }}" class="topbar-link">Войти</a>
+                    <a href="{{ route('tickets.create') }}" class="btn-primary btn-sm topbar-cta">Подать заявку</a>
                 @endauth
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Контейнер уведомлений -->
-    <div id="notifications-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+        <!-- Контейнер уведомлений -->
+        <div id="notifications-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-    <!-- Основной контент -->
-    <main class="flex-1">
-        @yield('content')
-    </main>
+        <!-- Лист с содержимым страницы -->
+        <main id="main" class="sheet">
+            @yield('content')
 
-    <!-- Футер -->
-    <footer class="bg-gray-50 border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <!-- Лого и описание -->
-                <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center space-x-2 mb-4">
-                        <div
-                            class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M11.42 15.17 17.25 21a2.652 2.652 0 0 0 3.75-3.75l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437"></path>
-                            </svg>
-                        </div>
-                        <span class="text-xl font-bold text-gray-900">ICT Help</span>
-                    </div>
-                    <p class="text-gray-600 mb-4 max-w-md">
-                        Современная система технической поддержки для колледжа.
-                        Быстро, удобно, эффективно.
-                    </p>
-                </div>
-
-                <!-- Контактная информация -->
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
-                        Контакты
-                    </h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center space-x-3 text-sm text-gray-600">
-                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path
-                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                                </path>
-                            </svg>
-                            <span>+7 (950) 336-29-89</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Рабочие часы -->
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
-                        Режим работы
-                    </h3>
-                    <div class="space-y-3">
-                        <div class="flex items-start space-x-3 text-sm text-gray-600">
-                            <svg class="w-4 h-4 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M12 6v6l4 2"></path>
-                            </svg>
-                            <div>
-                                <div>Пн-Пт: 8:30 - 17:00</div>
-                                <div>Обед: 12:30 - 13:00</div>
-                                <div>Сб-Вс: выходные</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-    </footer>
+            @guest
+                <footer class="sheet-foot">
+                    <span>Служба поддержки колледжа</span>
+                    <a href="tel:+79503362989">+7 (950) 336-29-89</a>
+                    <span>Пн–Пт 8:30–17:00, обед 12:30–13:00</span>
+                </footer>
+            @endguest
+        </main>
+    </div>
 
     <script>
         // Переменные для маршрутов API

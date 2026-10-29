@@ -89,8 +89,8 @@
             <div class="p-8 border-b border-gray-200">
                 <div class="flex flex-wrap items-center gap-4 mb-6">
                     @if($article->category)
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
-                          style="background-color: {{ $article->category->color }}">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium cat-chip"
+                          style="--chip: {{ $article->category->color }}">
                         {{ $article->category->name }}
                     </span>
                     @else
@@ -219,8 +219,8 @@
                     class="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
                     <div class="flex items-center justify-between mb-4">
                         @if($relatedArticle->category)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white"
-                              style="background-color: {{ $relatedArticle->category->color }}">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium cat-chip"
+                              style="--chip: {{ $relatedArticle->category->color }}">
                             {{ $relatedArticle->category->name }}
                         </span>
                         @else

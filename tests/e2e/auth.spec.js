@@ -8,7 +8,7 @@ test.describe('Аутентификация', () => {
   test('Главная страница доступна без авторизации', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/ICT/);
-    await expect(page.locator('text=Служба технической поддержки')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /Заявка в службу поддержки/ })).toBeVisible();
   });
 
   test('Страница входа отображается корректно', async ({ page }) => {

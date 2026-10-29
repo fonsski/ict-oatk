@@ -4,47 +4,42 @@
 
 @section('content')
 <div class="container-width section-padding">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-            <div>
-            <h1 class="text-3xl font-bold text-slate-900 mb-2">Мои заявки</h1>
-            <p class="text-slate-600">Управляйте вашими обращениями в службу поддержки</p>
+        <!-- Заголовок -->
+        <div class="page-head">
+            <h1 class="page-title">Мои заявки</h1>
+            <div class="page-actions">
+                @if(user_has_role(['admin', 'master']))
+                <a href="{{ route('tickets.trashed') }}" class="btn-secondary btn-sm">Корзина</a>
+                @endif
+                <a href="{{ route('tickets.create') }}" class="btn-primary btn-sm">Новая заявка</a>
             </div>
-        <div class="flex items-center gap-3 mt-4 sm:mt-0">
-            @if(user_has_role(['admin', 'master']))
-            <a href="{{ route('tickets.trashed') }}" class="btn-secondary">
-                Корзина
-            </a>
-            @endif
-            <a href="{{ route('tickets.create') }}" class="btn-primary">
-                Новая заявка
-            </a>
         </div>
-    </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-slate-900 mb-1">{{ $tickets->where('status', 'open')->count() }}</div>
-            <div class="text-sm text-slate-600">Открытые</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-slate-900 mb-1">{{ $tickets->where('status', 'in_progress')->count() }}</div>
-            <div class="text-sm text-slate-600">В работе</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-slate-900 mb-1">{{ $tickets->where('status', 'resolved')->count() }}</div>
-            <div class="text-sm text-slate-600">Решённые</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-2xl font-bold text-slate-900 mb-1">{{ $tickets->where('status', 'closed')->count() }}</div>
-            <div class="text-sm text-slate-600">Закрытые</div>
-            </div>
+        <!-- Счётчики по статусам: они же фильтр списка -->
+        @php
+            $statusNow = request('status');
+            $countCards = [
+                ['', 'Всего', $tickets->total()],
+                ['open', 'Открытые', $tickets->where('status', 'open')->count()],
+                ['in_progress', 'В работе', $tickets->where('status', 'in_progress')->count()],
+                ['resolved', 'Решённые', $tickets->where('status', 'resolved')->count()],
+                ['closed', 'Закрытые', $tickets->where('status', 'closed')->count()],
+            ];
+        @endphp
+        <div class="count-cards">
+            @foreach ($countCards as [$statusValue, $statusLabel, $countValue])
+                <a href="{{ request()->fullUrlWithQuery(['status' => $statusValue ?: null, 'page' => null]) }}"
+                    class="count-card"
+                    @if ((string) $statusNow === (string) $statusValue) aria-current="true" @endif>
+                    <span class="count-card-label">{{ $statusLabel }}</span>
+                    <span class="count-card-value">{{ $countValue }}</span>
+                </a>
+            @endforeach
         </div>
 
         <!-- Filters -->
-    <div class="card p-6 mb-8">
-        <h3 class="text-lg font-semibold text-slate-900 mb-4">Фильтры</h3>
+    <div class="card p-4 mb-6">
+        <h2 class="text-sm font-semibold text-slate-900 mb-3">Фильтры</h2>
         <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                 <label for="status" class="form-label">Статус</label>
@@ -114,7 +109,7 @@
                                         </p>
                                         @if($ticket->room)
                                             <div class="text-xs text-slate-500 mt-1 truncate">
-                                                🏢 {{ $ticket->room->number }}
+                                                Кабинет {{ $ticket->room->number }}
                                             </div>
                                         @endif
                                     </div>
