@@ -51,6 +51,14 @@ trap cleanup EXIT
 
 cd "${APP_DIR}"
 
+# Проверяем Node до остановки сайта: узнать, что сборка невозможна, лучше
+# сейчас, чем после git reset, когда новый код уже лежит рядом со старыми
+# стилями.
+command -v node >/dev/null 2>&1 || die "Node.js не найден — он нужен для сборки фронтенда. Запустите install.sh или поставьте Node 20"
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
+[[ "${NODE_MAJOR}" -ge 18 ]] \
+    || die "Для сборки фронтенда нужен Node.js 18 или новее, сейчас ${NODE_MAJOR}"
+
 # ------------------------------------------------------------------
 log "Резервная копия базы"
 # ------------------------------------------------------------------
@@ -117,8 +125,26 @@ log "Зависимости и сборка фронтенда"
 # Здесь это осознанно: весь скрипт и так идёт под sudo.
 COMPOSER_ALLOW_SUPERUSER=1 composer install \
     --no-dev --optimize-autoloader --no-interaction
-npm ci --silent
-npm run build
+# --include=dev: Vite, Tailwind и шрифты лежат в devDependencies, а при
+# NODE_ENV=production обычный npm ci их не ставит.
+npm ci --include=dev --silent
+
+# Собираем рядом и подменяем папку целиком. Vite сначала очищает каталог
+# сборки, поэтому при сбое прямо в public/build сайт остался бы без стилей
+# и скриптов; так прежняя сборка уцелеет, если новая не получилась.
+rm -rf public/build.new public/build.old
+if ! npm run build -- --outDir public/build.new; then
+    rm -rf public/build.new
+    die "Сборка фронтенда не удалась — прежняя сборка в public/build сохранена"
+fi
+if [[ ! -f public/build.new/manifest.json ]]; then
+    rm -rf public/build.new
+    die "Сборка не создала manifest.json — прежняя сборка в public/build сохранена"
+fi
+[[ -d public/build ]] && mv public/build public/build.old
+mv public/build.new public/build
+rm -rf public/build.old
+chown -R "${APP_USER}:${APP_USER}" public/build
 
 # ------------------------------------------------------------------
 log "Миграции"

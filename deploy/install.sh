@@ -53,8 +53,12 @@ if ! command -v composer >/dev/null 2>&1; then
     rm -f /tmp/composer-setup.php
 fi
 
-if ! command -v node >/dev/null 2>&1; then
-    log "Установка Node.js 20 (нужен для сборки фронтенда)"
+# Vite 5 собирает фронтенд на Node 18 и новее. Старый Node из системных
+# репозиториев (12, 14) сломал бы сборку непонятной ошибкой, поэтому смотрим
+# на версию, а не только на то, что команда node есть.
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+if [[ "${NODE_MAJOR}" -lt 18 ]]; then
+    log "Установка Node.js 20 (нужен 18 или новее для сборки фронтенда; сейчас: ${NODE_MAJOR})"
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y -qq nodejs
 fi
@@ -108,8 +112,13 @@ fi
 log "Установка зависимостей и сборка фронтенда"
 # ------------------------------------------------------------------
 composer install --no-dev --optimize-autoloader --no-interaction
-npm ci --silent
+# --include=dev: Vite, Tailwind и шрифты лежат в devDependencies. Если в
+# окружении задан NODE_ENV=production, обычный npm ci их пропустил бы и
+# сборка упала бы.
+npm ci --include=dev --silent
 npm run build
+[[ -f public/build/manifest.json ]] \
+    || die "Сборка фронтенда не создала public/build/manifest.json — страницы открываться не будут"
 
 grep -q '^APP_KEY=.\+' .env || php artisan key:generate --force
 grep -q '^REVERB_APP_KEY=.\+' .env || php artisan reverb:install --no-interaction || true
