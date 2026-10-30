@@ -27,11 +27,11 @@
     @php
         $statusNow = request('status');
         $countCards = [
-            ['', 'Всего', 'total-count', $tickets->total() ?? 0],
-            ['open', 'Открытые', 'open-count', $tickets->where('status', 'open')->count()],
-            ['in_progress', 'В работе', 'progress-count', $tickets->where('status', 'in_progress')->count()],
-            ['resolved', 'Решённые', 'resolved-count', $tickets->where('status', 'resolved')->count()],
-            ['closed', 'Закрытые', 'closed-count', $tickets->where('status', 'closed')->count()],
+            ['', 'Всего', 'total-count', $statusCounts['total']],
+            ['open', 'Открытые', 'open-count', $statusCounts['open']],
+            ['in_progress', 'В работе', 'progress-count', $statusCounts['in_progress']],
+            ['resolved', 'Решённые', 'resolved-count', $statusCounts['resolved']],
+            ['closed', 'Закрытые', 'closed-count', $statusCounts['closed']],
         ];
     @endphp
     <div class="count-cards" id="stats-cards">

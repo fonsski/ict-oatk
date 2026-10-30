@@ -438,19 +438,70 @@ class KnowledgeBaseController extends Controller
             ->with("success", "Статья удалена безвозвратно");
     }
 
+    /** Допустимые типы вложений, кроме архивов (их проверяет archiveRule). */
+    private const ATTACHMENT_MIMES = "pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,png,jpg,jpeg,gif";
+
+    /** Начало файла у каждого поддерживаемого архива. */
+    private const ARCHIVE_SIGNATURES = [
+        "zip" => ["PK\x03\x04", "PK\x05\x06", "PK\x07\x08"],
+        "rar" => ["Rar!\x1A\x07"],
+        "7z" => ["7z\xBC\xAF\x27\x1C"],
+    ];
+
+    /**
+     * Правило для архива: расширение известно, а файл действительно
+     * начинается с сигнатуры этого формата.
+     */
+    private function archiveRule(string $extension): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($extension) {
+            $head = is_object($value) && $value->getRealPath()
+                ? (string) file_get_contents($value->getRealPath(), false, null, 0, 8)
+                : "";
+
+            foreach (self::ARCHIVE_SIGNATURES[$extension] as $signature) {
+                if (str_starts_with($head, $signature)) {
+                    return;
+                }
+            }
+
+            $fail("Файл не похож на архив .{$extension}: он повреждён или имеет другой формат.");
+        };
+    }
+
     /**
      * Загрузить вложение к статье.
      */
     public function storeAttachment(Request $request, KnowledgeBase $knowledge)
     {
-        $request->validate([
-            "file" => [
-                "required",
-                "file",
-                "max:10240", // до 10 МБ
-                "mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,png,jpg,jpeg,gif",
+        // Архивы проверяем по началу файла, а не по определению типа: оно
+        // принимает zip за jar, apk, odt и тому подобное, и обычный архив
+        // отклонялся с ошибкой «validation.mimes». Остальное — по типу.
+        $extension = strtolower(
+            (string) $request->file("file")?->getClientOriginalExtension(),
+        );
+        $isArchive = array_key_exists($extension, self::ARCHIVE_SIGNATURES);
+
+        $request->validate(
+            [
+                "file" => [
+                    "required",
+                    "file",
+                    "max:10240", // до 10 МБ
+                    $isArchive
+                        ? $this->archiveRule($extension)
+                        : "mimes:" . self::ATTACHMENT_MIMES,
+                ],
             ],
-        ]);
+            [
+                "file.required" => "Выберите файл для вложения.",
+                "file.file" => "Не удалось прочитать загруженный файл.",
+                "file.max" => "Файл больше 10 МБ.",
+                "file.uploaded" => "Файл не загрузился: возможно, он больше допустимого размера.",
+                "file.mimes" =>
+                    "Такой тип файла не поддерживается. Допустимо: pdf, doc(x), xls(x), ppt(x), txt, csv, zip, rar, 7z, изображения.",
+            ],
+        );
 
         $file = $request->file("file");
 

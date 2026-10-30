@@ -20,15 +20,11 @@ class HomepageFAQController extends Controller
     }
 
     /**
-     * Check if user has admin or master role
+     * Частые вопросы ведут администратор, мастер и техник.
      */
     private function checkPermission()
     {
-        if (
-            !auth()->check() ||
-            (!auth()->user()->hasRole("admin") &&
-                !auth()->user()->hasRole("master"))
-        ) {
+        if (!auth()->check() || !user_can_manage_faq()) {
             abort(403, "Недостаточно прав доступа");
         }
     }

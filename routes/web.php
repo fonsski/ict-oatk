@@ -741,10 +741,10 @@ Route::middleware("auth")->group(function () {
         ])->name("topology.links.destroy");
     });
 
-    // Управление FAQ главной страницы (только для admin и master)
+    // Управление FAQ главной страницы (admin, master и technician)
     Route::middleware([
         "auth",
-        \App\Http\Middleware\CheckRole::class . ":admin,master",
+        \App\Http\Middleware\CheckRole::class . ":admin,master,technician",
     ])->group(function () {
         Route::resource("/homepage-faq", HomepageFAQController::class)->except([
             "show",

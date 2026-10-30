@@ -195,7 +195,15 @@
 
     <!-- Частые вопросы: доступны всем, включая неавторизованных посетителей -->
     <section class="faq">
-        <h2 class="section-title">Часто возникающие проблемы</h2>
+        <div class="faq-head">
+            <h2 class="section-title">Часто возникающие проблемы</h2>
+            @if(user_can_manage_faq())
+            <div class="page-actions">
+                <a href="{{ route('homepage-faq.index') }}" class="btn-secondary btn-sm">Управлять</a>
+                <a href="{{ route('homepage-faq.create') }}" class="btn-primary btn-sm">Добавить вопрос</a>
+            </div>
+            @endif
+        </div>
 
         @if(isset($faqs) && $faqs->count())
         <div class="faq-list">
@@ -210,7 +218,7 @@
             @endforeach
         </div>
         @else
-        <p class="empty-note">Пока нет часто задаваемых вопросов: ответы появятся здесь, когда их добавят.</p>
+        <p class="empty-note">Пока нет часто задаваемых вопросов@if(user_can_manage_faq()): <a href="{{ route('homepage-faq.create') }}" class="text-blue-600 hover:underline underline-offset-2">добавьте первый</a>@else: ответы появятся здесь, когда их добавят@endif.</p>
         @endif
     </section>
 

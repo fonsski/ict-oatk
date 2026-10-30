@@ -254,7 +254,7 @@
                        class="text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 <button type="submit" class="btn-primary py-2 text-sm">Прикрепить файл</button>
             </form>
-            <p class="mt-2 text-xs text-gray-500">До 10 МБ. Допустимо: pdf, doc(x), xls(x), ppt(x), txt, csv, zip, изображения.</p>
+            <p class="mt-2 text-xs text-gray-500">До 10 МБ. Допустимо: pdf, doc(x), xls(x), ppt(x), txt, csv, zip, rar, 7z, изображения.</p>
             @error('file')
             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
             @enderror

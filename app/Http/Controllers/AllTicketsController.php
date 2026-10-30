@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -12,26 +13,15 @@ use App\Models\User;
 class AllTicketsController extends Controller
 {
     /**
-     * Отображение всех заявок в системе
+     * Фильтры списка. Статус можно не применять: так считаются счётчики
+     * по статусам, которые должны показывать всю выборку целиком.
      */
-    public function index(Request $request)
-    {
-        // Проверка аутентификации и роли
-        if (
-            !Auth::check() ||
-            !in_array(optional(Auth::user()->role)->slug, [
-                "admin",
-                "master",
-                "technician",
-            ])
-        ) {
-            abort(403);
-        }
-        // Базовый запрос с подгрузкой связанных моделей
-        $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
-
-        // Применение фильтров
-        if ($request->filled("status")) {
+    private function applyFilters(
+        Builder $query,
+        Request $request,
+        bool $withStatus = true,
+    ): void {
+        if ($withStatus && $request->filled("status")) {
             $query->where("status", $request->get("status"));
         }
 
@@ -52,7 +42,12 @@ class AllTicketsController extends Controller
         }
 
         if ($request->filled("assigned_to")) {
-            $query->where("assigned_to_id", $request->get("assigned_to"));
+            $assignee = $request->get("assigned_to");
+
+            // Значение «Не назначено» из списка исполнителей.
+            $assignee === "unassigned"
+                ? $query->whereNull("assigned_to_id")
+                : $query->where("assigned_to_id", $assignee);
         }
 
         if ($request->filled("search")) {
@@ -64,9 +59,61 @@ class AllTicketsController extends Controller
                     ->orWhere("description", "like", "%{$search}%");
             });
         }
+    }
+
+    /**
+     * Сколько заявок в каждом статусе при текущих фильтрах, кроме статуса.
+     *
+     * @return array{total:int,open:int,in_progress:int,resolved:int,closed:int}
+     */
+    private function statusCounts(Request $request): array
+    {
+        $query = Ticket::query();
+        $this->applyFilters($query, $request, withStatus: false);
+
+        $byStatus = $query
+            ->selectRaw("status, count(*) as aggregate")
+            ->groupBy("status")
+            ->pluck("aggregate", "status");
+
+        return [
+            "total" => (int) $byStatus->sum(),
+            "open" => (int) ($byStatus["open"] ?? 0),
+            "in_progress" => (int) ($byStatus["in_progress"] ?? 0),
+            "resolved" => (int) ($byStatus["resolved"] ?? 0),
+            "closed" => (int) ($byStatus["closed"] ?? 0),
+        ];
+    }
+
+    /**
+     * Отображение всех заявок в системе
+     */
+    public function index(Request $request)
+    {
+        // Проверка аутентификации и роли
+        if (
+            !Auth::check() ||
+            !in_array(optional(Auth::user()->role)->slug, [
+                "admin",
+                "master",
+                "technician",
+            ])
+        ) {
+            abort(403);
+        }
+        // Базовый запрос с подгрузкой связанных моделей
+        $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
+
+        // Применение фильтров
+        $this->applyFilters($query, $request);
 
         // Сортировка по дате создания (новые сверху)
         $tickets = $query->latest()->paginate(15)->withQueryString();
+
+        // Счётчики по статусам считаются по всей выборке без фильтра по
+        // статусу: иначе после переключения на «Решённые» все остальные
+        // карточки обнулялись бы.
+        $statusCounts = $this->statusCounts($request);
 
         // Получение данных для фильтров
         $locations = Cache::remember("locations_list", 3600, function () {
@@ -98,6 +145,7 @@ class AllTicketsController extends Controller
             "tickets.all",
             compact(
                 "tickets",
+                "statusCounts",
                 "locations",
                 "assignable",
                 "categories",
@@ -125,39 +173,7 @@ class AllTicketsController extends Controller
         $query = Ticket::with(["user", "location", "room", "assignedTo.role"]);
 
         // Применение фильтров
-        if ($request->filled("status")) {
-            $query->where("status", $request->get("status"));
-        }
-
-        if ($request->filled("category")) {
-            $query->where("category", $request->get("category"));
-        }
-
-        if ($request->filled("priority")) {
-            $query->where("priority", $request->get("priority"));
-        }
-
-        if ($request->filled("location_id")) {
-            $query->where("location_id", $request->get("location_id"));
-        }
-
-        if ($request->filled("room_id")) {
-            $query->where("room_id", $request->get("room_id"));
-        }
-
-        if ($request->filled("assigned_to")) {
-            $query->where("assigned_to_id", $request->get("assigned_to"));
-        }
-
-        if ($request->filled("search")) {
-            $search = $request->get("search");
-            $query->where(function ($q) use ($search) {
-                $q->where("title", "like", "%{$search}%")
-                    ->orWhere("reporter_name", "like", "%{$search}%")
-                    ->orWhere("reporter_phone", "like", "%{$search}%")
-                    ->orWhere("description", "like", "%{$search}%");
-            });
-        }
+        $this->applyFilters($query, $request);
 
         // Получение заявок с ограничением количества
         $query = $query->latest();
@@ -212,14 +228,9 @@ class AllTicketsController extends Controller
             ];
         });
 
-        // Статистика
-        $stats = [
-            "total" => $tickets->count(),
-            "open" => $tickets->where("status", "open")->count(),
-            "in_progress" => $tickets->where("status", "in_progress")->count(),
-            "resolved" => $tickets->where("status", "resolved")->count(),
-            "closed" => $tickets->where("status", "closed")->count(),
-        ];
+        // Статистика: по всей выборке без фильтра по статусу и без лимита,
+        // чтобы карточки не зависели от выбранной вкладки.
+        $stats = $this->statusCounts($request);
 
         return response()->json([
             "tickets" => $ticketsData,
@@ -357,39 +368,7 @@ class AllTicketsController extends Controller
         $query = Ticket::query();
 
         // Применение фильтров
-        if ($request->filled("status")) {
-            $query->where("status", $request->get("status"));
-        }
-
-        if ($request->filled("category")) {
-            $query->where("category", $request->get("category"));
-        }
-
-        if ($request->filled("priority")) {
-            $query->where("priority", $request->get("priority"));
-        }
-
-        if ($request->filled("location_id")) {
-            $query->where("location_id", $request->get("location_id"));
-        }
-
-        if ($request->filled("room_id")) {
-            $query->where("room_id", $request->get("room_id"));
-        }
-
-        if ($request->filled("assigned_to")) {
-            $query->where("assigned_to_id", $request->get("assigned_to"));
-        }
-
-        if ($request->filled("search")) {
-            $search = $request->get("search");
-            $query->where(function ($q) use ($search) {
-                $q->where("title", "like", "%{$search}%")
-                    ->orWhere("reporter_name", "like", "%{$search}%")
-                    ->orWhere("reporter_phone", "like", "%{$search}%")
-                    ->orWhere("description", "like", "%{$search}%");
-            });
-        }
+        $this->applyFilters($query, $request);
 
         $tickets = $query->get();
 

@@ -62,6 +62,70 @@ class KnowledgeAttachmentTest extends TestCase
         Storage::disk('local')->assertExists($attachment->path);
     }
 
+    /**
+     * Архивы принимаются по началу файла: zip, rar и 7z. Раньше проверка
+     * шла по определению типа, и обычный zip отклонялся ошибкой
+     * «validation.mimes».
+     */
+    public static function archiveProvider(): array
+    {
+        return [
+            'zip' => ['docs.zip', "PK\x03\x04" . str_repeat("\0", 64)],
+            'zip без файлов' => ['empty.zip', "PK\x05\x06" . str_repeat("\0", 18)],
+            'rar' => ['docs.rar', "Rar!\x1A\x07\x01\x00" . str_repeat("\0", 64)],
+            'rar старого формата' => ['old.rar', "Rar!\x1A\x07\x00" . str_repeat("\0", 64)],
+            '7z' => ['docs.7z', "7z\xBC\xAF\x27\x1C" . str_repeat("\0", 64)],
+            'заглавное расширение' => ['DOCS.ZIP', "PK\x03\x04" . str_repeat("\0", 64)],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('archiveProvider')]
+    public function test_staff_can_attach_an_archive(string $name, string $bytes): void
+    {
+        $article = $this->article();
+
+        $this->actingAs($this->staff())->post(
+            route('knowledge.attachments.store', $article),
+            ['file' => UploadedFile::fake()->createWithContent($name, $bytes)],
+        )->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertSame($name, $article->attachments()->first()->original_name);
+    }
+
+    public function test_text_renamed_to_archive_is_rejected_with_a_readable_message(): void
+    {
+        $article = $this->article();
+
+        $response = $this->actingAs($this->staff())->post(
+            route('knowledge.attachments.store', $article),
+            ['file' => UploadedFile::fake()->createWithContent('fake.zip', 'это просто текст')],
+        );
+
+        $response->assertSessionHasErrors('file');
+        $this->assertStringContainsString('не похож на архив', session('errors')->first('file'));
+        $this->assertSame(0, $article->attachments()->count());
+    }
+
+    public function test_unsupported_type_error_is_not_a_raw_translation_key(): void
+    {
+        $article = $this->article();
+
+        $this->actingAs($this->staff())->post(
+            route('knowledge.attachments.store', $article),
+            ['file' => UploadedFile::fake()->create('script.exe', 100)],
+        );
+
+        $message = session('errors')->first('file');
+        $this->assertStringNotContainsString('validation.', $message);
+        $this->assertStringContainsString('rar', $message);
+    }
+
+    public function test_russian_validation_messages_are_available(): void
+    {
+        $this->assertNotSame('validation.mimes', __('validation.mimes'));
+        $this->assertNotSame('validation.required', __('validation.required'));
+    }
+
     public function test_disallowed_file_type_is_rejected(): void
     {
         $article = $this->article();

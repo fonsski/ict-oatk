@@ -168,6 +168,18 @@ if (!function_exists("user_can_manage_users")) {
     }
 }
 
+if (!function_exists("user_can_manage_faq")) {
+    /**
+     * Проверить, может ли пользователь вести частые вопросы главной страницы
+     *
+     * @return bool
+     */
+    function user_can_manage_faq()
+    {
+        return user_has_role(["admin", "master", "technician"]);
+    }
+}
+
 if (!function_exists("user_is_technician")) {
     /**
      * Проверить, является ли пользователь техником

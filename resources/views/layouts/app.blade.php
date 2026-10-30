@@ -30,26 +30,35 @@
         }
         $navGroups['Работа'] = $work;
 
+        // Разделы, куда пускают технику: оборудование, расходники, закупки,
+        // документы, знания и справочники. Кабинеты и пользователи остаются
+        // за администратором и мастером.
         if ($isStaff) {
-            $navGroups['Знания и расходники'] = [
-                ['База знаний', 'knowledge.index', request()->routeIs('knowledge.index')],
-                ['Расходники', 'consumables.index', request()->routeIs('consumables.*')],
+            $navGroups['Учёт'] = [
+                ['Оборудование', 'equipment.index', request()->routeIs('equipment.*') && !request()->routeIs('equipment.equipment-categories.*')],
+                ['Расходники', 'consumables.index', request()->routeIs('consumables.*') || request()->routeIs('consumable-write-offs.*')],
+                ['Закупки', 'purchases.index', request()->routeIs('purchases.*')],
+                ['Заявки ТМЦ', 'tmc-requests.index', request()->routeIs('tmc-requests.*')],
+                ['Документы', 'documents.index', request()->routeIs('documents.*') || request()->routeIs('document-types.*')],
                 ['Топология', 'topology.index', request()->routeIs('topology.*')],
             ];
+
+            $knowledge = [
+                ['База знаний', 'knowledge.index', request()->routeIs('knowledge.index')],
+                ['Категории знаний', 'knowledge.categories.index', request()->routeIs('knowledge.categories.*')],
+            ];
+            if (user_can_manage_faq()) {
+                $knowledge[] = ['FAQ главной', 'homepage-faq.index', request()->routeIs('homepage-faq.*')];
+            }
+            $knowledge[] = ['Операционные системы', 'operating-systems.index', request()->routeIs('operating-systems.*')];
+            $knowledge[] = ['Категории оборудования', 'equipment.equipment-categories.index', request()->routeIs('equipment.equipment-categories.*')];
+            $navGroups['Знания и справочники'] = $knowledge;
         }
 
         if (user_can_manage_users()) {
             $navGroups['Управление'] = [
-                ['Оборудование', 'equipment.index', request()->routeIs('equipment.*') && !request()->routeIs('equipment.equipment-categories.*')],
                 ['Кабинеты', 'room.index', request()->routeIs('room.*')],
                 ['Пользователи', 'user.index', request()->routeIs('user.*')],
-                ['Закупки', 'purchases.index', request()->routeIs('purchases.*')],
-                ['Заявки ТМЦ', 'tmc-requests.index', request()->routeIs('tmc-requests.*')],
-                ['Документы', 'documents.index', request()->routeIs('documents.*')],
-                ['Операционные системы', 'operating-systems.index', request()->routeIs('operating-systems.*')],
-                ['Категории оборудования', 'equipment.equipment-categories.index', request()->routeIs('equipment.equipment-categories.*')],
-                ['Категории знаний', 'knowledge.categories.index', request()->routeIs('knowledge.categories.*')],
-                ['FAQ главной', 'homepage-faq.index', request()->routeIs('homepage-faq.*')],
             ];
         }
     }

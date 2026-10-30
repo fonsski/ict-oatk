@@ -983,3 +983,15 @@
     padding-left: 14px;
     padding-right: 14px;
 }
+
+.faq-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+.faq-head + .faq-list,
+.faq-head + .empty-note {
+    margin-top: 12px;
+}

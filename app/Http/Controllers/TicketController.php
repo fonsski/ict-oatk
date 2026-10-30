@@ -44,10 +44,6 @@ class TicketController extends Controller
         // Список заявок с фильтрами и пагинацией
         $query = Ticket::withFullTicketData();
 
-        if ($request->filled("status")) {
-            $query->where("status", $request->get("status"));
-        }
-
         if ($request->filled("category")) {
             $query->where("category", $request->get("category"));
         }
@@ -92,6 +88,27 @@ class TicketController extends Controller
             $query->ownedByGuest(GuestTicketOwner::token($request));
         }
 
+        // Счётчики по статусам считаются по всем моим заявкам без фильтра
+        // по статусу: иначе после переключения на «Решённые» остальные
+        // карточки обнулялись бы, а при нескольких страницах считались бы
+        // только заявки текущей страницы.
+        $byStatus = (clone $query)
+            ->toBase()
+            ->selectRaw("status, count(*) as aggregate")
+            ->groupBy("status")
+            ->pluck("aggregate", "status");
+        $statusCounts = [
+            "total" => (int) $byStatus->sum(),
+            "open" => (int) ($byStatus["open"] ?? 0),
+            "in_progress" => (int) ($byStatus["in_progress"] ?? 0),
+            "resolved" => (int) ($byStatus["resolved"] ?? 0),
+            "closed" => (int) ($byStatus["closed"] ?? 0),
+        ];
+
+        if ($request->filled("status")) {
+            $query->where("status", $request->get("status"));
+        }
+
         $tickets = $this->paginateQuery($query->latest(), $request, 'tickets');
 
         $locations = $this->cacheService->getLocations();
@@ -100,7 +117,13 @@ class TicketController extends Controller
 
         return view(
             "tickets.index",
-            compact("tickets", "locations", "assignable", "categories"),
+            compact(
+                "tickets",
+                "statusCounts",
+                "locations",
+                "assignable",
+                "categories",
+            ),
         );
     }
 

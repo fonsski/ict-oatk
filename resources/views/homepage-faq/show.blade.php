@@ -17,7 +17,7 @@
             </a>
         </div>
 
-        @if(user_can_manage_users())
+        @if(user_can_manage_faq())
         <div class="flex items-center space-x-2">
             <a href="{{ route('homepage-faq.edit', $faq) }}"
                 class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200">
@@ -140,7 +140,7 @@
         </div>
 
         <!-- Footer Actions -->
-        @if(user_can_manage_users())
+        @if(user_can_manage_faq())
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200">
             <div class="flex items-center justify-between">
                 <div class="text-sm text-slate-500">

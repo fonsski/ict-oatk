@@ -19,11 +19,11 @@
         @php
             $statusNow = request('status');
             $countCards = [
-                ['', 'Всего', $tickets->total()],
-                ['open', 'Открытые', $tickets->where('status', 'open')->count()],
-                ['in_progress', 'В работе', $tickets->where('status', 'in_progress')->count()],
-                ['resolved', 'Решённые', $tickets->where('status', 'resolved')->count()],
-                ['closed', 'Закрытые', $tickets->where('status', 'closed')->count()],
+                ['', 'Всего', $statusCounts['total']],
+                ['open', 'Открытые', $statusCounts['open']],
+                ['in_progress', 'В работе', $statusCounts['in_progress']],
+                ['resolved', 'Решённые', $statusCounts['resolved']],
+                ['closed', 'Закрытые', $statusCounts['closed']],
             ];
         @endphp
         <div class="count-cards">
